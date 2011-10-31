@@ -52,6 +52,7 @@ require 'rexml/document'
 require 'net/https'
 require 'net/http'
 require 'uri'
+require 'rex/mime'
 
 module Nexpose
 
@@ -109,9 +110,13 @@ class APIRequest
 	attr_reader :error
 	attr_reader :trace
 
-	def initialize(req, url)
+	attr_reader :raw_response
+	attr_reader :raw_response_data
+
+	def initialize(req, url, api_version='1.1')
 		@url = url
 		@req = req
+		@api_version = api_version
 		prepare_http_client
 	end
 
@@ -139,8 +144,8 @@ class APIRequest
 
 		begin
 		prepare_http_client
-		resp, data = @http.post(@uri.path, @req, @headers)
-		@res = parse_xml(data)
+		@raw_response, @raw_response_data = @http.post(@uri.path, @req, @headers)
+		@res = parse_xml(@raw_response_data)
 
 		if(not @res.root)
 			@error = "NeXpose service returned invalid XML"
@@ -150,6 +155,8 @@ class APIRequest
 		@sid = attributes['session-id']
 
 		if(attributes['success'] and attributes['success'].to_i == 1)
+			@success = true
+		elsif @api_version =~ /1.2/  and @res and 	(@res.get_elements '//Exception').count < 1
 			@success = true
 		else
 			@success = false
@@ -189,7 +196,7 @@ class APIRequest
 		end
 
 		if ! (@success or @error)
-			@error = "NeXpose service returned an unrecognized response: #{data}"
+			@error = "NeXpose service returned an unrecognized response: #{@raw_response_data.inspect}"
 		end
 
 		@sid
@@ -200,8 +207,8 @@ class APIRequest
 		@res.root.attributes(*args)
 	end
 
-	def self.execute(url,req)
-		obj = self.new(req,url)
+	def self.execute(url, req, api_version='1.1')
+		obj = self.new(req, url, api_version)
 		obj.execute
 		if(not obj.success)
 			raise APIError.new(obj, "Action failed: #{obj.error}")
@@ -213,9 +220,9 @@ end
 
 module NexposeAPI
 
-	def make_xml(name, opts={}, data='')
+	def make_xml(name, opts={}, data='', append_session_id=true)
 		xml = REXML::Element.new(name)
-		if(@session_id)
+		if(@session_id and append_session_id)
 			xml.attributes['session-id'] = @session_id
 		end
 
@@ -287,6 +294,9 @@ module NexposeAPI
 					end
 				end
 			end
+			r.res.elements.each("//ScanSummary/message") do |message|
+				res[:message] = message.text
+			end
 			return res
 		else
 			return false
@@ -338,6 +348,102 @@ module NexposeAPI
 		r.success
 	end
 
+	#-------------------------------------------------------------------------
+	# Returns all asset group information
+	#-------------------------------------------------------------------------
+	def asset_groups_listing()
+		r = execute(make_xml('AssetGroupListingRequest'))
+
+		if r.success
+			res = []
+			r.res.elements.each('//AssetGroupSummary') do |group|
+				res << {
+						:asset_group_id => group.attributes['id'].to_i,
+						:name => group.attributes['name'].to_s,
+						:description => group.attributes['description'].to_s,
+						:risk_score => group.attributes['riskscore'].to_f,
+				}
+			end
+			res
+		else
+			false
+		end
+	end
+
+	#-------------------------------------------------------------------------
+	# Returns an asset group configuration information for a specific group ID
+	#-------------------------------------------------------------------------
+	def asset_group_config(group_id)
+		r = execute(make_xml('AssetGroupConfigRequest', {'group-id' => group_id}))
+
+		if r.success
+			res = []
+			r.res.elements.each('//Devices/device') do |device_info|
+				res << {
+						:device_id => device_info.attributes['id'].to_i,
+						:site_id => device_info.attributes['site-id'].to_i,
+						:address => device_info.attributes['address'].to_s,
+						:riskfactor => device_info.attributes['riskfactor'].to_f,
+				}
+			end
+			res
+		else
+			false
+		end
+	end
+
+	#-----------------------------------------------------------------------
+	# Starts device specific site scanning.
+	#
+	# devices - An Array of device IDs
+	# hosts - An Array of Hashes [o]=>{:range=>"to,from"} [1]=>{:host=>host}
+	#-----------------------------------------------------------------------
+	def site_device_scan_start(site_id, devices, hosts)
+
+		if hosts == nil and devices == nil
+			raise ArgumentError.new("Both the device and host list is nil")
+		end
+
+		xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+
+		if devices != nil
+			inner_xml = REXML::Element.new 'Devices'
+			for device_id in devices
+				inner_xml.add_element 'device', {'id' => "#{device_id}"}
+			end
+			xml.add_element inner_xml
+		end
+
+		if hosts != nil
+			inner_xml = REXML::Element.new 'Hosts'
+			hosts.each_index do |x|
+				if hosts[x].key? :range
+					to = hosts[x][:range].split(',')[0]
+					from = hosts[x][:range].split(',')[1]
+					inner_xml.add_element 'range', {'to' => "#{to}", 'from' => "#{from}"}
+				end
+				if hosts[x].key? :host
+					host_element = REXML::Element.new 'host'
+					host_element.text = "#{hosts[x][:host]}"
+					inner_xml.add_element host_element
+				end
+			end
+			xml.add_element inner_xml
+		end
+
+		r = execute xml
+		if r.success
+			r.res.elements.each('//Scan') do |scan_info|
+				return {
+						:scan_id => scan_info.attributes['scan-id'].to_i,
+						:engine_id => scan_info.attributes['engine-id'].to_i
+				}
+			end
+		else
+			false
+		end
+	end
+
 	def site_delete(param)
 		r = execute(make_xml('SiteDeleteRequest', { 'site-id' => param }))
 		r.success
@@ -360,7 +466,372 @@ module NexposeAPI
 		else
 			return false
 		end
-	end	
+	end
+
+	#-----------------------------------------------------------------------
+	# TODO: Needs to be expanded to included details
+	#-----------------------------------------------------------------------
+	def site_scan_history(site_id)
+		r = execute(make_xml('SiteScanHistoryRequest', {'site-id' => site_id.to_s}))
+
+		if (r.success)
+			res = []
+			r.res.elements.each("//ScanSummary") do |site_scan_history|
+				res << {
+						:site_id => site_scan_history.attributes['site-id'].to_i,
+						:scan_id => site_scan_history.attributes['scan-id'].to_i,
+						:engine_id => site_scan_history.attributes['engine-id'].to_i,
+						:start_time => site_scan_history.attributes['startTime'].to_s,
+						:end_time => site_scan_history.attributes['endTime'].to_s
+				}
+			end
+			res
+		else
+			false
+		end
+	end
+
+	###################
+	# SILO MANAGEMENT #
+	###################
+
+	#########################
+	# MULTI-TENANT USER OPS #
+	#########################
+
+	#-------------------------------------------------------------------------
+	# Creates a multi-tenant user
+	#
+	# user_config - A map of the user data.
+	#
+	# REQUIRED PARAMS
+	# user-id, authsrcid, user-name, full-name, enabled, superuser
+	#
+	# OPTIONAL PARAMS
+	# email, password
+	#
+	# silo_configs - An array of maps of silo specific data
+	#
+	# REQUIRED PARAMS
+	# silo-id, role-name, all-groups, all-sites, default-silo
+	#
+	# allowed_groups/allowed_sites - An array of ids
+	#-------------------------------------------------------------------------
+	def create_multi_tenant_user(user_config, silo_configs)
+		xml = make_xml('MultiTenantUserCreateRequest')
+		mtu_config_xml = make_xml('MultiTenantUserConfig', user_config, '', false)
+
+		# Add the silo access
+		silo_xml = make_xml('SiloAccesses', {}, '', false)
+		silo_config_xml = make_xml('SiloAccess', {}, '', false)
+		silo_configs.keys.each do |k|
+			if k.eql? 'allowed_sites'
+				allowed_sites_xml = make_xml('AllowedSites', {}, '', false)
+				silo_configs['allowed_sites'].each do |allowed_site|
+					allowed_sites_xml.add_element make_xml('AllowedSite', {'id' => allowed_site}, '', false)
+				end
+				silo_config_xml.add_element allowed_sites_xml
+			elsif k.eql? 'allowed_groups'
+				allowed_groups_xml = make_xml('AllowedGroups', {}, '', false)
+				silo_configs['allowed_groups'].each do |allowed_group|
+					allowed_groups_xml.add_element make_xml('AllowedGroup', {'id' => allowed_group}, '', false)
+				end
+				silo_config_xml.add_element allowed_groups_xml
+			else
+				silo_config_xml.attributes[k] = silo_configs[k]
+			end
+		end
+		silo_xml.add_element silo_config_xml
+		mtu_config_xml.add_element silo_xml
+		xml.add_element mtu_config_xml
+		r = execute xml, '1.2'
+		r.success
+	end
+
+
+	#-------------------------------------------------------------------------
+	# Lists all the multi-tenant users and their attributes.
+	#-------------------------------------------------------------------------
+	def list_mtu
+		xml = make_xml('MultiTenantUserListingRequest')
+		r = execute xml, '1.2'
+
+		if r.success
+			res = []
+			r.res.elements.each("//MultiTenantUserSummary") do |mtu|
+				res << {
+					:id => mtu.attributes['id'],
+					:full_name => mtu.attributes['full-name'],
+					:user_name => mtu.attributes['user-name'],
+					:email => mtu.attributes['email'],
+					:super_user => mtu.attributes['superuser'],
+					:enabled => mtu.attributes['enabled'],
+					:auth_module => mtu.attributes['auth-module'],
+					:silo_count => mtu.attributes['silo-count'],
+					:locked => mtu.attributes['locked']
+				}
+			end
+			res
+		else
+			false
+		end
+	end
+
+	#-------------------------------------------------------------------------
+	# Delete a multi-tenant user
+	#-------------------------------------------------------------------------
+	def delete_mtu user_name, user_id
+		using_user_name = (user_name and not user_name.empty?)
+		xml = make_xml('MultiTenantUserDeleteRequest', (using_user_name ? {'user-name' => user_name} : {'user-id' => user_id}))
+		r = execute xml, '1.2'
+		r.success
+	end
+
+	####################
+	# SILO PROFILE OPS #
+	####################
+
+	#-------------------------------------------------------------------------
+	# Creates a silo profile
+	#
+	# silo_config - A map of the silo data.
+	#
+	# REQUIRED PARAMS
+	# id, name, all‐licensed-modules, all‐global-engines, all-global-report-templates, all‐global-scan‐templates
+	#
+	# OPTIONAL PARAMS
+	# description
+	#
+	# permissions - A map of an array of maps of silo specific data
+	#
+	# REQUIRED PARAMS
+	# silo-id, role-name, all-groups, all-sites, default-silo
+	#
+	# allowed_groups/allowed_sites - An array of ids
+	#-------------------------------------------------------------------------
+	def create_silo_profile silo_profile_config, permissions
+		xml = make_xml 'SiloProfileCreateRequest'
+		spc_xml = make_xml('SiloProfileConfig', silo_profile_config, '', false)
+
+		# Add the permissions
+		if permissions['global_report_templates']
+			grt_xml = make_xml('GlobalReportTemplates', {}, '', false)
+			permissions['global_report_templates'].each do |name|
+				grt_xml.add_element make_xml('GlobalReportTemplate', {'name' => name}, '', false)
+			end
+			spc_xml.add_element grt_xml
+		end
+
+		if permissions['global_scan_engines']
+			gse_xml = make_xml('GlobalScanEngines', {}, '', false)
+			permissions['global_scan_engines'].each do |name|
+				gse_xml.add_element make_xml('GlobalScanEngine', {'name' => name}, '', false)
+			end
+			spc_xml.add_element gse_xml
+		end
+
+		if permissions['global_scan_templates']
+			gst_xml = make_xml('GlobalScanTemplates', {}, '', false)
+			permissions['global_scan_templates'].each do |name|
+				gst_xml.add_element make_xml('GlobalScanTemplate', {'name' => name}, '', false)
+			end
+			spc_xml.add_element gst_xml
+		end
+
+		if permissions['licensed_modules']
+			lm_xml = make_xml('LicensedModules', {}, '', false)
+			permissions['licensed_modules'].each do |name|
+				lm_xml.add_element make_xml('LicensedModule', {'name' => name}, '', false)
+			end
+			spc_xml.add_element lm_xml
+		end
+
+		if permissions['restricted_report_formats']
+			rrf_xml = make_xml('RestrictedReportFormats', {}, '', false)
+			permissions['restricted_report_formats'].each do |name|
+				rrf_xml.add_element make_xml('RestrictedReportFormat', {'name' => name}, '', false)
+			end
+			spc_xml.add_element rrf_xml
+		end
+
+		if permissions['restricted_report_sections']
+			rrs_xml = make_xml('RestrictedReportSections', {}, '', false)
+			permissions['restricted_report_sections'].each do |name|
+				rrs_xml.add_element make_xml('RestrictedReportSection', {'name' => name}, '', false)
+			end
+			spc_xml.add_element rrs_xml
+		end
+
+		xml.add_element spc_xml
+		r = execute xml, '1.2'
+		r.success
+	end
+
+	#-------------------------------------------------------------------------
+	# Lists all the silo profiles and their attributes.
+	#-------------------------------------------------------------------------
+	def list_silo_profiles
+		xml = make_xml('SiloProfileListingRequest')
+		r = execute xml, '1.2'
+
+		if r.success
+			res = []
+			r.res.elements.each("//SiloProfileSummary") do |silo_profile|
+				res << {
+					:id => silo_profile.attributes['id'],
+					:name => silo_profile.attributes['name'],
+					:description => silo_profile.attributes['description'],
+					:global_report_template_count => silo_profile.attributes['global-report-template-count'],
+					:global_scan_engine_count => silo_profile.attributes['global-scan-engine-count'],
+					:global_scan_template_count => silo_profile.attributes['global-scan-template-count'],
+					:licensed_module_count => silo_profile.attributes['licensed-module-count'],
+					:restricted_report_section_count => silo_profile.attributes['restricted-report-section-count'],
+					:all_licensed_modules => silo_profile.attributes['all-licensed-modules'],
+					:all_global_engines => silo_profile.attributes['all-global-engines'],
+					:all_global_report_templates => silo_profile.attributes['all-global-report-templates'],
+					:all_global_scan_templates => silo_profile.attributes['all-global-scan-templates']
+				}
+			end
+			res
+		else
+			false
+		end
+	end
+
+	#-------------------------------------------------------------------------
+	# Delete a silo profile
+	#-------------------------------------------------------------------------
+	def delete_silo_profile name, id
+		using_name = (name and not name.empty?)
+		xml = make_xml('SiloProfileDeleteRequest', (using_name ? {'name' => name} : {'silo-profile-id' => id}))
+		r = execute xml, '1.2'
+		r.success
+	end
+
+	####################
+	# SILO OPS #
+	####################
+
+	#-------------------------------------------------------------------------
+	# Creates a silo
+	#
+	# silo_config - A map of the silo creation data.
+	#
+	# REQUIRED PARAMS
+	# id, name, silo-profile-id, max-assets, max-hosted-assets, max-users
+	#
+	# OPTIONAL PARAMS
+	# description
+	#-------------------------------------------------------------------------
+	def create_silo silo_config
+		xml = make_xml 'SiloCreateRequest'
+		silo_config_xml = make_xml 'SiloConfig', {}, '', false
+
+		# Add the attributes
+		silo_config.keys.each do |key|
+			if not 'merchant'.eql? key and not 'organization'.eql? key
+				silo_config_xml.attributes[key] = silo_config[key]
+			end
+		end
+
+		# Add Organization info
+		if silo_config['organization']
+			org_xml = make_xml 'Organization', {}, '', false
+			silo_config['organization'].keys.each do |key|
+				if not 'address'.eql? key
+					org_xml.attributes[key] = silo_config['organization'][key]
+				end
+			end
+
+			address_xml = make_xml 'Address', silo_config['organization']['address'], '', false
+			org_xml.add_element address_xml
+			silo_config_xml.add_element org_xml
+		end
+
+		# Add Merchant info
+		if silo_config['merchant']
+		 	merchant_xml = make_xml 'Merchant', {}, '', false
+
+			silo_config['merchant'].keys.each do |key|
+				if not 'dba'.eql? key and not 'other_industries'.eql? key and not 'qsa'.eql? key and not 'address'.eql? key
+					merchant_xml.attributes[key] = silo_config['merchant'][key]
+				end
+			end
+
+			 # Add the merchant address
+			 merchant_address_xml = make_xml 'Address', silo_config['merchant']['address'], '', false
+			 merchant_xml.add_element merchant_address_xml
+
+			 #Now add the complex data types
+			 if silo_config['merchant']['dba']
+				 dba_xml = make_xml 'DBAs', {}, '', false
+				 silo_config['merchant']['dba'].each do |name|
+					dba_xml.add_element make_xml('DBA', {'name' => name}, '', false)
+				end
+				merchant_xml.add_element dba_xml
+			end
+
+			if silo_config['merchant']['other_industries']
+				ois_xml = make_xml 'OtherIndustries', {}, '', false
+				silo_config['merchant']['other_industries'].each do |name|
+					ois_xml.add_element make_xml('Industry', {'name' => name}, '', false)
+				end
+				merchant_xml.add_element ois_xml
+			end
+
+			if silo_config['merchant']['qsa']
+				qsa_xml = make_xml 'QSA', {}, '', false
+				silo_config['merchant']['qsa'].keys.each do |key|
+					if not 'address'.eql? key
+						qsa_xml.attributes[key] = silo_config['merchant']['qsa'][key]
+					end
+				end
+
+				# Add the address for this QSA
+				address_xml = make_xml 'Address', silo_config['merchant']['qsa']['address'], '', false
+
+				qsa_xml.add_element address_xml
+				merchant_xml.add_element qsa_xml
+			end
+			silo_config_xml.add_element merchant_xml
+		end
+
+		xml.add_element silo_config_xml
+		r = execute xml, '1.2'
+		r.success
+	end
+
+	#-------------------------------------------------------------------------
+	# Lists all the silos and their attributes.
+	#-------------------------------------------------------------------------
+	def list_silos
+		xml = make_xml('SiloListingRequest')
+		r = execute xml, '1.2'
+
+		if r.success
+			res = []
+			r.res.elements.each("//SiloSummary") do |silo_profile|
+				res << {
+					:id => silo_profile.attributes['id'],
+					:name => silo_profile.attributes['name'],
+					:description => silo_profile.attributes['description']
+				}
+			end
+			res
+		else
+			false
+		end
+	end
+
+	#-------------------------------------------------------------------------
+	# Delete a silo
+	#-------------------------------------------------------------------------
+	def delete_silo name, id
+		using_name = (name and not name.empty?)
+		xml = make_xml('SiloDeleteRequest', (using_name ? {'silo-name' => name} : {'silo-id' => id}))
+		r = execute xml, '1.2'
+		r.success
+	end
 
 	def site_device_listing(site_id)
 		r = execute(make_xml('SiteDeviceListingRequest', { 'site-id' => site_id.to_s }))
@@ -491,20 +962,25 @@ class Connection
 	attr_reader :url
 
 	# Constructor for Connection
-	def initialize(ip, user, pass, port = 3780)
+	def initialize(ip, user, pass, port = 3780, silo_id = nil)
 		@host = ip
 		@port = port
 		@username = user
 		@password = pass
+		@silo_id = silo_id
 		@session_id = nil
 		@error = false
-		@url = "https://#{@host}:#{@port}/api/1.1/xml"
+		@url = "https://#{@host}:#{@port}/api/VERSION_STRING/xml"
 	end
 
 	# Establish a new connection and Session ID
 	def login
 		begin
-			r = execute(make_xml('LoginRequest', { 'sync-id' => 0, 'password' => @password, 'user-id' => @username }))
+			login_hash = { 'sync-id' => 0, 'password' => @password, 'user-id' => @username }
+			unless @silo_id.nil?
+				login_hash['silo-id'] = @silo_id
+			end
+			r = execute(make_xml('LoginRequest', login_hash))
 		rescue APIError
 			raise AuthenticationFailed.new(r)
 		end
@@ -524,8 +1000,9 @@ class Connection
 	end
 
 	# Execute an API request
-	def execute(xml)
-		APIRequest.execute(url,xml.to_s)
+	def execute(xml, version = '1.1')
+		@api_version = version
+		APIRequest.execute(@url.sub('VERSION_STRING', @api_version),xml.to_s, @api_version)
 	end
 
 	# Download a specific URL
@@ -1630,6 +2107,21 @@ class EngineListing
 	# EngineListing (connection)
 	def initialize(connection)
 		@connection = connection
+		@engines = []
+		@engine_count = 0
+		@error = false
+		r = @connection.execute('<EngineListingRequest session-id="' + @connection.session_id + '"/>', '1.2')
+
+		if (r.success)
+			r.res.elements.each('EngineListingResponse/EngineSummary') do |v|
+				@engines.push(EngineSummary.new(v.attributes['id'], v.attributes['name'], v.attributes['address'],
+												v.attributes['port'], v.attributes['status']))
+			end
+		else
+			@error = true
+			@error_msg = 'EngineListingRequest Parse Error'
+		end
+		@engine_count = @engines.length
 	end
 end
 
@@ -1962,60 +2454,75 @@ end
 
 # === Description
 #
-class ReportAdHoc
+	class ReportAdHoc
+		include XMLUtils
 
-	attr_reader :error
-	attr_reader :error_msg
-	attr_reader :connection
-	# Report Template ID strong e.g. full-audit
-	attr_reader :template_id
-	# pdf|html|xml|text|csv|raw-xml
-	attr_reader :format
-	# Array of (ReportFilter)*
-	attr_reader :filters
-	attr_reader :request_xml
-	attr_reader :response_xml
-	attr_reader :report_decoded
+		attr_reader :error
+		attr_reader :error_msg
+		attr_reader :connection
+		# Report Template ID strong e.g. full-audit
+		attr_reader :template_id
+		# pdf|html|xml|text|csv|raw-xml
+		attr_reader :format
+		# Array of (ReportFilter)*
+		attr_reader :filters
+		attr_reader :request_xml
+		attr_reader :response_xml
+		attr_reader :report_decoded
 
 
-	def initialize(connection, template_id = 'full-audit', format = 'raw-xml')
+		def initialize(connection, template_id = 'full-audit', format = 'raw-xml')
 
-		@error = false
-		@connection = connection
-		@xml_tag_stack = array()
-		@filters = Array.new()
-		@template_id = template_id
-		@format = format
+			@error = false
+			@connection = connection
+			@filters = Array.new()
+			@template_id = template_id
+			@format = format
 
-	end
-
-	def addFilter(filter_type, id)
-
-		# filter_type can be site|group|device|scan
-		# id is the ID number. For scan, you can use 'last' for the most recently run scan
-		filter = new ReportFilter.new(filter_type,id)
-		filters.push(filter)
-
-	end
-
-	def generate()
-		request_xml = '<ReportAdhocGenerateRequest session-id="' + @connection.session_id + '">'
-		request_xml += '<AdhocReportConfig template-id="' + @template_id + '" format="' + @format + '">'
-		request_xml += '<Filters>'
-		@filters.each do |f|
-			request_xml += '<filter type="' + f.type + '" id="'+  f.id + '"/>'
 		end
-		request_xml += '</Filters>'
-		request_xml += '</AdhocReportConfig>'
-		request_xml += '</ReportAdhocGenerateRequest>'
 
-		myReportAdHoc_request = APIRequest.new(request_xml, @connection.geturl())
-		myReportAdHoc_request.execute()
+		def addFilter(filter_type, id)
 
-		myReportAdHoc_response = myReportAdHoc_request.response_xml
+			# filter_type can be site|group|device|scan
+			# id is the ID number. For scan, you can use 'last' for the most recently run scan
+			filter = ReportFilter.new(filter_type, id)
+			filters.push(filter)
+
+		end
+
+		def generate()
+			request_xml = '<ReportAdhocGenerateRequest session-id="' + @connection.session_id + '">'
+			request_xml += '<AdhocReportConfig template-id="' + @template_id + '" format="' + @format + '">'
+			request_xml += '<Filters>'
+			@filters.each do |f|
+				request_xml += '<filter type="' + f.type + '" id="'+ f.id.to_s + '"/>'
+			end
+			request_xml += '</Filters>'
+			request_xml += '</AdhocReportConfig>'
+			request_xml += '</ReportAdhocGenerateRequest>'
+
+			ad_hoc_request = APIRequest.new(request_xml, @connection.url)
+			ad_hoc_request.execute()
+
+			content_type_response = ad_hoc_request.raw_response.header['Content-Type']
+			if content_type_response =~ /multipart\/mixed;\s*boundary=([^\s]+)/
+				# NeXpose sends an incorrect boundary format which breaks parsing
+				# Eg: boundary=XXX; charset=XXX
+				# Fix by removing everything from the last semi-colon onward
+				last_semi_colon_index = content_type_response.index(/;/, content_type_response.index(/boundary/))
+				content_type_response = content_type_response[0, last_semi_colon_index]
+
+				data = "Content-Type: " + content_type_response + "\r\n\r\n" + ad_hoc_request.raw_response_data
+				doc = Rex::MIME::Message.new data
+				doc.parts.each do |part|
+					if /.*base64.*/ =~ part.header.to_s
+						return parse_xml(part.content.unpack("m*")[0])
+					end
+				end
+			end
+		end
+
 	end
-
-end
 
 # === Description
 # Object that represents the configuration of a report definition.
@@ -2108,6 +2615,7 @@ class ReportConfig
 	def generateReport(debug = false)
 		return generateReport(@connection, @config_id, debug)
 	end
+
 	# === Description
 	# Save the report definition to the NSC.
 	# Returns the config-id.
@@ -2326,207 +2834,62 @@ class ReportSection
 end
 
 
-# TODO add
-def self.site_device_scan(connection, site_id, device_array, host_array, debug = false)
+	# TODO add
+	def self.site_device_scan(connection, site_id, device_array, host_array, debug = false)
 
-	request_xml = '<SiteDevicesScanRequest session-id="' + connection.session_id.to_s + '" site-id="' + site_id.to_s + '">'
-	request_xml += '<Devices>'
-	device_array.each do |d|
-		request_xml += '<device id="' + d.to_s + '"/>'
-	end
-	request_xml += '</Devices>'
-	request_xml += '<Hosts>'
-	# The host array can only by single IP addresses for now. TODO: Expand to full API Spec.
-	host_array.each do |h|
-		request_xml += '<range from="' + h.to_s + '"/>'
-	end
-	request_xml += '</Hosts>'
-	request_xml += '</SiteDevicesScanRequest>'
+		request_xml = '<SiteDevicesScanRequest session-id="' + connection.session_id.to_s + '" site-id="' + site_id.to_s + '">'
+		request_xml += '<Devices>'
+		device_array.each do |d|
+			request_xml += '<device id="' + d.to_s + '"/>'
+		end
+		request_xml += '</Devices>'
+		request_xml += '<Hosts>'
+		# The host array can only by single IP addresses for now. TODO: Expand to full API Spec.
+		host_array.each do |h|
+			request_xml += '<range from="' + h.to_s + '"/>'
+		end
+		request_xml += '</Hosts>'
+		request_xml += '</SiteDevicesScanRequest>'
 
-	r = connection.execute(request_xml)
-	r.success ? { :engine_id => r.attributes['engine_id'], :scan_id => r.attributes['scan-id'] } : nil
-end
-
-# === Description
-# TODO
-def self.getAttribute(attribute, xml)
-	value = ''
-	#@value = substr(substr(strstr(strstr(@xml,@attribute),'"'),1),0,strpos(substr(strstr(strstr(@xml,@attribute),'"'),1),'"'))
-	return value
-end
-
-# === Description
-# Returns an ISO 8601 formatted date/time stamp. All dates in NeXpose must use this format.
-def self.get_iso_8601_date(int_date)
-#@date_mod = date('Ymd\THis000', @int_date)
-	date_mod = ''
-return date_mod
-end
-
-# ==== Description
-# Echos the last XML API request and response for the specified object.  (Useful for debugging)
-def self.printXML(object)
-	puts "request" + object.request_xml.to_s
-	puts "response is " + object.response_xml.to_s
-end
-
-
-
-def self.testa(ip, port, user, passwd)
-	nsc = Connection.new(ip, user, passwd, port)
-
-	nsc.login
-	site_listing = SiteListing.new(nsc)
-
-	site_listing.sites.each do |site|
-		puts "name is #{site.site_name}"
-		puts "id is #{site.id}"
+		r = connection.execute(request_xml)
+		r.success ? {:engine_id => r.attributes['engine_id'], :scan_id => r.attributes['scan-id']} : nil
 	end
 
-=begin
-	## Site Delete ##
-	nsc.login
-	status = deleteSite(nsc, '244', true)
-	puts "status: #{status}"
-=end
-=begin
-	nsc.login
-
-	site = Site.new(nsc)
-	site.setSiteConfig("New Site 3", "New Site Description")
-	site.site_config.addHost(IPRange.new("10.1.90.86"))
-	status = site.saveSite()
-	report_config = ReportConfig.new(nsc)
-	report_config.set_template_id("raw-xml")
-	report_config.set_format("xml")
-	report_config.addFilter("SiteFilter",site.site_id)
-	report_config.set_generate_after_scan(1)
-	report_config.set_storeOnServer(1)
-	report_config.saveReport()
-	puts report_config.config_id.to_s
-
-	site.scanSite()
-
-	nsc.logout
-=end
-
-=begin
-	nsc.login
-	site = Site.new(nsc)
-	site.setSiteConfig("New Site 3", "New Site Description")
-	site.site_config.addHost(IPRange.new("10.1.90.86"))
-	status = site.saveSite()
-
-	report_config = ReportConfig.new(nsc)
-	report_config.set_template_id("audit-report")
-	report_config.set_format("pdf")
-	report_config.addFilter("SiteFilter",site.site_id)
-	report_config.set_email_As("file")
-	report_config.set_smtp_relay_server("")
-	report_config.set_sender("nexpose@rapid7.com")
-	report_config.addEmailRecipient("jabra@rapid7.com")
-	report_config.set_generate_after_scan(1)
-	report_config.saveReport()
-
-	site.scanSite()
-=end
-
-	nsc.logout
-
-=begin
-	vuln_listing = VulnerabilityListing.new(nsc)
-	vuln_listing.vulnerability_summaries.each do |v|
-		puts "vuln id #{v.id}"
-		exit
+	# === Description
+	# TODO
+	def self.getAttribute(attribute, xml)
+		value = ''
+		#@value = substr(substr(strstr(strstr(@xml,@attribute),'"'),1),0,strpos(substr(strstr(strstr(@xml,@attribute),'"'),1),'"'))
+		yvalue
 	end
-	n.logout
-=end
 
-
-=begin
-	nsc.login
-	vuln_id = 'generic-icmp-timestamp'
-	vuln = VulnerabilityDetail.new(n,vuln_id.to_s)
-	puts "#{vuln.id}"
-	puts "#{vuln.title}"
-	puts "#{vuln.pciSeverity}"
-	puts "#{vuln.cvssScore}"
-	puts "#{vuln.cvssVector}"
-	puts "#{vuln.description}"
-	vuln.references.each do |r|
-		puts "source: #{r.source}"
-		puts "reference: #{r.reference}"
+	# === Description
+	# Returns an ISO 8601 formatted date/time stamp. All dates in NeXpose must use this format.
+	def self.get_iso_8601_date(int_date)
+		#@date_mod = date('Ymd\THis000', @int_date)
+		date_mod = ''
+		return date_mod
 	end
-	puts "#{vuln.solution}"
-=end
 
-=begin
-	site = Site.new(n)
-	site.setSiteConfig("New Site Name", "New Site Description")
-	site.site_config.addHost(IPRange.new("10.1.90.86"))
-	#site.site_config.addHost(HostName.new("localhost"))
-	#site.site_config.addHost(IPRange.new("192.168.7.1","192.168.7.20"))
-	#site.site_config.addHost(IPRange.new("10.1.90.130"))
-	status = site.saveSite()
-
-	puts "#{site.site_id}"
-	site.scanSite
-	nsc.logout
-=end
-
-=begin
-	site = Site.new(nsc,'263')
-
-	site.printSite()
-	site.getSiteXML()
-	puts "#{site.site_id}"
-	puts "#{site.site_config.description}"
-	puts "#{site.site_config.riskfactor}"
-	nsc.logout
-=end
-
-	#site.scanSite()
-=begin
-	site_config = SiteConfig.new()
-
-
-	my_site = site_config.getSiteConfig(n, '244')
-
-	history = SiteScanHistory.new(n, '244')
-
-	devices = SiteDeviceListing.new(n, '244')
-=end
-
-=begin
-	site_listing = SiteListing.new(n)
-
-	site_listing.sites.each do |site|
-		puts "name is #{site.site_name}"
+	# ==== Description
+	# Echos the last XML API request and response for the specified object.  (Useful for debugging)
+	def self.printXML(object)
+		puts "request" + object.request_xml.to_s
+		puts "response is " + object.response_xml.to_s
 	end
-=end
+
+
+	def self.testa(ip, port, user, passwd)
+		nsc = Connection.new(ip, user, passwd, port)
+
+		nsc.login
+		site_listing = SiteListing.new(nsc)
+
+		site_listing.sites.each do |site|
+			puts "name is #{site.site_name}"
+			puts "id is #{site.id}"
+		end
+	end
+
 
 end
-
-=begin
-def self.test(url,user,pass)
-	xml = "<?xml version='1.0' encoding='UTF-8'?>
-		<!DOCTYPE LoginRequest [
-		<!ELEMENT LoginRequest EMPTY>
-		<!ATTLIST LoginRequest sync-id CDATA '0'>
-		<!ATTLIST LoginRequest user-id CDATA 'user'>
-		<!ATTLIST LoginRequest password CDATA 'pass'>
-		]>
-		<LoginRequest sync-id='0' password='#{pass}' user-id='#{user}'/>"
-
-	r = APIRequest.new(xml, url)
-	r.execute
-	puts r.response_xml
-end
-
-# Run the program
-# Logon, get a session-id, list the sites, then logout.
-test("http://x.x.x.x:3780", 'nxadmin', 'PASSWORD')
-=end
-
-end
-

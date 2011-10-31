@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 APP_NAME = "nexpose"
-VERSION = "0.0.4"
+VERSION = "0.0.5"
 REVISION = "12878"
 
 Gem::Specification.new do |s|
@@ -20,4 +20,5 @@ Gem::Specification.new do |s|
 	s.platform              = "ruby"
 
 	s.add_dependency("librex", ">= 0.0.32")
+	s.add_dependency("rex", ">= 1.0.2")
 end
