@@ -117,6 +117,7 @@ class APIRequest
 		@url = url
 		@req = req
 		@api_version = api_version
+		@url = @url.sub('API_VERSION', @api_version)
 		prepare_http_client
 	end
 
@@ -970,7 +971,7 @@ class Connection
 		@silo_id = silo_id
 		@session_id = nil
 		@error = false
-		@url = "https://#{@host}:#{@port}/api/VERSION_STRING/xml"
+		@url = "https://#{@host}:#{@port}/api/API_VERSION/xml"
 	end
 
 	# Establish a new connection and Session ID
@@ -1002,7 +1003,7 @@ class Connection
 	# Execute an API request
 	def execute(xml, version = '1.1')
 		@api_version = version
-		APIRequest.execute(@url.sub('VERSION_STRING', @api_version),xml.to_s, @api_version)
+		APIRequest.execute(@url,xml.to_s, @api_version)
 	end
 
 	# Download a specific URL
