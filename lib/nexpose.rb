@@ -145,7 +145,8 @@ class APIRequest
 
 		begin
 		prepare_http_client
-		@raw_response, @raw_response_data = @http.post(@uri.path, @req, @headers)
+		@raw_response = @http.post(@uri.path, @req, @headers)
+		@raw_response_data = @raw_response.read_body
 		@res = parse_xml(@raw_response_data)
 
 		if(not @res.root)
