@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 APP_NAME = "nexpose"
-VERSION = "0.0.7"
+VERSION = "0.0.8"
 REVISION = "12878"
 
 Gem::Specification.new do |s|

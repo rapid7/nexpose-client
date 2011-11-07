@@ -350,6 +350,109 @@ module NexposeAPI
 		r.success
 	end
 
+	#
+	# Create a NeXpose ticket
+	#
+	# ticket_info: A hash of the data to be used to create a ticket in NeXpose:
+	# :name        => The name of the ticket (Required)
+	# :device_id   => The NeXpose device ID for the device being ticketed (Required)
+	# :assigned_to => The NeXpose user to whom this ticket is assigned (Required)
+	# :priority    => "low,moderate,normal,high,critical" (Required)
+	#
+	# :vulnerabilities => An array of NeXpose vuln IDs. This is NOT the same as vuln ID.  (Required)
+	# :comments        => An array of comments to accompany this ticket
+	#
+	# @return The ticket ID if the ticket creation was successful, {@code false} otherwise
+	#
+	def create_ticket ticket_info
+		ticket_name = ticket_info[:name]
+		unless ticket_name
+			raise ArgumentError.new 'Ticket name is required'
+		end
+
+		device_id = ticket_info[:device_id]
+		unless device_id
+			raise ArgumentError.new 'Device ID is required'
+		end
+
+		assigned_to = ticket_info[:assigned_to]
+		unless assigned_to
+			raise ArgumentError.new 'Assignee name is required'
+		end
+
+		priority = ticket_info[:priority]
+		unless priority
+			raise ArgumentError.new 'Ticket priority is required'
+		end
+
+		vulnerabilities = ticket_info[:vulnerabilities]
+		if not vulnerabilities or vulnerabilities.count < 1
+			raise ArgumentError.new 'Vulnerabilities are required'
+		end
+
+		comments = ticket_info[:comments]
+		base_xml = make_xml 'TicketCreateRequest'
+
+		required_attributes = {
+			'name'        => ticket_name,
+			'priority'    => priority,
+			'device-id'   => device_id,
+			'assigned-to' => assigned_to
+		}
+
+		create_request_xml = REXML::Element.new 'TicketCreate'
+		create_request_xml.add_attributes required_attributes
+
+	  # Add vulnerabilities
+		vulnerabilities_xml = REXML::Element.new 'Vulnerabilities'
+		vulnerabilities.each do |vuln_id|
+			vulnerabilities_xml.add_element 'Vulnerability', {'id' => vuln_id}
+		end
+		create_request_xml.add_element vulnerabilities_xml
+
+		# Add comments
+		if comments and comments.count > 0
+			comments_xml = REXML::Element.new 'Comments'
+			comments.each do |comment|
+				comment_xml = REXML::Element.new 'Comment'
+				comment_xml.add_text comment
+				comments_xml.add_element comment_xml
+			end
+
+			create_request_xml.add_element comments_xml
+		end
+
+		base_xml.add_element create_request_xml
+		r = execute base_xml, '1.2'
+		if r.success
+			r.res.elements.each('TicketCreateResponse') do |group|
+				return group.attributes['id'].to_i
+			end
+		else
+			false
+		end
+	end
+
+	#
+	# Deletes a NeXpose ticket.
+	#
+	# ticket_ids: An array of ticket IDs to be deleted.
+	#
+	# @returns {@code true} iff the call was successfull. {@code false} otherwise.
+	#
+	def delete_ticket ticket_ids
+		if not ticket_ids or ticket_ids.count < 1
+			raise ArgumentError.new 'The tickets to delete should not be null or empty'
+		end
+
+		base_xml = make_xml 'TicketDeleteRequest'
+		ticket_ids.each do |id|
+			base_xml.add_element 'Ticket', {'id' => id}
+		end
+
+		(execute base_xml, '1.2').success
+	end
+
 	#-------------------------------------------------------------------------
 	# Returns all asset group information
 	#-------------------------------------------------------------------------
@@ -441,6 +544,32 @@ module NexposeAPI
 						:engine_id => scan_info.attributes['engine-id'].to_i
 				}
 			end
+		else
+			false
+		end
+	end
+
+	#
+	# Lists all the users for the NSC along with the user details.
+	#
+	def list_users
+		r = execute(make_xml('UserListingRequest'))
+		if r.success
+			res = []
+			r.res.elements.each('//UserSummary') do |user_summary|
+				res << {
+					:auth_source 	=> user_summary.attributes['authSource'],
+					:auth_module 	=> user_summary.attributes['authModule'],
+					:user_name 		=> user_summary.attributes['userName'],
+					:full_name 		=> user_summary.attributes['fullName'],
+					:email 			=> user_summary.attributes['email'],
+					:is_admin 		=> user_summary.attributes['isAdmin'].to_s.chomp.eql?('1'),
+					:is_disabled 	=> user_summary.attributes['disabled'].to_s.chomp.eql?('1'),
+					:site_count 	=> user_summary.attributes['siteCount'],
+					:group_count 	=> user_summary.attributes['groupCount']
+				}
+			end
+			res
 		else
 			false
 		end
