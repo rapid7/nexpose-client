@@ -589,8 +589,8 @@ module NexposeAPI
 				res << {
 					:site_id       => site.attributes['id'].to_i,
 					:name          => site.attributes['name'].to_s,
-					:risk_factor   => site.attributes['risk_factor'].to_f,
-					:risk_score    => site.attributes['risk_score'].to_f,
+					:risk_factor   => site.attributes['riskfactor'].to_f,
+					:risk_score    => site.attributes['riskscore'].to_f,
 				}
 			end
 			return res
