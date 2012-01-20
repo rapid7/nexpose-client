@@ -505,8 +505,8 @@ module Nexpose
 				s.elements.each('ScanConfig') do |c|
 					@scanConfig = ScanConfig.new(c.attributes['configID'],
 												 c.attributes['name'],
-												 c.attributes['configVersion'],
-												 c.attributes['templateID'])
+												 c.attributes['templateID'],
+												 c.attributes['configVersion'])
 					s.elements.each('Schedule') do |schedule|
 						schedule = new Schedule(schedule.attributes["type"], schedule.attributes["interval"], schedule.attributes["start"], schedule.attributes["enabled"])
 						@scanConfig.addSchedule(schedule)
