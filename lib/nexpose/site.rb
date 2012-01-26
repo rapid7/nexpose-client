@@ -464,7 +464,7 @@ module Nexpose
 			@connection = connection
 			@site_id = site_id
 
-			r = APIRequest.execute(@connection.url, '<SiteConfigRequest session-id="' + @connection.session_id + '" site-id="' + @site_id + '"/>')
+			r = APIRequest.execute(@connection.url, '<SiteConfigRequest session-id="' + @connection.session_id + '" site-id="' + "#{@site_id}" + '"/>')
 			parse(r.res)
 		end
 
@@ -581,7 +581,7 @@ module Nexpose
 			@connection = connection
 			@scan_summaries = Array.new()
 
-			r = @connection.execute('<SiteScanHistoryRequest' + ' session-id="' + @connection.session_id + '" site-id="' + @site_id + '"/>')
+			r = @connection.execute('<SiteScanHistoryRequest' + ' session-id="' + @connection.session_id + '" site-id="' + "#{@site_id}" + '"/>')
 			status = r.success
 		end
 	end
@@ -615,13 +615,13 @@ module Nexpose
 
 			r = nil
 			if (@site_id)
-				r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '" site-id="' + @site_id + '"/>')
+				r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '" site-id="' + "#{@site_id}" + '"/>')
 			else
 				r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '"/>')
 			end
 
 			if (r.success)
-				response.elements.each('SiteDeviceListingResponse/SiteDevices/device') do |d|
+				r.res.elements.each('SiteDeviceListingResponse/SiteDevices/device') do |d|
 					@devices.push(Device.new(d.attributes['id'], @site_id, d.attributes["address"], d.attributes["riskfactor"], d.attributes['riskscore']))
 				end
 			end
