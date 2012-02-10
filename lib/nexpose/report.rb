@@ -135,7 +135,7 @@ module Nexpose
 			@config_id = config_id
 			@report_summaries = []
 
-			reportHistory_request = APIRequest.new('<ReportHistoryRequest session-id="' + "#{connection.session_id}" + '" reportcfg-id="' + "#{@config_id}" + '"/>', @connection.geturl())
+			reportHistory_request = APIRequest.new('<ReportHistoryRequest session-id="' + "#{connection.session_id}" + '" reportcfg-id="' + "#{@config_id}" + '"/>', @connection.get)
 			reportHistory_request.execute()
 			@response_xml = reportHistory_request.response_xml
 			@request_xml = reportHistory_request.request_xml
