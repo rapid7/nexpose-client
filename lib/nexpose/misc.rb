@@ -3,7 +3,7 @@ module Nexpose
 		include XMLUtils
 
 		def device_delete(param)
-			r = execute(make_xml('DeviceDeleteRequest', {'site-id' => param}))
+			r = execute(make_xml('DeviceDeleteRequest', {'device-id' => param}))
 			r.success
 		end
 
