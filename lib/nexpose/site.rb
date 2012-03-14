@@ -34,6 +34,7 @@ module Nexpose
       else
         false
       end
+    end
 
 		#
 		#
