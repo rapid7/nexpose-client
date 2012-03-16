@@ -34,7 +34,6 @@ module Nexpose
       else
         false
       end
-    end
 
 		#
 		#
@@ -541,7 +540,7 @@ module Nexpose
 												 c.attributes['name'],
 												 c.attributes['templateID'],
 												 c.attributes['configVersion'])
-					s.elements.each('Schedule') do |schedule|
+					c.elements.each('Schedule') do |schedule|
 						schedule = new Schedule(schedule.attributes["type"], schedule.attributes["interval"], schedule.attributes["start"], schedule.attributes["enabled"])
 						@scanConfig.addSchedule(schedule)
 					end
