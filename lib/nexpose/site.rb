@@ -2,6 +2,40 @@ module Nexpose
 	module NexposeAPI
 		include XMLUtils
 
+    # Public: fine a site for a given name
+    #
+    # name - the site name in your Nexpose Installation
+    #
+    # Example
+    #   find_site_by_name('website')
+    #   # => [{:site_id=>'12', :name=>'website', :risk_factor=>1.0, :risk_score=>12.0}] 
+    #
+    #   find_site_by_name('doesnt_exists')
+    #   # => []
+    #
+    # Returns an Array with an Hash containing the requested site or an empty
+    # array if the site doesn't exist.
+    def find_site_by_name(name)
+      r = execute(make_xml('SiteListingRequest', {}))
+
+      if (r.success)
+        res = []
+        r.res.elements.each("//SiteSummary") do |site|
+          if (site.attributes['name'] == name) 
+            res << {
+              :site_id => site.attributes['id'].to_i,
+              :name => site.attributes['name'].to_s,
+              :risk_factor => site.attributes['riskfactor'].to_f,
+              :risk_score => site.attributes['riskscore'].to_f,
+            }
+          end
+        end
+        res
+      else
+        false
+      end
+    end
+
 		#
 		#
 		#
@@ -507,8 +541,8 @@ module Nexpose
 												 c.attributes['name'],
 												 c.attributes['templateID'],
 												 c.attributes['configVersion'])
-					s.elements.each('Schedule') do |schedule|
-						schedule = new Schedule(schedule.attributes["type"], schedule.attributes["interval"], schedule.attributes["start"], schedule.attributes["enabled"])
+					c.elements.each('Schedules/Schedule') do |schedule|
+						schedule = ScanSchedule.new(schedule.attributes["type"], schedule.attributes["interval"], schedule.attributes["start"], schedule.attributes["enabled"])
 						@scanConfig.addSchedule(schedule)
 					end
 				end
