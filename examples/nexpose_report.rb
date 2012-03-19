@@ -6,8 +6,8 @@ require 'nexpose'
 
 host = '127.0.0.1'
 port = 3780
-user = "v4test"
-pass = "buynexpose"
+user = "user"
+pass = "password"
 
 @nsc = Nexpose::Connection.new(host, user, pass, port)
 
