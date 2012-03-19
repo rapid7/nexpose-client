@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-require_relative '../lib/nexpose'
+require 'nexpose'
 
 
 host = '127.0.0.1'
