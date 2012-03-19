@@ -250,7 +250,7 @@ module Nexpose
 				doc.parts.each do |part|
 					if /.*base64.*/ =~ part.header.to_s
 						if (@format == "text") or (@format == "pdf") or (@format == "csv")
-              						return Base64.decode64(part.content)
+              						return part.content.unpack("m*")[0]
             					else
               						return parse_xml(part.content.unpack("m*")[0])
             					end
