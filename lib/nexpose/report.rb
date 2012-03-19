@@ -249,7 +249,11 @@ module Nexpose
 				doc = Rex::MIME::Message.new data
 				doc.parts.each do |part|
 					if /.*base64.*/ =~ part.header.to_s
-						return parse_xml(part.content.unpack("m*")[0])
+						if (@format == "text") or (@format == "pdf") or (@format == "csv")
+              						return Base64.decode64(part.content)
+            					else
+              						return parse_xml(part.content.unpack("m*")[0])
+            					end
 					end
 				end
 			end
