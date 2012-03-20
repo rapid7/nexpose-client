@@ -72,7 +72,7 @@ module Nexpose
          xml << %Q{ port="#{replace_entities(port)}"} if (port)
          xml << '>'
          xml << replace_entities(securityblob) if (isblob)
-         xml << @headers.to_xml()
+         xml << @headers.to_xml() if @headers
          xml << '</adminCredentials>'
 
          xml
