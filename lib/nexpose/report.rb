@@ -226,6 +226,7 @@ module Nexpose
 		end
 
 		def generate()
+      puts "SOME DEBUG HERE"
 			request_xml = '<ReportAdhocGenerateRequest session-id="' + @connection.session_id + '">'
 			request_xml += '<AdhocReportConfig template-id="' + @template_id + '" format="' + @format + '">'
 			request_xml += '<Filters>'
@@ -240,6 +241,7 @@ module Nexpose
 			ad_hoc_request.execute()
 
 			content_type_response = ad_hoc_request.raw_response.header['Content-Type']
+      puts "RESPONSE IS #{content_type_response}"
 			if content_type_response =~ /multipart\/mixed;\s*boundary=([^\s]+)/
 				# NeXpose sends an incorrect boundary format which breaks parsing
 				# Eg: boundary=XXX; charset=XXX
