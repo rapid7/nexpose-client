@@ -249,6 +249,7 @@ module Nexpose
 
 				data = "Content-Type: " + content_type_response + "\r\n\r\n" + ad_hoc_request.raw_response_data
 				doc = Rex::MIME::Message.new data
+        puts "AIEE #{@format}"
         doc.parts.each do |part|
           if /.*base64.*/ =~ part.header.to_s
             if (@format == "text") or (@format == "pdf") or (@format == "csv")
