@@ -187,21 +187,6 @@ module Nexpose
 		end
 	end
 
-  class ScanSchedule
-    attr_reader :type
-    attr_reader :interval
-    attr_reader :start
-    attr_reader :enabled
-
-    def initialize(type, interval, start, enabled)
-      @type=type
-      @interval=interval
-      @start=start
-      @enabled=enabled
-    end
-
-  end
-
 	# TODO add engineID
 	# === Description
 	# Object that represents the scanning configuration for a Site.

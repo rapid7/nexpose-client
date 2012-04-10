@@ -19,7 +19,6 @@ Gem::Specification.new do |s|
 	s.required_ruby_version = ">= 1.8.7"
 	s.platform              = "ruby"
 
-  s.add_development_dependency("tomdoc")
 	s.add_dependency("librex", ">= 0.0.32")
 	s.add_dependency("rex", ">= 1.0.2")
 end

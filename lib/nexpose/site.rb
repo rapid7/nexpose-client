@@ -1,7 +1,7 @@
 module Nexpose
 	module NexposeAPI
 		include XMLUtils
-    
+
 		#
 		#
 		#
@@ -507,8 +507,8 @@ module Nexpose
 												 c.attributes['name'],
 												 c.attributes['templateID'],
 												 c.attributes['configVersion'])
-					c.elements.each('Schedules/Schedule') do |schedule|
-						schedule = ScanSchedule.new(schedule.attributes["type"], schedule.attributes["interval"], schedule.attributes["start"], schedule.attributes["enabled"])
+					s.elements.each('Schedule') do |schedule|
+						schedule = new Schedule(schedule.attributes["type"], schedule.attributes["interval"], schedule.attributes["start"], schedule.attributes["enabled"])
 						@scanConfig.addSchedule(schedule)
 					end
 				end
