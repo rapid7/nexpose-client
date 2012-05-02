@@ -110,38 +110,117 @@ module Nexpose
 		attr_accessor :sites
 		attr_accessor :priority
 
-		def initialize(connection, engine_id)
+		def initialize(connection, id = -1)
 			@connection = connection
-			@id = nil
+			@id = id
 			@address = nil
 			@name = nil
-			@port = nil
-			@scope = nil
-			@priority = 'global'
+			@port = 40814
+			@scope = 'silo'
+			@priority = 'normal'
 			@sites = []
 
-			r = @connection.execute('<EngineConfigRequest session-id="' + @connection.session_id + '" engine-id="' + engine_id + '"/>', '1.2')
+      # If valid ID provided, retrieve data from server.
+      if (id > 0)
+        xml = '<EngineConfigRequest session-id="' + @connection.session_id + '"'
+        xml << %Q{ engine-id="#{id}"}
+        xml << ' />'
+        r = @connection.execute(xml, '1.2')
 
-			if (r.success)
-				r.res.elements.each('EngineConfigResponse/EngineConfig') do |v|
-					@id = v.attributes['id']
-					@address = v.attributes['address']
-					@name = v.attributes['name']
-					@port = v.attributes['port']
-					@scope = v.attributes['scope']
-					v.elements.each('Site') do |s|
-						@sites << s.attributes['id']
-					end
-				end
-			else
-				@error = true
-				@error_msg = 'EngineConfigRequest Parse Error'
-			end
-		end
+        if (r.success)
+          r.res.elements.each('EngineConfigResponse/EngineConfig') do |v|
+            @id = v.attributes['id']
+            @address = v.attributes['address']
+            @name = v.attributes['name']
+            @port = v.attributes['port']
+            @scope = v.attributes['scope']
+            v.elements.each('Site') do |s|
+              @sites << s.attributes['id']
+            end
+          end
+        else
+          @error = true
+          @error_msg = 'EngineConfigRequest Parse Error'
+        end
+      end
+    end
 
-		def save
+    def to_xml
+      xml = '<EngineConfig'
+      xml << %Q{ id="#{id}"}
+      xml << %Q{ address="#{address}"}
+      xml << %Q{ name="#{name}"}
+      xml << %Q{ port="#{port}"}
+      xml << %Q{ scope="#{scope}"}
+      xml << %Q{ priority="#{priority}"} if (priority)
+      # TODO: xml << %Q{ sites="#{sites}"} if (sites)
+      xml << ' />'
+      xml
+    end
 
-		end
-	end
+    # Save this engine configuration
+    # Example usage:
+    #   engine = EngineConfig.new(@nsc)
+    #   engine.address = 'atlanta.company.com'
+    #   engine.name = 'Atlanta Engine'
+    #   engine.save()
+    def save
+      xml = '<EngineSaveRequest session-id="' + @connection.session_id + '">'
+      xml << to_xml
+      xml << '</EngineSaveRequest>'
 
+      r = @connection.execute(xml, '1.2')
+      unless (r.success)
+        @error = true
+        @error_msg = 'EngineSaveRequest Parse Error'
+      end
+    end
+  end
+
+  #-------------------------------------------------------------------------------------------------------------------
+  # Core objects for creating an engine pool
+  # Example usage:
+  #   pool = EnginePool.new('East Coast Pool')
+  #   pool.add('New York Engine')
+  #   pool.add('Georgia Engine')
+  #   id = pool.create(@nsc)
+  #-------------------------------------------------------------------------------------------------------------------
+	class EnginePool
+		attr_accessor :name
+		attr_accessor :scope
+		attr_accessor :engines
+
+		def initialize(name, scope = 'silo')
+			@name = name
+			@scope = scope
+      @engines = []
+    end
+
+    # Add an engine to the pool by name (not ID).
+    def add(engine)
+      engines << engine
+    end
+
+    # Create an engine pool from the existing configuration.
+    # Returns the engine ID assigned to the pool, if successful.
+    def create(connection)
+      xml = '<EnginePoolCreateRequest session-id="' + connection.session_id + '">'
+      xml << %Q{<EnginePool name="#{name}" scope="#{scope}">}
+      engines.each do |engine|
+        xml << %Q{<Engine name="#{engine}" />}
+      end
+      xml << '</EnginePool>'
+      xml << '</EnginePoolCreateRequest>'
+
+      r = connection.execute(xml, '1.2')
+      if (r.success)
+        r.res.elements.each('EnginePoolCreateResponse') do |v|
+          return v.attributes['id']
+        end
+      else 
+        @error = true
+        @error_msg = 'EnginePoolCreateResponse Parse Error'
+      end
+    end
+  end
 end
