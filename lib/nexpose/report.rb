@@ -76,7 +76,7 @@ module Nexpose
 			else
 				false
 			end
-		end
+    end
 	end
 
 	# === Description
@@ -523,7 +523,7 @@ module Nexpose
 			r = @connection.execute('<ReportTemplateListingRequest session-id="' + connection.session_id.to_s + '"/>')
 			if (r.success)
 				r.res.elements.each('ReportTemplateListingResponse/ReportTemplateSummary') do |r|
-					@report_template_summaries.push(ReportTemplateSumary.new(r.attributes['id'], r.attributes['name']))
+					@report_template_summaries.push(ReportTemplateSummary.new(r.attributes['id'], r.attributes['name'], r.attributes['description']))
 				end
 			else
 				@error = true
@@ -532,7 +532,35 @@ module Nexpose
 
 		end
 
-	end
+  end
+
+  class ReportListing
+
+    attr_reader :error_msg
+    attr_reader :error
+    attr_reader :request_xml
+    attr_reader :response_xml
+    attr_reader :connection
+    attr_reader :xml_tag_stack
+    attr_reader :report_summaries #; //Array (ReportSummary*)
+
+    def initialize(connection)
+
+      @error = nil
+      @connetion = connection
+      @report_summaries = []
+
+      r = @connetion.execute('<ReportListingRequest session-id="' + connection.session_id.to_s + '"/>')
+      if (r.success)
+        r.res.elements.each('ReportListingResponse/ReportConfigSummary') do |r|
+          @report_summaries.push(ReportSummary.new(r.attributes['template-id'], r.attributes['cfg-id'], r.attributes['status'], r.attributes['generated-on'], r.attributes['report-URI']))
+        end
+      else
+        @error = true
+        @error_msg = 'ReportListingRequest Parse Error'
+      end
+    end
+  end
 
 
 	class ReportTemplateSummary
