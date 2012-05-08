@@ -848,7 +848,7 @@ module Nexpose
 		include Sanitize
 
 		def to_xml
-			"<hostname>#{replace_entities(hostname)}</hostname>"
+			"<host>#{replace_entities(hostname)}</host>"
 		end
 	end
 
