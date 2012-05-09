@@ -566,8 +566,8 @@ module Nexpose
 		attr_reader :error_msg
 		# The last XML request sent by this object
 		attr_reader :request_xml
-		# The last XML response received by this object
-		attr_reader :response_xml
+		# The last response received by this object
+		attr_reader :response
 		# The NSC Connection associated with this object
 		attr_reader :connection
 		# The Site ID
@@ -581,11 +581,22 @@ module Nexpose
 			@connection = connection
 			@scan_summaries = Array.new()
 
-			r = @connection.execute('<SiteScanHistoryRequest' + ' session-id="' + @connection.session_id + '" site-id="' + "#{@site_id}" + '"/>')
+			@request_xml = '<SiteScanHistoryRequest' + ' session-id="' + @connection.session_id + '" site-id="' + "#{@site_id}" + '"/>'
+			r = @connection.execute(@request_xml)
+			@response = r
 
 			if r and r.success
-         		r
-      		end
+				r.res.elements.each('//ScanSummary') do |summary|
+					scan_id=summary.attributes['scan-id'].to_i
+					engine_id=summary.attributes['engine-id'].to_i
+					name=summary.attributes['name'].to_s
+					start_time=summary.attributes['startTime'].to_s
+					end_time=summary.attributes['endTime'].to_s
+					status=summary.attributes['status'].to_s
+					scan_summary = ScanSummary.new(scan_id, engine_id, name, start_time, end_time, status)
+					scan_summaries << scan_summary
+				end
+			end
 		end
 	end
 
