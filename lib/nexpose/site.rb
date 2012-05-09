@@ -582,7 +582,10 @@ module Nexpose
 			@scan_summaries = Array.new()
 
 			r = @connection.execute('<SiteScanHistoryRequest' + ' session-id="' + @connection.session_id + '" site-id="' + "#{@site_id}" + '"/>')
-			status = r.success
+
+			if r and r.success
+         		r
+      		end
 		end
 	end
 
@@ -845,7 +848,7 @@ module Nexpose
 		include Sanitize
 
 		def to_xml
-			"<hostname>#{replace_entities(hostname)}</hostname>"
+			"<host>#{replace_entities(hostname)}</host>"
 		end
 	end
 
