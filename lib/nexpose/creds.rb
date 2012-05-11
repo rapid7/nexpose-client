@@ -24,9 +24,13 @@ module Nexpose
       # When using httpheaders, this represents the set of headers to pass
       # with the authentication request.
       attr_reader :headers
+      # When using htmlforms, this represents the tho form to pass the
+      # authentication request to.
+      attr_reader :html_forms
 
       def initialize(isblob = false)
          @isblob = isblob
+	 @html_forms = Array.new()
       end
 
       # Sets the credentials information for this object.
@@ -61,6 +65,10 @@ module Nexpose
          @headers = headers
       end
 
+      def setHTMLForms(html_forms)
+	  @html_forms = html_forms
+      end
+
       def to_xml
          xml = ''
          xml << '<adminCredentials'
@@ -73,6 +81,7 @@ module Nexpose
          xml << '>'
          xml << replace_entities(securityblob) if (isblob)
          xml << @headers.to_xml() if @headers
+         xml << @html_forms.to_xml() if @html_forms
          xml << '</adminCredentials>'
 
          xml
@@ -152,7 +161,25 @@ module Nexpose
       # field, this flag determines if the field should be checked (selected).
       attr_reader :checked
 
-      # TODO
+      def initialize(name, value, type, dynamic, checked)
+	  @name = name
+	  @value = value
+	  @type = type
+	  @dynamic = dynamic
+	  @checked = checked
+      end
+
+      def to_xml
+	  xml = ''
+	  xml << '<Field'
+	  xml << %Q{ name="#{replace_entities(name)}"} if (name)
+	  xml << %Q{ value="#{replace_entities(value)}"} if (value)
+	  xml << %Q{ type="#{replace_entities(type)}"} if (type)
+	  xml << %Q{ dynamic="#{replace_entities(dynamic)}"} if (dynamic)
+	  xml << %Q{ checked="#{replace_entities(checked)}"} if (checked)
+	  xml << '>'
+	  xml << '</Field>'
+      end
    end
 
    # When using htmlform, this represents the login form information.
@@ -165,8 +192,34 @@ module Nexpose
       attr_reader :method
       # The HTTP encoding type with which to submit the form.
       attr_reader :enctype
+      # The fields in the HTML Form
+      attr_reader :fields
 
-      # TODO
+      def initialize(name, action, method, enctype)
+	  @name = name
+	  @action = action
+	  @method = method
+	  @enctype = enctype
+	  @fields = Array.new()
+      end
+
+      def add_field(field)
+	  @fields << field
+      end
+
+      def to_xml
+	  xml = ''
+	  xml << '<HTMLForm'
+	  xml << %Q{ name="#{replace_entities(name)}"} if (name)
+	  xml << %Q{ action="#{replace_entities(action)}"} if (action)
+	  xml << %Q{ method="#{replace_entities(method)}"} if (method)
+	  xml << %Q{ enctype="#{replace_entities(enctype)}"} if (enctype)
+	  xml << '>'
+	  fields.each() do |field|
+	      xml << field.to_xml
+	  end
+	  xml << '</HTMLForm>'
+      end
    end
 
    # When using htmlform, this represents the login form information.
@@ -178,8 +231,33 @@ module Nexpose
       attr_reader :soft403
       # Base URL of the application for which the form authentication applies.
       attr_reader :webapproot
+      # The forms to authenticate with
+      attr_reader :html_forms
 
-      # TODO
+      def initialize(parentpage, soft403, webapproot)
+	  @parentpage = parentpage
+	  @soft403 = soft403
+	  @webapproot = webapproot
+	  @html_forms = Array.new()
+      end
+
+      def add_html_form(html_form)
+	  @html_forms << html_form
+      end
+
+      def to_xml
+	  xml = ''
+	  xml << '<HTMLForms'
+	  xml << %Q{ parentpage="#{replace_entities(parentpage)}"} if (parentpage)
+	  xml << %Q{ soft403="#{replace_entities(soft403)}"} if (soft403)
+	  xml << %Q{ webapproot="#{replace_entities(webapproot)}"} if (webapproot)
+	  xml << '>'
+	  html_forms.each() do |html_form|
+	      xml << html_form.to_xml
+	  end
+	  xml << '</HTMLForms>'
+      end
+
    end
 
    # When using ssh-key, this represents the PEM-format keypair information.
