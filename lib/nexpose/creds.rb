@@ -30,7 +30,7 @@ module Nexpose
 		
 		def initialize(isblob = false)
 			@isblob = isblob
-			@html_forms = Array.new()
+			@html_forms = []
 		end
 		
 		# Sets the credentials information for this object.
@@ -200,7 +200,7 @@ module Nexpose
 			@action = action
 			@method = method
 			@enctype = enctype
-			@fields = Array.new()
+			@fields = []
 		end
 
 		def add_field(field)
@@ -238,7 +238,7 @@ module Nexpose
 			@parentpage = parentpage
 			@soft403 = soft403
 			@webapproot = webapproot
-			@html_forms = Array.new()
+			@html_forms = []
 		end
 
 		def add_html_form(html_form)

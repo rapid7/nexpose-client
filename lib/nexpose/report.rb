@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 module Nexpose
 	module NexposeAPI
 		include XMLUtils
@@ -208,7 +209,7 @@ module Nexpose
 
 			@error = false
 			@connection = connection
-			@filters = Array.new()
+			@filters = []
 			@template_id = template_id
 			@format = format
 
@@ -326,9 +327,9 @@ module Nexpose
 			@error = false
 			@connection = connection
 			@config_id = config_id
-			@xml_tag_stack = Array.new()
-			@filters = Array.new()
-			@email_recipients = Array.new()
+			@xml_tag_stack = []
+			@filters = []
+			@email_recipients = []
 			@name = "New Report " + rand(999999999).to_s
 
 			r = @connection.execute('<ReportConfigRequest session-id="' + @connection.session_id.to_s + '" reportcfg-id="' + @config_id.to_s + '"/>')
@@ -518,7 +519,7 @@ module Nexpose
 
 			@error = nil
 			@connection = connection
-			@report_template_summaries = Array.new()
+			@report_template_summaries = []
 
 			r = @connection.execute('<ReportTemplateListingRequest session-id="' + connection.session_id.to_s + '"/>')
 			if (r.success)
@@ -587,7 +588,7 @@ module Nexpose
 
 		def initialize(name)
 
-			@properties = Array.new()
+			@properties = []
 			@name = name
 		end
 

@@ -437,10 +437,10 @@ module Nexpose
 		attr_reader :scanConfig
 
 		def initialize()
-			@xml_tag_stack = Array.new()
-			@hosts = Array.new()
-			@credentials = Array.new()
-			@alerts = Array.new()
+			@xml_tag_stack = []
+			@hosts = []
+			@credentials = []
+			@alerts = []
 			@error = false
 		end
 
@@ -579,7 +579,7 @@ module Nexpose
 			@site_id = id
 			@error = false
 			@connection = connection
-			@scan_summaries = Array.new()
+			@scan_summaries = []
 
 			@request_xml = '<SiteScanHistoryRequest' + ' session-id="' + @connection.session_id + '" site-id="' + "#{@site_id}" + '"/>'
 			r = @connection.execute(@request_xml)
@@ -625,7 +625,7 @@ module Nexpose
 			@site_id = site_id
 			@error = false
 			@connection = connection
-			@devices = Array.new()
+			@devices = []
 
 			r = nil
 			if (@site_id)
@@ -813,7 +813,7 @@ module Nexpose
 			@sender = sender
 			@enabled = enabled
 			@limitText = limitText
-			@recipients = Array.new()
+			@recipients = []
 			# Sets default vuln filter - All Events
 			setVulnFilter(VulnFilter.new("50790400", 1))
 		end

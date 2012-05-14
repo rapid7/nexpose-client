@@ -211,8 +211,8 @@ module Nexpose
 			@name = name
 			@templateID = templateID
 			@configVersion = configVersion
-			@schedules = Array.new()
-			@scanTriggers = Array.new()
+			@schedules = []
+			@scanTriggers = []
 
 		end
 
