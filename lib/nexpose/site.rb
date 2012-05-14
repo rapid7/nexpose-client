@@ -630,14 +630,21 @@ module Nexpose
 			r = nil
 			if (@site_id)
 				r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '" site-id="' + "#{@site_id}" + '"/>')
+        if r.success
+          r.res.elements.each('SiteDeviceListingResponse/SiteDevices/device') do |d|
+            @devices.push(Device.new(d.attrubytes['id'], @site_id, d.attributes["address"], d.attributes["riskfactor"], d.attributes["riskscore"]))
+          end
+        end
 			else
 				r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '"/>')
-			end
-
-			if (r.success)
-				r.res.elements.each('SiteDeviceListingResponse/SiteDevices/device') do |d|
-					@devices.push(Device.new(d.attributes['id'], @site_id, d.attributes["address"], d.attributes["riskfactor"], d.attributes['riskscore']))
-				end
+        if r.success
+          r.res.elements.each('SiteDeviceListingResponse/SiteDevices') do |rr|
+            @sid = rr.attribute("site-id")
+            rr.elements.each('device') do |d|
+              @devices.push(Device.new(d.attributes['id'], @sid, d.attributes["address"], d.attributes['riskfactor'], d.attributes['riskscore']))
+            end
+          end
+        end
 			end
 		end
 	end

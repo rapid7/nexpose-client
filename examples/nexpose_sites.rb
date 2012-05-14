@@ -8,9 +8,9 @@ require 'pp'
 # Change these to point to your instance/user/password
 #
 host = "127.0.0.1"
-port = "3790"
-user = "nxadmin"
-pass = "nxadmin"
+port = "3780"
+user = "user"
+pass = "pass"
 
 #
 # Connect and authenticate
