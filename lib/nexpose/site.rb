@@ -627,96 +627,106 @@ module Nexpose
 			@connection = connection
 			@devices = []
 
-			r = nil
-			if (@site_id)
-				r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '" site-id="' + "#{@site_id}" + '"/>')
-			else
-				r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '"/>')
-			end
+      r = nil
+      if (@site_id)
+        r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '" site-id="' + "#{@site_id}" + '"/>')
+        if (r.success)
+          r.res.elements.each('SiteDeviceListingResponse/SiteDevices/device') do |d|
+            @devices.push(Device.new(d.attributes['id'], @site_id, d.attributes["address"], d.attributes["riskfactor"], d.attributes['riskscore']))
+          end
+        end
 
-			if (r.success)
-				r.res.elements.each('SiteDeviceListingResponse/SiteDevices/device') do |d|
-					@devices.push(Device.new(d.attributes['id'], @site_id, d.attributes["address"], d.attributes["riskfactor"], d.attributes['riskscore']))
-				end
-			end
-		end
-	end
+      else
+        r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '"/>')
+        if (r.success)
+          r.res.elements.each('SiteDeviceListingResponse/SiteDevices') do |rr|
+            @sid = rr.attribute("site-id")
+            rr.elements.each('device') do |d|
+              @devices.push(Device.new(d.attributes['id'], @sid, d.attributes["address"], d.attributes["riskfactor"], d.attributes['riskscore']))
+            end
+          end
+        end
 
-	# === Description
-	# Object that represents a single device in an NSC.
-	#
-	class Device
+      end
 
-		# A unique device ID (assigned by the NSC)
-		attr_reader :id
-		# The site ID of this devices site
-		attr_reader :site_id
-		# IP Address or Hostname of this device
-		attr_reader :address
-		# User assigned risk multiplier
-		attr_reader :riskfactor
-		# NeXpose risk score
-		attr_reader :riskscore
+    end
+  end
 
-		def initialize(id, site_id, address, riskfactor=1, riskscore=0)
-			@id = id
-			@site_id = site_id
-			@address = address
-			@riskfactor = riskfactor
-			@riskscore = riskscore
+  # === Description
+  # Object that represents a single device in an NSC.
+  #
+  class Device
 
-		end
-	end
+    # A unique device ID (assigned by the NSC)
+    attr_reader :id
+    # The site ID of this devices site
+    attr_reader :site_id
+    # IP Address or Hostname of this device
+    attr_reader :address
+    # User assigned risk multiplier
+    attr_reader :riskfactor
+    # NeXpose risk score
+    attr_reader :riskscore
 
-	# === Description
-	# Object that holds a scan schedule
-	#
-	class Schedule
-		# Type of Schedule (daily|hourly|monthly|weekly)
-		attr_reader :type
-		# The schedule interval
-		attr_reader :interval
-		# The date and time to start the first scan
-		attr_reader :start
-		# Enable or disable this schedule
-		attr_reader :enabled
-		# The date and time to disable to schedule. If null then the schedule will run forever.
-		attr_reader :notValidAfter
-		# Scan on the same date each time
-		attr_reader :byDate
+    def initialize(id, site_id, address, riskfactor=1, riskscore=0)
+      @id = id
+      @site_id = site_id
+      @address = address
+      @riskfactor = riskfactor
+      @riskscore = riskscore
 
-		def initialize(type, interval, start, enabled = 1)
+    end
+  end
 
-			@type = type
-			@interval = interval
-			@start = start
-			@enabled = enabled
+  # === Description
+  # Object that holds a scan schedule
+  #
+  class Schedule
+    # Type of Schedule (daily|hourly|monthly|weekly)
+    attr_reader :type
+    # The schedule interval
+    attr_reader :interval
+    # The date and time to start the first scan
+    attr_reader :start
+    # Enable or disable this schedule
+    attr_reader :enabled
+    # The date and time to disable to schedule. If null then the schedule will run forever.
+    attr_reader :notValidAfter
+    # Scan on the same date each time
+    attr_reader :byDate
 
-		end
-	end
+    def initialize(type, interval, start, enabled = 1)
 
-	# === Description
-	# Object that represents a Syslog Alert.
-	#
-	class SyslogAlert
+      @type = type
+      @interval = interval
+      @start = start
+      @enabled = enabled
 
-		# A unique name for this alert
-		attr_reader :name
-		# If this alert is enabled or not
-		attr_reader :enabled
-		# The Syslog server to sent this alert
-		attr_reader :server
-		# The vulnerability filter to trigger the alert
-		attr_reader :vulnFilter
-		# The alert type
-		attr_reader :type
+    end
+  end
 
-		def initialize(name, server, enabled = 1)
-			@type = :syslog
-			@name = name
-			@server = server
-			@enabled = enabled
-			# Sets default vuln filter - All Events
+  # === Description
+  # Object that represents a Syslog Alert.
+  #
+  class SyslogAlert
+
+    # A unique name for this alert
+    attr_reader :name
+    # If this alert is enabled or not
+    attr_reader :enabled
+    # The Syslog server to sent this alert
+    attr_reader :server
+    # The vulnerability filter to trigger the alert
+    attr_reader :vulnFilter
+    # The alert type
+    attr_reader :type
+
+    def initialize(name, server, enabled = 1)
+      @type = :syslog
+      @name = name
+      @server = server
+      @enabled = enabled
+      # Sets default vuln filter - All Events
 			setVulnFilter(VulnFilter.new("50790400", 1))
 
 		end
