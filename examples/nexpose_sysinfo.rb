@@ -9,8 +9,8 @@ require 'pp'
 #
 host = "127.0.0.1"
 port = "3780"
-user = "nxadmin"
-pass = "nxadmin"
+user = "user"
+pass = "pass"
 
 #
 # Connect and authenticate

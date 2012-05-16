@@ -7,7 +7,7 @@ require 'nexpose'
 host = '127.0.0.1'
 port = 3780
 user = "user"
-pass = "password"
+pass = "pass"
 
 @nsc = Nexpose::Connection.new(host, user, pass, port)
 
@@ -27,27 +27,30 @@ templates.each do |template|
   p template[:template_id]
 end
 
-#report = Nexpose::ReportConfig.new(@nsc)
-#report.set_name("Test" + Time.now.to_i.to_s)
-#report.set_template_id("audit-report")
-#report.addFilter("SiteFilter", site.to_i)
-#report.set_format("csv")
+p "Creating report config"
+report = Nexpose::ReportConfig.new(@nsc)
+report.set_name("Test" + Time.now.to_i.to_s)
+report.set_template_id("audit-report")
+report.addFilter("SiteFilter", site.to_i)
+report.set_format("raw-xml")
 
-report = Nexpose::ReportAdHoc.new(@nsc, 'audit-report', 'csv')
-report.addFilter('site', site.to_i)
-p report.generate
+#report = Nexpose::ReportAdHoc.new(@nsc, 'audit-report', 'raw-xml')
+#report.addFilter('site', site.to_i)
+#p report.generate.to_s
 
 #gets
-#report.saveReport()
 
-#url = nil
-#while not url
-#  url = @nsc.report_last(report.config_id)
-#  select(nil, nil, nil, 10)
-#end
+p "Saving report"
+report.saveReport()
 
-#p url
+url = nil
+while not url
+  url = @nsc.report_last(report.config_id)
+  select(nil, nil, nil, 10)
+end
+
+p url
 #gets
-#data = @nsc.download(url)
+data = @nsc.download(url)
 
-#p data
+p data.inspect

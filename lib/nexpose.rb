@@ -95,7 +95,7 @@ module Nexpose
 	def self.getAttribute(attribute, xml)
 		value = ''
 		#@value = substr(substr(strstr(strstr(@xml,@attribute),'"'),1),0,strpos(substr(strstr(strstr(@xml,@attribute),'"'),1),'"'))
-		yvalue
+		value
 	end
 
 	# === Description
