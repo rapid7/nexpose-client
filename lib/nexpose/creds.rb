@@ -1,5 +1,6 @@
 module Nexpose
 	include Sanitize
+	include XMLUtils
 	
 	# === Description
 	# Object that represents administrative credentials to be used during a scan. When retrived from an existing site configuration the credentials will be returned as a security blob and can only be passed back as is during a Site Save operation. This object can only be used to create a new set of credentials.
@@ -70,20 +71,25 @@ module Nexpose
 		end
 		
 		def to_xml
-			xml = ''
-			xml << '<adminCredentials'
-			xml << %Q{ service="#{replace_entities(service)}"} if (service)
-			xml << %Q{ userid="#{replace_entities(userid)}"} if (userid)
-			xml << %Q{ password="#{replace_entities(password)}"} if (password)
-			xml << %Q{ realm="#{replace_entities(realm)}"} if (realm)
-			xml << %Q{ host="#{replace_entities(host)}"} if (host)
-			xml << %Q{ port="#{replace_entities(port)}"} if (port)
-			xml << '>'
-			xml << replace_entities(securityblob) if (isblob)
-			xml << @headers.to_xml() if @headers
-			xml << @html_forms.to_xml() if @html_forms
-			xml << '</adminCredentials>'
+			to_xml_elem.to_s
+		end
+
+		def to_xml_elem
+			attributes = {}
+
+			attributes['service'] = @service
+			attributes['userid'] = @userid
+			attributes['password'] = @password
+			attributes['realm'] = @realm
+			attributes['host'] = @host
+			attributes['port'] = @port
+
+			xml = make_xml('adminCredentials', attributes)
+			xml.add_element(@headers.to_xml_elem) if @headers
+			xml.add_element(@html_forms.to_xml_elem) if @html_forms
 			
+			puts xml.to_s
+
 			xml
 		end
     end
@@ -101,13 +107,12 @@ module Nexpose
 			@value = value
 		end
 		
-		def to_xml
-			xml = ''
-			xml << '<Header'
-			xml << %Q{ name="#{replace_entities(name)}"} if (name)
-			xml << %Q{ value="#{replace_entities(value)}"} if (value)
-			xml << '/>'
-			xml
+		def to_xml_elem
+			attributes = {}
+			attributes['name'] = @name
+			attributes['value'] = @value
+			
+			make_xml('Header', attributes)
 		end
     end
     
@@ -131,16 +136,15 @@ module Nexpose
 		end
 		
 		
-		def to_xml
-			xml = ''
-			xml << '<Headers'
-			xml << %Q{ soft403="#{replace_entities(soft403)}"} if (soft403)
-			xml << %Q{ webapproot="#{replace_entities(webapproot)}"} if (webapproot)
-			xml << '>'
+		def to_xml_elem
+			attributes = {}
+			attributes['webapproot'] = @webapproot
+			attributes['soft403'] = @soft403
+
+			xml = make_xml('Headers', attributes)
 			@headers.each do |header|
-				xml << header.to_xml
+				xml.add_element(header.to_xml_elem)
 			end
-			xml << '</Headers>'
 			xml
 		end
 	end
@@ -169,16 +173,15 @@ module Nexpose
 			@checked = checked
 		end
 
-		def to_xml
-			xml = ''
-			xml << '<Field'
-			xml << %Q{ name="#{replace_entities(name)}"} if (name)
-			xml << %Q{ value="#{replace_entities(value)}"} if (value)
-			xml << %Q{ type="#{replace_entities(type)}"} if (type)
-			xml << %Q{ dynamic="#{replace_entities(dynamic)}"} if (dynamic)
-			xml << %Q{ checked="#{replace_entities(checked)}"} if (checked)
-			xml << '>'
-			xml << '</Field>'
+		def to_xml_elem
+			attributes = {}
+			attributes['name'] = @name
+			attributes['value'] = @value
+			attributes['type'] = @type
+			attributes['dynamic'] = @dynamic
+			attributes['checked'] = @checked
+			
+			make_xml('Field', attributes)
 		end
 	end
 	
@@ -207,18 +210,20 @@ module Nexpose
 			@fields << field
 		end
 
-		def to_xml
-			xml = ''
-			xml << '<HTMLForm'
-			xml << %Q{ name="#{replace_entities(name)}"} if (name)
-			xml << %Q{ action="#{replace_entities(action)}"} if (action)
-			xml << %Q{ method="#{replace_entities(method)}"} if (method)
-			xml << %Q{ enctype="#{replace_entities(enctype)}"} if (enctype)
-			xml << '>'
+		def to_xml_elem
+			attributes = {}
+			attributes['name'] = @name
+			attributes['action'] = @action
+			attributes['method'] = @method
+			attributes['enctype'] = @enctype
+
+			xml = make_xml('HTMLForm', attributes)
+
 			fields.each() do |field|
-				xml << field.to_xml
-			end
-			xml << '</HTMLForm>'
+				xml.add_element(field.to_xml_elem)
+			end			
+
+			xml
 		end
 	end
 	
@@ -245,17 +250,18 @@ module Nexpose
 			@html_forms << html_form
 		end
 
-		def to_xml
-			xml = ''
-			xml << '<HTMLForms'
-			xml << %Q{ parentpage="#{replace_entities(parentpage)}"} if (parentpage)
-			xml << %Q{ soft403="#{replace_entities(soft403)}"} if (soft403)
-			xml << %Q{ webapproot="#{replace_entities(webapproot)}"} if (webapproot)
-			xml << '>'
+		def to_xml_elem
+			attributes = {}
+			attributes['parentpage'] = @parentpage
+			attributes['soft403'] = @soft403
+			attributes['webapproot'] = @webapproot
+
+			xml = make_xml('HTMLForms', attributes)
+
 			html_forms.each() do |html_form|
-				xml << html_form.to_xml
+				xml.add_element(html_form.to_xml_elem)
 			end
-			xml << '</HTMLForms>'
+			xml
 		end
 		
 	end

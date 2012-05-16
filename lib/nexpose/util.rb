@@ -24,7 +24,9 @@ module Nexpose
 			end
 
 			opts.keys.each do |k|
-				xml.attributes[k] = "#{opts[k]}"
+				if opts[k] != nil
+					xml.attributes[k] = "#{opts[k]}"
+				end
 			end
 
 			xml.text = data
