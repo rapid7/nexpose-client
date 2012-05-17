@@ -87,9 +87,6 @@ module Nexpose
 			xml = make_xml('adminCredentials', attributes)
 			xml.add_element(@headers.to_xml_elem) if @headers
 			xml.add_element(@html_forms.to_xml_elem) if @html_forms
-			
-			puts xml.to_s
-
 			xml
 		end
     end
