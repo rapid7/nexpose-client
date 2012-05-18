@@ -1,5 +1,4 @@
 module Nexpose
-
 	module Sanitize
 		def replace_entities(str)
 			ret = str.dup

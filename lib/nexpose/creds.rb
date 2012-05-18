@@ -1,11 +1,14 @@
 module Nexpose
-	include Sanitize
-	include XMLUtils
-	
 	# === Description
-	# Object that represents administrative credentials to be used during a scan. When retrived from an existing site configuration the credentials will be returned as a security blob and can only be passed back as is during a Site Save operation. This object can only be used to create a new set of credentials.
+	# Object that represents administrative credentials to be used
+	# during a scan. When retrived from an existing site configuration
+	# the credentials will be returned as a security blob and can only
+	# be passed back as is during a Site Save operation. This object
+	# can only be used to create a new set of credentials.
 	#
 	class AdminCredentials
+		include XMLUtils
+
 		# Security blob for an existing set of credentials
 		attr_reader :securityblob
 		# Designates if this object contains user defined credentials or a security blob
@@ -31,7 +34,6 @@ module Nexpose
 		
 		def initialize(isblob = false)
 			@isblob = isblob
-			@html_forms = []
 		end
 		
 		# Sets the credentials information for this object.
@@ -84,7 +86,8 @@ module Nexpose
 			attributes['host'] = @host
 			attributes['port'] = @port
 
-			xml = make_xml('adminCredentials', attributes)
+			data = isblob ? securityblob : ''
+			xml = make_xml('adminCredentials', attributes, data)
 			xml.add_element(@headers.to_xml_elem) if @headers
 			xml.add_element(@html_forms.to_xml_elem) if @html_forms
 			xml
@@ -93,6 +96,7 @@ module Nexpose
     
     # Object that represents Header name-value pairs, associated with Web Session Authentication.
     class Header
+		include XMLUtils
 		# Name, one per Header
 		attr_reader :name
 		# Value, one per Header
@@ -115,6 +119,7 @@ module Nexpose
     
     # Object that represents Headers, associated with Web Session Authentication.
     class Headers
+		include XMLUtils
 		# A regular expression used to match against the response to identify authentication failures.
 		attr_reader :soft403
 		# Base URL of the application for which the form authentication applies.
@@ -148,6 +153,7 @@ module Nexpose
 	
 	# When using htmlform, this represents the login form information.
 	class Field
+		include XMLUtils
 		# The name of the HTML field (form parameter).
 		attr_reader :name
 		# The value of the HTML field (form parameter).
@@ -184,6 +190,7 @@ module Nexpose
 	
 	# When using htmlform, this represents the login form information.
 	class HTMLForm
+		include XMLUtils
 		# The name of the form being submitted.
 		attr_reader :name
 		# The HTTP action (URL) through which to submit the login form.
@@ -226,6 +233,7 @@ module Nexpose
 	
 	# When using htmlform, this represents the login form information.
 	class HTMLForms
+		include XMLUtils
 		# The URL of the login page containing the login form.
 		attr_reader :parentpage
 		# A regular expression used to match against the response to identify
