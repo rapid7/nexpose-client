@@ -392,7 +392,7 @@ module Nexpose
 			xml += ' <Filters>'
 
 			@filters.each do |f|
-				xml += ' <' + f.type.to_s + ' id="' + f.id.to_s + '"/>'
+				xml += ' <filter type="' + f.type.to_s + '" id="' + f.id.to_s + '"/>'
 			end
 
 			xml += ' </Filters>'
