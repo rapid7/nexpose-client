@@ -168,9 +168,9 @@ module Nexpose
       xml << %Q{ scope="#{scope}"}
       xml << %Q{ priority="#{priority}"} if (priority)
       xml << '>'
-      #sites.each do |site|
-      #xml << %Q{<Site id="#{site}" />}
-      #end
+      sites.each do |site|
+        xml << %Q{<Site id="#{site}" />}
+      end
       xml << '</EngineConfig>'
       xml
     end
