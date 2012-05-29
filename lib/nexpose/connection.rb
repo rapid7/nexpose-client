@@ -99,8 +99,8 @@ module Nexpose
 			http.use_ssl = true
 			http.verify_mode = OpenSSL::SSL::VERIFY_NONE # XXX: security issue
 			headers = {'Cookie' => "nexposeCCSessionID=#{@session_id}"}
-			resp, data = http.get(uri.path, headers)
-			data
+			resp = http.get(uri.path, headers)
+			resp.body
 		end
 	end
 end
