@@ -1,15 +1,11 @@
 # encoding: utf-8
 
-APP_NAME = "nexpose"
-VERSION = "0.0.95"
-REVISION = "12878"
-
 Gem::Specification.new do |s|
-	s.name                  = APP_NAME
-	s.version               = VERSION
+	s.name                  = "nexpose"
+	s.version               = "0.0.96"
 	s.homepage              = "https://github.com/rapid7/nexpose-client"
 	s.summary               = "Ruby API for Rapid7 NeXpose"
-	s.description           = "This gem provides a Ruby API to the NeXpose vulnerability management product by Rapid7. This version is based on Metasploit SVN revision #{REVISION}"
+	s.description           = "This gem provides a Ruby API to the NeXpose vulnerability management product by Rapid7."
 	s.license               = "BSD"
 	s.authors               = ["HD Moore", "Chris Lee"]
 	s.email		        	    = ["hdm@metasploit.com", "christopher_lee@rapid7.com"]
