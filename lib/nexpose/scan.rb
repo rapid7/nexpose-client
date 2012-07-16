@@ -191,30 +191,30 @@ module Nexpose
 	# === Description
 	# Object that represents the scanning configuration for a Site.
 	#
-	class ScanConfig
-		# A unique ID for this scan configuration
-		attr_reader :configID
-		# The name of the scan template
-		attr_reader :name
-		# The ID of the scan template used full-audit, exhaustive-audit, web-audit, dos-audit, internet-audit, network-audit
-		attr_reader :templateID
-		# The configuration version (default is 2)
-		attr_reader :configVersion
-		# Array of (Schedule)*
-		attr_reader :schedules
-		# Array of (ScanTrigger)*
-		attr_reader :scanTriggers
+  class ScanConfig
+    # A unique ID for this scan configuration
+    attr_reader :configID
+    # The name of the scan template
+    attr_reader :name
+    # The ID of the scan template used full-audit, exhaustive-audit, web-audit, dos-audit, internet-audit, network-audit
+    attr_reader :templateID
+    # The configuration version (default is 2)
+    attr_reader :configVersion
+    attr_reader :engine_id
+    # Array of (Schedule)* ... TODO: There can be only 0 or 1 schedules
+    attr_reader :schedules
+    # Array of (ScanTrigger)*
+    attr_reader :scanTriggers
 
-		def initialize(configID, name, templateID, configVersion = 2)
-
-			@configID = configID
-			@name = name
-			@templateID = templateID
-			@configVersion = configVersion
-			@schedules = []
-			@scanTriggers = []
-
-		end
+    def initialize(configID, name, templateID, configVersion = 2, engine_id = nil)
+      @configID = configID
+      @name = name
+      @templateID = templateID
+      @configVersion = configVersion
+      @engine_id = engine_id
+      @schedules = []
+      @scanTriggers = []
+    end
 
 		# Adds a new Schedule for this ScanConfig
 		def addSchedule(schedule)
@@ -234,47 +234,67 @@ module Nexpose
 			@name = name
 		end
 
-	end
+    def self.parse(xml)
+      config = ScanConfig.new(xml.attributes['configID'],
+                              xml.attributes['name'],
+                              xml.attributes['templateID'],
+                              xml.attributes['configVersion'],
+                              xml.attributes['engineID'])
+      xml.elements.each('Schedules/Schedule') do |sched|
+        schedule = Schedule.new(sched.attributes['type'],
+                                sched.attributes['interval'],
+                                sched.attributes['start'],
+                                sched.attributes['enabled'])
+        config.addSchedule(schedule)
+      end
+      # TODO
+      # xml.elements.each('ScanTriggers') do |trigger|
+      # end
+      config
+    end
+  end
+
+  class Schedule
+    # Valid schedule types: daily, hourly, monthly-date, monthly-day, weekly
+    # Required
+    attr_reader :enabled, :type, :interval, :start
+    # Optional ... TODO act upon in code.
+    attr_reader :incremental, :max_duration, :not_valid_after, :repeater_type
+
+    def initialize(type, interval, start, enabled = 1)
+      @type = type
+      @interval = interval
+      @start = start
+      @enabled = enabled
+    end
+  end
 
 	# TODO: review
 	# <scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
 	# === Description
 	#
 	class ScanFilter
-
 		attr_reader :scanStop
 		attr_reader :scanFailed
 		attr_reader :scanStart
 
-		def initialize(scanstop, scanFailed, scanStart)
-
-			@scanStop = scanStop
-			@scanFailed = scanFailed
-			@scanStart = scanStart
-
-		end
-
-	end
-
-
-	# === Description
-	# Object that holds an event that triggers the start of a scan.
-	#
-	class ScanTrigger
-		# Type of Trigger (AutoUpdate)
-		attr_reader :type
-		# Enable or disable this scan trigger
-		attr_reader :enabled
-		# Sets the trigger to start an incremental scan or a full scan
-		attr_reader :incremental
-
-		def initialize(type, incremental, enabled = 1)
-
-			@type = type
-			@incremental = incremental
-			@enabled = enabled
-
+		def initialize(scan_stop, scan_failed, scan_start)
+			@scanStop = scan_stop
+			@scanFailed = scan_failed
+			@scanStart = scan_start
 		end
 	end
+
+  # === Description
+  # Object that holds an event that triggers the start of a scan.
+  class ScanTrigger
+    attr_reader :type, :enabled, :incremental
+
+    def initialize(type, incremental, enabled = 1)
+      @type = type
+      @incremental = incremental
+      @enabled = enabled
+    end
+  end
 
 end

@@ -300,12 +300,10 @@ module Nexpose
 
 			xml << ' <ScanTriggers>'
 			@site_config.scanConfig.scanTriggers.each do |s|
-
 				if (s.class.to_s == "Nexpose::AutoUpdate")
 					xml << ' <autoUpdate enabled="' + s.enabled + '" incremental="' + s.incremental + '"/>'
 				end
 			end
-
 			xml << ' </ScanTriggers>'
 
 			xml << ' </ScanConfig>'
@@ -408,33 +406,34 @@ module Nexpose
 	# === Description
 	# Object that represents the configuration of a Site. This object is automatically created when a new Site object is instantiated.
 	#
-	class SiteConfig
-		# true if an error condition exists; false otherwise
-		attr_reader :error
-		# Error message string
-		attr_reader :error_msg
-		# The last XML request sent by this object
-		attr_reader :request_xml
-		# The last XML response received by this object
-		attr_reader :response_xml
-		# The NSC Connection associated with this object
-		attr_reader :connection
-		# The Site ID
-		attr_reader :site_id
-		# The Site Name
-		attr_reader :site_name
-		# A Description of the Site
-		attr_reader :description
-		# User assigned risk multiplier
-		attr_reader :riskfactor
-		# Array containing ((IPRange|HostName)*)
-		attr_reader :hosts
-		# Array containing (AdminCredentials*)
-		attr_reader :credentials
-		# Array containing ((SmtpAlera|SnmpAlert|SyslogAlert)*)
-		attr_reader :alerts
-		# ScanConfig object which holds Schedule and ScanTrigger Objects
-		attr_reader :scanConfig
+  class SiteConfig
+    # true if an error condition exists; false otherwise
+    attr_reader :error
+    # Error message string
+    attr_reader :error_msg
+    # The last XML request sent by this object
+    attr_reader :request_xml
+    # The last XML response received by this object
+    attr_reader :response_xml
+    # The NSC Connection associated with this object
+    attr_reader :connection
+    # The Site ID
+    attr_reader :site_id
+    # The Site Name
+    attr_reader :site_name
+    # A Description of the Site
+    attr_reader :description
+    # User assigned risk multiplier
+    attr_reader :riskfactor
+    # Array containing ((IPRange|HostName)*)
+    attr_reader :hosts
+    # Array containing (AdminCredentials*)
+    attr_reader :credentials
+    # Array containing ((SmtpAlera|SnmpAlert|SyslogAlert)*)
+    attr_reader :alerts
+    # ScanConfig object which holds Schedule and ScanTrigger Objects
+    attr_reader :scanConfig
+    attr_reader :is_dynamic
 
 		def initialize()
 			@xml_tag_stack = []
@@ -468,6 +467,12 @@ module Nexpose
 			parse(r.res)
 		end
 
+    def self.get_site_config(connection, site_id)
+      config = SiteConfig.new
+      config.getSiteConfig(connection, site_id)
+      config
+    end
+
 		def _set_site_id(site_id)
 			@site_id = site_id
 		end
@@ -492,68 +497,67 @@ module Nexpose
 			@connection = connection
 		end
 
+    def parse(response)
+      response.elements.each('SiteConfigResponse/Site') do |s|
+        @site_id = s.attributes['id']
+        @site_name = s.attributes['name']
+        @description = s.attributes['description']
+        @riskfactor = s.attributes['riskfactor']
+        @is_dynamic = s.attributes['isDynamic']
+        s.elements.each('Hosts/range') do |r|
+          @hosts.push(IPRange.new(r.attributes['from'], r.attributes['to']))
+        end
+        s.elements.each('Hosts/host') do |host|
+          @hosts << HostName.new(host.text)
+        end
+        # TODO: This should just be passed to ScanConfig to parse.
+        s.elements.each('ScanConfig') do |c|
+          @scanConfig = ScanConfig.parse(c)
+        end
+        s.elements.each('Credentials') do |cred|
+          # TODO
+        end
+        s.elements.each('Alerting/Alert') do |a|
 
-		def parse(response)
-			response.elements.each('SiteConfigResponse/Site') do |s|
-				@site_id = s.attributes['id']
-				@site_name = s.attributes['name']
-				@description = s.attributes['description']
-				@riskfactor = s.attributes['riskfactor']
-				s.elements.each('Hosts/range') do |r|
-					@hosts.push(IPRange.new(r.attributes['from'], r.attributes['to']))
-				end
-				s.elements.each('ScanConfig') do |c|
-					@scanConfig = ScanConfig.new(c.attributes['configID'],
-												 c.attributes['name'],
-												 c.attributes['templateID'],
-												 c.attributes['configVersion'])
-					s.elements.each('Schedule') do |schedule|
-						schedule = new Schedule(schedule.attributes["type"], schedule.attributes["interval"], schedule.attributes["start"], schedule.attributes["enabled"])
-						@scanConfig.addSchedule(schedule)
-					end
-				end
+          a.elements.each('smtpAlert') do |smtp|
+            smtp_alert = SmtpAlert.new(a.attributes["name"], smtp.attributes["sender"], smtp.attributes["limitText"], a.attributes["enabled"])
 
-				s.elements.each('Alerting/Alert') do |a|
+            smtp.elements.each('recipient') do |recipient|
+              smtp_alert.addRecipient(recipient.text)
+            end
+            @alerts.push(smtp_alert)
+          end
 
-					a.elements.each('smtpAlert') do |smtp|
-						smtp_alert = SmtpAlert.new(a.attributes["name"], smtp.attributes["sender"], smtp.attributes["limitText"], a.attributes["enabled"])
+          a.elements.each('snmpAlert') do |snmp|
+            snmp_alert = SnmpAlert.new(a.attributes["name"], snmp.attributes["community"], snmp.attributes["server"], a.attributes["enabled"])
+            @alerts.push(snmp_alert)
+          end
+          a.elements.each('syslogAlert') do |syslog|
+            syslog_alert = SyslogAlert.new(a.attributes["name"], syslog.attributes["server"], a.attributes["enabled"])
+            @alerts.push(syslog_alert)
+          end
 
-						smtp.elements.each('recipient') do |recipient|
-							smtp_alert.addRecipient(recipient.text)
-						end
-						@alerts.push(smtp_alert)
-					end
+          a.elements.each('vulnFilter') do |vulnFilter|
 
-					a.elements.each('snmpAlert') do |snmp|
-						snmp_alert = SnmpAlert.new(a.attributes["name"], snmp.attributes["community"], snmp.attributes["server"], a.attributes["enabled"])
-						@alerts.push(snmp_alert)
-					end
-					a.elements.each('syslogAlert') do |syslog|
-						syslog_alert = SyslogAlert.new(a.attributes["name"], syslog.attributes["server"], a.attributes["enabled"])
-						@alerts.push(syslog_alert)
-					end
+            #vulnfilter = new VulnFilter.new(a.attributes["typemask"], a.attributes["severityThreshold"], $attrs["MAXALERTS"])
+            # Pop off the top alert on the stack
+            #$alert = @alerts.pop()
+            # Add the new recipient string to the Alert Object
+            #$alert.setVulnFilter($vulnfilter)
+            # Push the alert back on to the alert stack
+            #array_push($this->alerts, $alert)
+          end
 
-					a.elements.each('vulnFilter') do |vulnFilter|
-
-						#vulnfilter = new VulnFilter.new(a.attributes["typemask"], a.attributes["severityThreshold"], $attrs["MAXALERTS"])
-						# Pop off the top alert on the stack
-						#$alert = @alerts.pop()
-						# Add the new recipient string to the Alert Object
-						#$alert.setVulnFilter($vulnfilter)
-						# Push the alert back on to the alert stack
-						#array_push($this->alerts, $alert)
-					end
-
-					a.elements.each('scanFilter') do |scanFilter|
-						#<scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
-						#scanfilter = ScanFilter.new(scanFilter.attributes['scanStop'],scanFilter.attributes['scanFailed'],scanFilter.attributes['scanStart'])
-						#alert = @alerts.pop()
-						#alert.setScanFilter(scanfilter)
-						#@alerts.push(alert)
-					end
-				end
-			end
-		end
+          a.elements.each('scanFilter') do |scanFilter|
+            #<scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
+            #scanfilter = ScanFilter.new(scanFilter.attributes['scanStop'],scanFilter.attributes['scanFailed'],scanFilter.attributes['scanStart'])
+            #alert = @alerts.pop()
+            #alert.setScanFilter(scanfilter)
+            #@alerts.push(alert)
+          end
+        end
+      end
+    end
 	end
 
 	# === Description
@@ -671,33 +675,6 @@ module Nexpose
 			@address = address
 			@riskfactor = riskfactor
 			@riskscore = riskscore
-
-		end
-	end
-
-	# === Description
-	# Object that holds a scan schedule
-	#
-	class Schedule
-		# Type of Schedule (daily|hourly|monthly|weekly)
-		attr_reader :type
-		# The schedule interval
-		attr_reader :interval
-		# The date and time to start the first scan
-		attr_reader :start
-		# Enable or disable this schedule
-		attr_reader :enabled
-		# The date and time to disable to schedule. If null then the schedule will run forever.
-		attr_reader :notValidAfter
-		# Scan on the same date each time
-		attr_reader :byDate
-
-		def initialize(type, interval, start, enabled = 1)
-
-			@type = type
-			@interval = interval
-			@start = start
-			@enabled = enabled
 
 		end
 	end
