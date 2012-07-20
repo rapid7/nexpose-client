@@ -208,13 +208,13 @@ module Nexpose
 		end
 
 		# Creates a new site summary
-		def setSiteSummary(site_name, description, riskfactor = 1)
+		def setSiteSummary(site_name, description, riskfactor = 1.0)
 			@site_summary = SiteSummary.new(-1, site_name, description, riskfactor)
 
 		end
 
 		# Creates a new site configuration
-		def setSiteConfig(site_name, description, riskfactor = 1)
+		def setSiteConfig(site_name, description, riskfactor = 1.0)
 			setSiteSummary(site_name, description, riskfactor)
 			@site_config = SiteConfig.new()
 			@site_config._set_site_id(-1)
@@ -242,8 +242,8 @@ module Nexpose
 		end
 
 		# Saves this site in the NSC
-		def saveSite()
-			r = @connection.execute('<SiteSaveRequest session-id="' + @connection.session_id + '">' + getSiteXML() + ' </SiteSaveRequest>')
+		def saveSite
+			r = @connection.execute('<SiteSaveRequest session-id="' + @connection.session_id + '">' + getSiteXML + ' </SiteSaveRequest>')
 			if (r.success)
 				@site_id = r.attributes['site-id']
 				@site_config._set_site_id(@site_id)
@@ -255,20 +255,20 @@ module Nexpose
 			end
 		end
 
-		def deleteSite()
+		def deleteSite
 			r = @connection.execute('<SiteDeleteRequest session-id="' + @connection.session_id.to_s + '" site-id="' + @site_id + '"/>')
 			r.success
 		end
 
 
-		def printSite()
+		def printSite
 			puts "Site ID: " + @site_summary.id
 			puts "Site Name: " + @site_summary.site_name
 			puts "Site Description: " + @site_summary.description
 			puts "Site Risk Factor: " + @site_summary.riskfactor
 		end
 
-		def getSiteXML()
+		def getSiteXML
 
 			xml = '<Site id="' + "#{@site_config.site_id}" + '" name="' + "#{@site_config.site_name}" + '" description="' + "#{@site_config.description}" + '" riskfactor="' + "#{@site_config.riskfactor}" + '">'
 
@@ -278,33 +278,39 @@ module Nexpose
 			end
 			xml << '</Hosts>'
 
-			xml << '<Credentials>'
-			@site_config.credentials.each do |c|
-				xml << c.to_xml if c.respond_to? :to_xml
-			end
-			xml << ' </Credentials>'
+      unless @site_config.credentials.empty?
+        xml << '<Credentials>'
+        @site_config.credentials.each do |c|
+          xml << c.to_xml if c.respond_to? :to_xml
+        end
+        xml << ' </Credentials>'
+      end
 
-			xml << ' <Alerting>'
-			@site_config.alerts.each do |a|
-				xml << a.to_xml if a.respond_to? :to_xml
-			end
-			xml << ' </Alerting>'
+      unless @site_config.alerts.empty?
+        xml << ' <Alerting>'
+        @site_config.alerts.each do |a|
+          xml << a.to_xml if a.respond_to? :to_xml
+        end
+        xml << ' </Alerting>'
+      end
 
-			xml << ' <ScanConfig configID="' + "#{@site_config.scanConfig.configID}" + '" name="' + "#{@site_config.scanConfig.name}" + '" templateID="' + "#{@site_config.scanConfig.templateID}" + '" configVersion="' + "#{@site_config.scanConfig.configVersion}" + '">'
+			xml << %Q{<ScanConfig configID="#{@site_config.scanConfig.configID}" name="#{@site_config.scanConfig.name}" templateID="#{@site_config.scanConfig.templateID}" configVersion="#{@site_config.scanConfig.configVersion}" engineID="#{@site_config.scanConfig.engine_id}">}
 
 			xml << ' <Schedules>'
 			@site_config.scanConfig.schedules.each do |s|
-				xml << ' <Schedule enabled="' + s.enabled + '" type="' + s.type + '" interval="' + s.interval + '" start="' + s.start + '"/>'
+				xml << %Q{<Schedule enabled="#{s.enabled}" type="#{s.type}" interval="#{s.interval}" start="#{s.start}" />}
 			end
 			xml << ' </Schedules>'
 
-			xml << ' <ScanTriggers>'
-			@site_config.scanConfig.scanTriggers.each do |s|
-				if (s.class.to_s == "Nexpose::AutoUpdate")
-					xml << ' <autoUpdate enabled="' + s.enabled + '" incremental="' + s.incremental + '"/>'
-				end
-			end
-			xml << ' </ScanTriggers>'
+      unless @site_config.scanConfig.scanTriggers.empty?
+        xml << ' <ScanTriggers>'
+        @site_config.scanConfig.scanTriggers.each do |s|
+          if (s.class.to_s == "Nexpose::AutoUpdate")
+            xml << ' <autoUpdate enabled="' + s.enabled + '" incremental="' + s.incremental + '"/>'
+          end
+        end
+        xml << ' </ScanTriggers>'
+      end
 
 			xml << ' </ScanConfig>'
 
@@ -320,7 +326,7 @@ module Nexpose
 	# === Example
 	#   # Create a new Nexpose Connection on the default port and Login
 	#   nsc = Connection.new("10.1.40.10","nxadmin","password")
-	#   nsc->login();
+	#   nsc->login;
 	#
 	#   # Get Site Listing
 	#   sitelisting = SiteListing.new(nsc)
@@ -391,7 +397,7 @@ module Nexpose
 
 		# Constructor
 		# SiteSummary(id, site_name, description, riskfactor = 1)
-		def initialize(id, site_name, description, riskfactor = 1)
+		def initialize(id, site_name, description, riskfactor = 1.0)
 			@id = id
 			@site_name = site_name
 			@description = description
