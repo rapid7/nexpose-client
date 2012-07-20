@@ -34,7 +34,7 @@ module Nexpose
 
 		#
 		#
-		#
+		# TODO Should just return empty array if doesn't work?
 		def site_listing
 			r = execute(make_xml('SiteListingRequest', {}))
 
@@ -56,6 +56,7 @@ module Nexpose
 
 		#-----------------------------------------------------------------------
 		# TODO: Needs to be expanded to included details
+    #       Also confusing. Name clashes with field on Site
 		#-----------------------------------------------------------------------
 		def site_scan_history(site_id)
 			r = execute(make_xml('SiteScanHistoryRequest', {'site-id' => site_id.to_s}))
