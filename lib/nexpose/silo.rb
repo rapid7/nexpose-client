@@ -10,55 +10,56 @@ module Nexpose
 		# MULTI-TENANT USER OPS #
 		#########################
 
-		#-------------------------------------------------------------------------
-		# Creates a multi-tenant user
-		#
-		# user_config - A map of the user data.
-		#
-		# REQUIRED PARAMS
-		# user-id, authsrcid, user-name, full-name, enabled, superuser
-		#
-		# OPTIONAL PARAMS
-		# email, password
-		#
-		# silo_configs - An array of maps of silo specific data
-		#
-		# REQUIRED PARAMS
-		# silo-id, role-name, all-groups, all-sites, default-silo
-		#
-		# allowed_groups/allowed_sites - An array of ids
-		#-------------------------------------------------------------------------
-		def create_multi_tenant_user(user_config, silo_configs)
-			xml = make_xml('MultiTenantUserCreateRequest')
-			mtu_config_xml = make_xml('MultiTenantUserConfig', user_config, '', false)
+    #-------------------------------------------------------------------------
+    # Creates a multi-tenant user
+    #
+    # user_config - A map of the user data.
+    #
+    # REQUIRED PARAMS
+    # user-id, authsrcid, user-name, full-name, enabled, superuser
+    #
+    # OPTIONAL PARAMS
+    # email, password
+    #
+    # silo_configs - An array of maps of silo specific data
+    #
+    # REQUIRED PARAMS
+    # silo-id, role-name, all-groups, all-sites, default-silo
+    #
+    # allowed_groups/allowed_sites - An array of ids
+    #-------------------------------------------------------------------------
+    def create_multi_tenant_user(user_config, silo_configs)
+      xml = make_xml('MultiTenantUserCreateRequest')
+      mtu_config_xml = make_xml('MultiTenantUserConfig', user_config, '', false)
 
-			# Add the silo access
-			silo_xml = make_xml('SiloAccesses', {}, '', false)
-			silo_config_xml = make_xml('SiloAccess', {}, '', false)
-			silo_configs.keys.each do |k|
-				if k.eql? 'allowed_sites'
-					allowed_sites_xml = make_xml('AllowedSites', {}, '', false)
-					silo_configs['allowed_sites'].each do |allowed_site|
-						allowed_sites_xml.add_element make_xml('AllowedSite', {'id' => allowed_site}, '', false)
-					end
-					silo_config_xml.add_element allowed_sites_xml
-				elsif k.eql? 'allowed_groups'
-					allowed_groups_xml = make_xml('AllowedGroups', {}, '', false)
-					silo_configs['allowed_groups'].each do |allowed_group|
-						allowed_groups_xml.add_element make_xml('AllowedGroup', {'id' => allowed_group}, '', false)
-					end
-					silo_config_xml.add_element allowed_groups_xml
-				else
-					silo_config_xml.attributes[k] = silo_configs[k]
-				end
-			end
-			silo_xml.add_element silo_config_xml
-			mtu_config_xml.add_element silo_xml
-			xml.add_element mtu_config_xml
-			r = execute xml, '1.2'
-			r.success
-		end
-
+      # Add the silo access
+      silo_xml = make_xml('SiloAccesses', {}, '', false)
+      silo_configs.each do |silo_config|
+        silo_config_xml = make_xml('SiloAccess', {}, '', false)
+        silo_config.keys.each do |k|
+          if k == 'allowed_sites'
+            allowed_sites_xml = make_xml('AllowedSites', {}, '', false)
+            silo_config['allowed_sites'].each do |allowed_site|
+              allowed_sites_xml.add_element(make_xml('AllowedSite', {'id' => allowed_site}, '', false))
+            end
+            silo_config_xml.add_element(allowed_sites_xml)
+          elsif k == 'allowed_groups'
+            allowed_groups_xml = make_xml('AllowedGroups', {}, '', false)
+            silo_config['allowed_groups'].each do |allowed_group|
+              allowed_groups_xml.add_element(make_xml('AllowedGroup', {'id' => allowed_group}, '', false))
+            end
+            silo_config_xml.add_element(allowed_groups_xml)
+          else
+            silo_config_xml.attributes[k] = silo_config[k]
+          end
+        end
+        silo_xml.add_element(silo_config_xml)
+      end
+      mtu_config_xml.add_element(silo_xml)
+      xml.add_element(mtu_config_xml)
+      r = execute(xml, '1.2')
+      r.success
+    end
 
 		#-------------------------------------------------------------------------
 		# Lists all the multi-tenant users and their attributes.
