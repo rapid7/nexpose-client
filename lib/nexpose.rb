@@ -67,6 +67,7 @@ require 'nexpose/ticket'
 require 'nexpose/vuln'
 require 'nexpose/creds'
 require 'nexpose/connection'
+require 'nexpose/role'
 
 module Nexpose
 
