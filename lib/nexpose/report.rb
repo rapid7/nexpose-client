@@ -42,9 +42,9 @@ module Nexpose
 
       if (r.success)
         res = []
-        r.res.elements.each("//ReportTemplateSummary") do |template|
+        r.res.elements.each('//ReportTemplateSummary') do |template|
           desc = ''
-          template.elements.each("//description") do |ent|
+          template.elements.each('description') do |ent|
             desc = ent.text
           end
 
@@ -53,10 +53,9 @@ module Nexpose
             #       example explicitly calls out "template_id".
             :template_id => template.attributes['id'],
             :name => template.attributes['name'],
-            :description => desc.to_s,
+            :description => desc,
             :scope => template.attributes['scope'],
-            :type => template.attributes['type'],
-            :builtin => template.attributes['builtin'].to_i
+            :type => template.attributes['type']
           }
         end
         res
