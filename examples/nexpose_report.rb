@@ -19,6 +19,7 @@ sites.each do |site|
   p site[:site_id].to_s + ". " + site[:name]
 end
 
+#must be the ID of the site, the int printed from above.
 site = gets
 
 templates = @nsc.report_template_listing
@@ -31,7 +32,7 @@ p "Creating report config"
 report = Nexpose::ReportConfig.new(@nsc)
 report.set_name("Test" + Time.now.to_i.to_s)
 report.set_template_id("audit-report")
-report.addFilter("SiteFilter", site.to_i)
+report.addFilter("site", site.to_i)
 report.set_format("raw-xml")
 
 #report = Nexpose::ReportAdHoc.new(@nsc, 'audit-report', 'raw-xml')
