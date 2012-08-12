@@ -1,7 +1,7 @@
 module Nexpose
 
 	# === Description
-	# Object that represents a connection to a NeXpose Security Console.
+	# Object that represents a connection to a Nexpose Security Console.
 	#
 	# === Examples
 	#   # Create a new Nexpose Connection on the default port

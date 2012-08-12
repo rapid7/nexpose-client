@@ -3,15 +3,15 @@ module Nexpose
 		include XMLUtils
 
 		#
-		# Create a NeXpose ticket
+		# Create a Nexpose ticket
 		#
-		# ticket_info: A hash of the data to be used to create a ticket in NeXpose:
+		# ticket_info: A hash of the data to be used to create a ticket in Nexpose:
 		# :name        => The name of the ticket (Required)
-		# :device_id   => The NeXpose device ID for the device being ticketed (Required)
-		# :assigned_to => The NeXpose user to whom this ticket is assigned (Required)
+		# :device_id   => The Nexpose device ID for the device being ticketed (Required)
+		# :assigned_to => The Nexpose user to whom this ticket is assigned (Required)
 		# :priority    => "low,moderate,normal,high,critical" (Required)
 		#
-		# :vulnerabilities => An array of NeXpose vuln IDs. This is NOT the same as vuln ID.  (Required)
+		# :vulnerabilities => An array of Nexpose vuln IDs. This is NOT the same as vuln ID.  (Required)
 		# :comments        => An array of comments to accompany this ticket
 		#
 		# @return The ticket ID if the ticket creation was successful, {@code false} otherwise
@@ -86,7 +86,7 @@ module Nexpose
 		end
 
 		#
-		# Deletes a NeXpose ticket.
+		# Deletes a Nexpose ticket.
 		#
 		# ticket_ids: An array of ticket IDs to be deleted.
 		#

@@ -421,7 +421,7 @@ module Nexpose
 		attr_reader :cvssVector
 		# The date this vulnerability was published
 		attr_reader :published
-		# The date this vulnerability was added to NeXpose
+		# The date this vulnerability was added to Nexpose
 		attr_reader :added
 		# The last date this vulnerability was modified
 		attr_reader :modified

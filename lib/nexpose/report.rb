@@ -2,66 +2,102 @@ module Nexpose
   module NexposeAPI
     include XMLUtils
 
-    def report_generate(param)
-      r = execute(make_xml('ReportGenerateRequest', {'report-id' => param}))
-      r.success
+    # Generate a new report using the specified report definition.
+    def report_generate(report_id)
+      xml = make_xml('ReportGenerateRequest', {'report-id' => report_id})
+      ReportSummary.parse_all(execute(xml))
     end
 
-    def report_last(param)
-      r = execute(make_xml('ReportHistoryRequest', {'reportcfg-id' => param}))
-      res = nil
-      if (r.success)
-        stk = []
-        r.res.elements.each("//ReportSummary") do |rep|
-          stk << [rep.attributes['id'].to_i, rep.attributes['report-URI']]
-        end
-        if (stk.length > 0)
-          stk.sort! { |a, b| b[0] <=> a[0] }
-          res = stk[0][1]
-        end
-      end
-      res
+    # Provide a history of all reports generated with the specified report
+    # definition.
+    def report_history(report_config_id)
+      xml = make_xml('ReportHistoryRequest', {'reportcfg-id' => report_config_id})
+      ReportSummary.parse_all(execute(xml))
     end
 
-    def report_history(param)
-      execute(make_xml('ReportHistoryRequest', {'reportcfg-id' => param}))
+    # Get the details of the last report generated with the specified report id.
+    def report_last(report_config_id)
+      history = report_history(report_config_id)
+      history.sort { |a, b| b.generated_on <=> a.generated_on }.first
     end
 
-    def report_config_delete(param)
-      r = execute(make_xml('ReportDeleteRequest', {'reportcfg-id' => param}))
-      r.success
+    # Delete a previously generated report definition.
+    # Also deletes any reports generated from that configuration.
+    def report_config_delete(report_config_id)
+      xml = make_xml('ReportDeleteRequest', {'reportcfg-id' => report_config_id})
+      execute(xml).success
     end
 
-    def report_delete(param)
-      r = execute(make_xml('ReportDeleteRequest', {'report-id' => param}))
-      r.success
+    # Delete a previously generated report.
+    def report_delete(report_id)
+      xml = make_xml('ReportDeleteRequest', {'report-id' => report_id})
+      execute(xml).success
     end
 
+    # Provide a list of all report templates the user can access on the
+    # Security Console.
+    #
+    # Returns an array of maps containing:
+    # * :template_id The ID of the report template.
+    # * :name The name of the report template.
+    # * :description Description of the report template.
+    # * :scope The visibility (scope) of the report template. One of: global|silo
+    # * :type One of: data|document. With a data template, you can export comma-separated value (CSV) files with vulnerability-based data. With a document template, you can create PDF, RTF, HTML, or XML reports with asset-based information.
+    # --
+    # FIXME API Guide says this is returned, but it isn't.
+    # * :builtin Whether the report template is built-in, and therefore cannot be modified.
+    # ++
     def report_template_listing
       r = execute(make_xml('ReportTemplateListingRequest', {}))
-
+      templates = []
       if (r.success)
-        res = []
         r.res.elements.each('//ReportTemplateSummary') do |template|
           desc = ''
           template.elements.each('description') do |ent|
             desc = ent.text
           end
 
-          res << {
-            # TODO: just "id", but worried about backwards compatibility?
-            #       example explicitly calls out "template_id".
+          templates << {
             :template_id => template.attributes['id'],
             :name => template.attributes['name'],
             :description => desc,
             :scope => template.attributes['scope'],
             :type => template.attributes['type']
+            # :builtin => template.attributes['builtin']
           }
         end
-        res
-      else
-        false
       end
+      templates
+    end
+
+    # Provide a listing of all report definitions the user can access on the
+    # Security Console.
+    #
+    # Returns an array of maps containing:
+    # * :template_id The ID of the report template.
+    # * :cfg_id The report definition (config) ID.
+    # * :status The current status of the report. One of: Started|Generated|Failed|Aborted|Unknown
+    # * :generated_on The date and time the report was generated, in ISO 8601 format.
+    # * :report_uri The URL to use to access the report.
+    # * :scope One of: global|silo
+    def report_listing
+      r = execute(make_xml('ReportListingRequest', {}))
+      reports = []
+      if (r.success)
+        r.res.elements.each('//ReportConfigSummary') do |report|
+          reports << {
+            :template_id => report.attributes['template-id'],
+            :cfg_id => report.attributes['cfg-id'],
+            :status => report.attributes['status'],
+            :generated_on => report.attributes['generated-on'],
+            :report_uri => report.attributes['report-URI'],
+            # TODO Confirm scope is reported in multi-tenant environments.
+            #      Always nil in single-tenant.
+            :scope => report.attributes['scope']
+          }
+        end
+      end
+      reports
     end
   end
 
@@ -124,9 +160,7 @@ module Nexpose
       response = REXML::Document.new(response.to_s)
       status = response.root.attributes['success']
       if (status == '1')
-        response.elements.each('ReportHistoryResponse/ReportSummary') do |r|
-          @report_summaries.push(ReportSummary.new(r.attributes["id"], r.attributes["cfg-id"], r.attributes["status"], r.attributes["generated-on"], r.attributes['report-uri']))
-        end
+        @report_summaries = ReportSummary.parse_all(response)
       else
         @error = true
         @error_msg = 'Error ReportHistoryReponse'
@@ -135,18 +169,18 @@ module Nexpose
   end
 
   # === Description
-  # Object that represents the summary of a single report.
+  # Summary of a single report.
   class ReportSummary
-    # The Report ID
+    # The id of the generated report.
     attr_reader :id
-    # The Report Configuration ID
+    # The report definition (configuration) ID.
     attr_reader :cfg_id
-    # The status of this report
-    # available | generating | failed
+    # The current status of the report.
+    # One of: Started|Generated|Failed|Aborted|Unknown
     attr_reader :status
-    # The date on which this report was generated
+    # The date and time the report was generated, in ISO 8601 format.
     attr_reader :generated_on
-    # The relative URI of the report
+    # The relative URI to use to access the report.
     attr_reader :report_uri
 
     def initialize(id, cfg_id, status, generated_on, report_uri)
@@ -155,6 +189,20 @@ module Nexpose
       @status = status
       @generated_on = generated_on
       @report_uri = report_uri
+    end
+
+    def self.parse(xml)
+      ReportSummary.new(xml.attributes['id'], xml.attributes['cfg-id'], xml.attributes['status'], xml.attributes['generated-on'], xml.attributes['report-URI'])
+    end
+
+    def self.parse_all(response)
+      summaries = []
+      if (response.success)
+        response.res.elements.each('//ReportSummary') do |summary|
+          summaries << ReportSummary.parse(summary)
+        end
+      end
+      summaries
     end
   end
 
@@ -206,7 +254,7 @@ module Nexpose
 
       content_type_response = ad_hoc_request.raw_response.header['Content-Type']
       if content_type_response =~ /multipart\/mixed;\s*boundary=([^\s]+)/
-        # NeXpose sends an incorrect boundary format which breaks parsing
+        # Nexpose sends an incorrect boundary format which breaks parsing
         # Eg: boundary=XXX; charset=XXX
         # Fix by removing everything from the last semi-colon onward
         last_semi_colon_index = content_type_response.index(/;/, content_type_response.index(/boundary/))
@@ -225,7 +273,6 @@ module Nexpose
         end
       end
     end
-
   end
 
   # === Description
@@ -471,6 +518,7 @@ module Nexpose
     end
   end
 
+  # TODO Same functionality in report_listing method.
   class ReportListing
     attr_reader :error_msg
     attr_reader :error
@@ -488,6 +536,7 @@ module Nexpose
       r = @connetion.execute('<ReportListingRequest session-id="' + connection.session_id.to_s + '"/>')
       if (r.success)
         r.res.elements.each('ReportListingResponse/ReportConfigSummary') do |r|
+          # Note that this does record 'scope', which is in ReportConfigSummary, but not ReportSummary
           @report_summaries.push(ReportSummary.new(r.attributes['template-id'], r.attributes['cfg-id'], r.attributes['status'], r.attributes['generated-on'], r.attributes['report-URI']))
         end
       else
@@ -518,7 +567,6 @@ module Nexpose
       @properties = []
       @name = name
     end
-
 
     def addProperty(name, value)
       @properties[name.to_s] = value

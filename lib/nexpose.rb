@@ -1,5 +1,5 @@
 #
-# The NeXpose API
+# The Nexpose API
 #
 =begin
 
@@ -34,11 +34,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =end
 
 #
-# WARNING! This code makes an SSL connection to the NeXpose server, but does NOT
+# WARNING! This code makes an SSL connection to the Nexpose server, but does NOT
 #          verify the certificate at this time. This can be a security issue if
 #          an attacker is able to man-in-the-middle the connection between the
-#          Metasploit console and the NeXpose server. In the common case of
-#          running NeXpose and Metasploit on the same host, this is a low risk.
+#          Metasploit console and the Nexpose server. In the common case of
+#          running Nexpose and Metasploit on the same host, this is a low risk.
 #
 
 #
@@ -101,7 +101,7 @@ module Nexpose
 	end
 
 	# === Description
-	# Returns an ISO 8601 formatted date/time stamp. All dates in NeXpose must use this format.
+	# Returns an ISO 8601 formatted date/time stamp. All dates in Nexpose must use this format.
 	def self.get_iso_8601_date(int_date)
 		#@date_mod = date('Ymd\THis000', @int_date)
 		date_mod = ''

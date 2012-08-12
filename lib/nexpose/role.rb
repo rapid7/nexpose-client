@@ -4,7 +4,7 @@ module Nexpose
     include XMLUtils
 
     # Returns a summary list of all roles.
-    def role_listing(connection)
+    def role_listing
       xml = make_xml('RoleListingRequest')
       r = execute(xml, '1.2')
       if r.success

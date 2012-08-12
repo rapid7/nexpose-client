@@ -384,7 +384,7 @@ module Nexpose
 	end
 
 	# === Description
-	# Object that represents the summary of a NeXpose Site.
+	# Object that represents the summary of a Nexpose Site.
 	#
 	class SiteSummary
 		# The Site ID
@@ -673,7 +673,7 @@ module Nexpose
 		attr_reader :address
 		# User assigned risk multiplier
 		attr_reader :riskfactor
-		# NeXpose risk score
+		# Nexpose risk score
 		attr_reader :riskscore
 
 		def initialize(id, site_id, address, riskfactor=1, riskscore=0)
