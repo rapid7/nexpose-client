@@ -99,10 +99,21 @@ module Nexpose
       end
       reports
     end
+
+    # Retrieve the configuration for a report definition.
+    def get_report_config(report_config_id)
+      xml = make_xml('ReportConfigRequest', {'reportcfg-id' => report_config_id})
+      ReportConfig.parse(execute(xml))
+    end
   end
 
+  # --
   # === Description
   # Object that represents the summary of a Report Configuration.
+  #
+  # TODO Class appears to be unused. Values can be retrieved through
+  # report_listing method above.
+  # ++
   class ReportConfigSummary
     # The Report Configuration ID
     attr_reader :id
@@ -125,8 +136,14 @@ module Nexpose
     end
   end
 
+  # --
   # === Description
   # Object that represents the schedule on which to automatically generate new reports.
+  # TODO Appears to be dead code. Report history can be grabbed through
+  # report_history(report_config_id). This code requests the history,
+  # but then doesn't even parse it until the xml_parse() method is invoked
+  # with the very values it has been sitting on.
+  # ++
   class ReportHistory
     # true if an error condition exists; false otherwise
     attr_reader :error
@@ -217,7 +234,7 @@ module Nexpose
     attr_reader :template_id
     # pdf|html|xml|text|csv|raw-xml
     attr_reader :format
-    # Array of (ReportFilter)*
+    # Array of (Filter)*
     attr_reader :filters
     attr_reader :request_xml
     attr_reader :response_xml
@@ -234,7 +251,7 @@ module Nexpose
     def addFilter(filter_type, id)
       # filter_type can be site|group|device|scan
       # id is the ID number. For scan, you can use 'last' for the most recently run scan
-      filter = ReportFilter.new(filter_type, id)
+      filter = Filter.new(filter_type, id)
       filters.push(filter)
     end
 
@@ -277,7 +294,7 @@ module Nexpose
 
   # === Description
   # Object that represents the configuration of a report definition.
-  class ReportConfig
+  class ReportConfigX
     # true if an error condition exists; false otherwise
     attr_reader :error
     # Error message string
@@ -300,7 +317,7 @@ module Nexpose
     attr_reader :timezone
     # XXX new
     attr_reader :owner
-    # Array of (ReportFilter)* - The Sites, Asset Groups, or Devices to run the report against
+    # Array of (Filter)* - The Sites, Asset Groups, or Devices to run the report against
     attr_reader :filters
     # Automatically generate a new report at the conclusion of a scan
     # 1 or 0
@@ -378,7 +395,7 @@ module Nexpose
     # === Description
     # Adds a new filter to the report config
     def addFilter(filter_type, id)
-      filter = ReportFilter.new(filter_type, id)
+      filter = Filter.new(filter_type, id)
       @filters.push(filter)
     end
 
@@ -454,6 +471,134 @@ module Nexpose
     end
   end
 
+  # Definition object for a report configuration.
+  class ReportConfig
+    # The ID of the report definition (config).
+    # Use -1 to create a new definition.
+    attr_accessor :id
+    # The unique name assigned to the report definition.
+    attr_accessor :name
+    # The ID of the report template used.
+    attr_accessor :template_id
+    # Format. One of: pdf|html|rtf|xml|text|csv|db|raw-xml|raw-xml-v2|ns-xml|qualys-xml
+    attr_accessor :format
+    attr_accessor :owner
+    attr_accessor :timezone
+
+    # Description associated with this report.
+    attr_accessor :description
+    # Array of filters associated with this report.
+    attr_accessor :filters
+    # Array of user IDs which have access to resulting reports.
+    attr_accessor :users
+    # Baseline comparison highlights the changes between two scans, including
+    # newly discovered assets, services and vulnerabilities, assets and services
+    # that are no longer available and vulnerabilities that were mitigated or
+    # fixed. The current scan results can be compared against the results of the
+    # first scan, the most recent (previous) scan, or the scan results from a
+    # particular date.
+    attr_accessor :baseline
+    # Configuration of when a report is generated.
+    attr_accessor :generate
+    # Report delivery configuration.
+    attr_accessor :delivery
+    # Database export configuration.
+    attr_accessor :db_export
+
+    # Construct a basic ReportConfig object.
+    def initialize(id, name, template_id, format, owner, timezone)
+      @id = id
+      @name = name
+      @template_id = template_id
+      @format = format
+      @owner = owner
+      @timezone = timezone
+
+      @filters = []
+      @users = []
+    end
+
+    # Retrieve the configuration for an existing report definition.
+    def self.get(connection, report_config_id)
+      connection.get_report_config(report_config_id)
+    end
+
+    # Save the configuration of this report definition.
+    def save(connection, generate_now = false)
+      xml = %Q{<ReportSaveRequest session-id='#{connection.session_id}' generate-now='#{generate_now ? 1 : 0}'>}
+      xml << to_xml
+      xml << '</ReportSaveRequest>'
+      response = connection.execute(xml)
+      if response.success
+        @id = response.attributes['reportcfg-id']
+      end
+    end
+
+    # Generate a new report using this report definition.
+    def generate(connection)
+      connection.report_generate(@id)
+    end
+
+    # Delete this report definition from the Security Console.
+    # Deletion will also remove all reports previously generated from the
+    # configuration.
+    def delete(connection)
+      connection.report_config_delete(@id)
+    end
+
+    def to_xml
+      xml = %Q{<ReportConfig format='#{@format}' id='#{@id}' name='#{@name}' owner='#{@owner}' template-id='#{@template_id}' timezone='#{@timezone}'>}
+      xml << %Q{<description>#{@description}</description>} if @description
+
+      xml << '<Filters>'
+      @filters.each { |filter| xml << filter.to_xml }
+      xml << '</Filters>'
+
+      xml << '<Users>'
+      @users.each { |user| xml << %Q{<user id='#{user}' />} }
+      xml << '</Users>'
+
+      xml << %Q{<Baseline compareTo='#{@baseline}' />} if @baseline
+      xml << @generate.to_xml if @generate
+      xml << @delivery.to_xml if @delivery
+      xml << @db_export.to_xml if @db_export
+
+      xml << '</ReportConfig>'
+    end
+
+    def self.parse(xml)
+      xml.res.elements.each('//ReportConfig') do |cfg|
+        config = ReportConfig.new(cfg.attributes['id'],
+                                  cfg.attributes['name'],
+                                  cfg.attributes['template-id'],
+                                  cfg.attributes['format'],
+                                  cfg.attributes['owner'],
+                                  cfg.attributes['timezone'])
+
+        cfg.elements.each('//description') do |desc|
+          config.description = desc.text
+        end
+
+        config.filters = Filter.parse(xml)
+
+        cfg.elements.each('//user') do |user|
+          config.users << user.attributes['id'].to_i
+        end
+
+        cfg.elements.each('//Baseline') do |baseline|
+          config.baseline = baseline.attributes['compareTo']
+        end
+
+        config.generate = Generate.parse(cfg)
+        config.delivery = Delivery.parse(cfg)
+        config.db_export = DBExport.parse(cfg)
+
+        return config
+      end
+      nil
+    end
+  end
+
   # === Description
   # Object that represents a report filter which determines which sites, asset
   # groups, and/or devices that a report is run against.  gtypes are
@@ -462,18 +607,199 @@ module Nexpose
   # a specifies a specific scan to use as the data source for the report. The gid
   # can be a specific scan-id or "first" for the first run scan, or “last” for
   # the last run scan.
-  class ReportFilter
-    attr_reader :type
+  class Filter
+    # The ID of the specific site, group, device, or scan.
+    # For scan, this can also be "last" for the most recently run scan.
+    # For vuln-status, the ID can have one of the following values:
+    # 1. vulnerable-exploited (The check was positive. An exploit verified the vulnerability.)
+    # 2. vulnerable-version (The check was positive. The version of the scanned service or software is associated with known vulnerabilities.)
+    # 3. potential (The check for a potential vulnerability was positive.)
+    # These values are supported for CSV and XML formats.
     attr_reader :id
+    # One of: site|group|device|scan|vuln-categories|vuln-severity|vuln-status|cyberscope-component|cyberscope-bureau|cyberscope-enclave
+    attr_reader :type
 
     def initialize(type, id)
       @type = type
       @id = id
     end
+
+    def to_xml
+      %Q{<filter id='#{@id}' type='#{@type}' />}
+    end
+
+    def self.parse(xml)
+      filters = []
+      xml.res.elements.each('//Filters/filter') do |filter|
+        filters << Filter.new(filter.attributes['type'], filter.attributes['id']) 
+      end
+      filters
+    end
   end
 
+  # Data object associated with when a report is generated
+  class Generate
+    # Will the report be generated after a scan completes (1),
+    # or is it ad-hoc/scheduled (0).
+    attr_accessor :after_scan
+    # Whether or not a scan is scheduled (0|1).
+    attr_accessor :scheduled
+    # Schedule associated with the report.
+    attr_accessor :schedule
+
+    def initialize(after_scan, scheduled, schedule = nil)
+      @after_scan = after_scan
+      @scheduled = scheduled
+      @schedule = schedule
+    end
+
+    def to_xml
+      xml = %Q{<Generate after-scan='#{@after_scan ? 1 : 0}' schedule='#{@scheduled ? 1 : 0}'>}
+      xml << @schedule.to_xml if @schedule
+      xml << '</Generate>'
+    end
+
+    def self.parse(xml)
+      xml.elements.each('//Generate') do |generate|
+        if generate.attributes['after-scan'] == '1'
+          return Generate.new(true, false)
+        else
+          if generate.attributes['schedule'] == '1'
+            schedule = Schedule.parse(xml)
+            return Generate.new(false, true, schedule)
+          end
+          return Generate.new(false, false)
+        end
+      end
+      nil
+    end
+  end
+
+  # Data object for configuration of where a report is stored or delivered.
+  class Delivery
+    # Whether to store report on server.
+    attr_accessor :store_on_server
+    # Directory location to store report in (for non-default storage).
+    attr_accessor :location
+    # E-mail configuration.
+    attr_accessor :email
+
+    def initialize(store_on_server, location = nil, email = nil)
+      @store_on_server = store_on_server
+      @location = location
+      @email = email
+    end
+
+    def to_xml
+      xml = '<Delivery>'
+      xml << %Q{<Storage storeOnServer='#{@store_on_server ? 1 : 0}'>}
+      xml << %Q{<location>#{@location}</location>} if @location
+      xml << '</Storage>'
+      xml << @email.to_xml if @email
+      xml << '</Delivery>'
+    end
+
+    def self.parse(xml)
+      xml.elements.each('//Delivery') do |delivery|
+        on_server = false
+        location = nil
+        xml.elements.each('//Storage') do |storage|
+          on_server = true if storage.attributes['storeOnServer'] == '1'
+          xml.elements.each('//location') do |loc|
+            location = loc.text
+          end
+        end
+
+        email = Email.parse(xml)
+
+        return Delivery.new(on_server, location, email)
+      end
+      nil
+    end
+  end
+
+  # Configuration structure for database exporting of reports.
+  class DBExport
+    # The DB type to export to.
+    attr_accessor :type
+    # Credentials needed to export to the specified database.
+    attr_accessor :credentials
+    # Map of parameters for this DB export configuration.
+    attr_accessor :parameters
+
+    def initialize(type)
+      @type = type
+      @parameters = {}
+    end
+
+    def to_xml
+      xml = %Q{<DBExport type='#{@type}'>}
+      xml << @credentials.to_xml if @credentials
+      @parameters.each_pair do |name, value|
+        xml << %Q{<param name='#{name}'>#{value}</param>}
+      end
+      xml << '</DBExport>'
+    end
+
+    def self.parse(xml)
+      xml.elements.each('//DBExport') do |dbexport|
+        config = DBExport.new(dbexport.attributes['type'])
+        config.credentials = ExportCredential.parse(xml) 
+        xml.elements.each('//param') do |param|
+          config.parameters[param.attributes['name']] = param.text
+        end
+        return config
+      end
+      nil
+    end
+  end
+
+  # DBExport credentials configuration object.
+  #
+  # The userid, password and realm attributes should ONLY be used
+  # if a security blob cannot be generated and the data is being
+  # transmitted/stored using external encryption (e.g., HTTPS).
+  class ExportCredential
+    # Security blob for exporting to a database.
+    attr_accessor :credential
+    attr_accessor :userid
+    attr_accessor :password
+    # DB specific, usually the database name.
+    attr_accessor :realm
+
+    def initialize(credential)
+      @credential = credential
+    end
+
+    def to_xml
+      xml = '<credentials'
+      xml << %Q{ userid='#{@userid}'} if @userid
+      xml << %Q{ password='#{@password}'} if @password
+      xml << %Q{ realm='#{@realm}'} if @realm
+      xml << '>'
+      xml << @credential if @credential
+      xml << '</credentials>'
+    end
+
+    def self.parse(xml)
+      xml.elements.each('//credentials') do |creds|
+        credential = ExportCredential.new(creds.text)
+        # The following attributes may not exist.
+        credential.userid = creds.attributes['userid']
+        credential.password = creds.attributes['password']
+        credential.realm = creds.attributes['realm']
+        return credential
+      end
+      nil
+    end
+  end
+
+  # --
+  # TODO Generic Schedule class exists.
+  #
   # === Description
   # Object that represents the schedule on which to automatically generate new reports.
+  # ++
   class ReportSchedule
     # The type of schedule
     # (daily, hourly, monthly, weekly)
@@ -490,8 +816,10 @@ module Nexpose
     end
   end
 
+  # --
   # TODO: Class duplicates functionality of report_template_listing call.
   #       Should be removed if it doesn't add additional value.
+  # ++
   class ReportTemplateListing
     attr_reader :error_msg
     attr_reader :error
@@ -518,7 +846,9 @@ module Nexpose
     end
   end
 
+  # --
   # TODO Same functionality in report_listing method.
+  # ++
   class ReportListing
     attr_reader :error_msg
     attr_reader :error
@@ -546,7 +876,9 @@ module Nexpose
     end
   end
 
+  # --
   # TODO: Is this class useful? Summaries produced by report_template_listing.
+  # ++
   class ReportTemplateSummary
     attr_reader :id
     attr_reader :name

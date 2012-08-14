@@ -299,7 +299,7 @@ module Nexpose
 
 			xml << ' <Schedules>'
 			@site_config.scanConfig.schedules.each do |s|
-				xml << %Q{<Schedule enabled="#{s.enabled}" type="#{s.type}" interval="#{s.interval}" start="#{s.start}" />}
+				xml << %Q{<Schedule enabled="#{s.enabled ? 1 : 0}" type="#{s.type}" interval="#{s.interval}" start="#{s.start}" />}
 			end
 			xml << ' </Schedules>'
 

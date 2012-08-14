@@ -265,21 +265,6 @@ module Nexpose
     end
   end
 
-  class Schedule
-    # Valid schedule types: daily, hourly, monthly-date, monthly-day, weekly
-    # Required
-    attr_reader :enabled, :type, :interval, :start
-    # Optional ... TODO act upon in code.
-    attr_reader :incremental, :max_duration, :not_valid_after, :repeater_type
-
-    def initialize(type, interval, start, enabled = 1)
-      @type = type
-      @interval = interval
-      @start = start
-      @enabled = enabled
-    end
-  end
-
 	# TODO: review
 	# <scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
 	# === Description
