@@ -70,6 +70,12 @@ module Nexpose
       templates
     end
 
+    # Retrieve the configuration for a report template.
+    def get_report_template(template_id)
+      xml = make_xml('ReportTemplateConfigRequest', {'template-id' => template_id})
+      ReportTemplate.parse(execute(xml))
+    end
+
     # Provide a listing of all report definitions the user can access on the
     # Security Console.
     #
@@ -641,17 +647,153 @@ module Nexpose
     end
   end
 
-  class ReportSection
-    attr_reader :name
-    attr_reader :properties
+  # Definition object for a report template.
+  class ReportTemplate
+    # The ID of the report template.
+    attr_accessor :id
+    # The name of the report template.
+    attr_accessor :name
+    # With a data template, you can export comma-separated value (CSV) files
+    # with vulnerability-based data. With a document template, you can create
+    # PDF, RTF, HTML, or XML reports with asset-based information. When you
+    # retrieve a report template, the type will always be visible even though
+    # type is implied. When ReportTemplate is sent as a request, and the type
+    # attribute is not provided, the type attribute defaults to document,
+    # allowing for backward compatibility with existing API clients.
+    attr_accessor :type
+    # The visibility (scope) of the report template.
+    # One of: global|silo
+    attr_accessor :scope
+    # The report template is built-in, and cannot be modified.
+    attr_accessor :built_in
+    # Description of this report template.
+    attr_accessor :description
 
-    def initialize(name)
-      @properties = []
+    # Array of report sections.
+    attr_accessor :sections
+    # Map of report properties.
+    attr_accessor :properties
+    # Display asset names with IPs.
+    attr_accessor :show_device_names
+
+    def initialize(name, type = 'document', id = -1, scope = 'global', built_in = false)
       @name = name
+      @type = type
+      @id = id
+      @scope = scope
+      @built_in = built_in
+
+      @sections = []
+      @properties = {}
+      @show_device_names = false
     end
 
-    def addProperty(name, value)
-      @properties[name.to_s] = value
+    # Save the configuration for a report template.
+    def save(connection)
+      xml = %Q{<ReportTemplateSaveRequest session-id='#{connection.session_id}' scope='#{@scope}'>}
+      xml << to_xml
+      xml << '</ReportTemplateSaveRequest>'
+      response = connection.execute(xml)
+      if response.success
+        @id = response.attributes['template-id']
+      end
+    end
+
+    def delete(connection)
+      xml = %Q{<ReportTemplateDeleteRequest session-id='#{connection.session_id}' template-id='#{@id}'>}
+      xml << '</ReportTemplateDeleteRequest>'
+      response = connection.execute(xml)
+      if response.success
+        @id = response.attributes['template-id']
+      end
+    end
+
+    # Retrieve the configuration for a report template.
+    def self.get(connection, template_id)
+      connection.get_report_template(template_id)
+    end
+
+    include Sanitize
+
+    def to_xml
+      xml = %Q{<ReportTemplate id='#{@id}' name='#{@name}' type='#{@type}'}
+      xml << %Q{ scope='#{@scope}'} if @scope
+      xml << %Q{ builtin='#{@built_in}'} if @built_in
+      xml << '>'
+      xml << %Q{<description>#{@description}</description>} if @description
+
+      xml << '<ReportSections>'
+      properties.each_pair do |name, value|
+        xml << %Q{<property name='#{name}'>#{replace_entities(value)}</property>}
+      end
+      @sections.each { |section| xml << section.to_xml }
+      xml << '</ReportSections>'
+
+      xml << %Q{<Settings><showDeviceNames enabled='#{@show_device_names ? 1 : 0}' /></Settings>}
+      xml << '</ReportTemplate>'
+    end
+
+    def self.parse(xml)
+      xml.res.elements.each('//ReportTemplate') do |tmp|
+        template = ReportTemplate.new(tmp.attributes['name'],
+                                      tmp.attributes['type'],
+                                      tmp.attributes['id'],
+                                      tmp.attributes['scope'] || 'global',
+                                      tmp.attributes['builtin'])
+        tmp.elements.each('//description') do |desc|
+          template.description = desc.text
+        end
+
+        tmp.elements.each('//ReportSections/property') do |property|
+          template.properties[property.attributes['name']] = property.text
+        end
+
+        tmp.elements.each('//ReportSection') do |section|
+          template.sections << Section.parse(section)
+        end
+
+        tmp.elements.each('//showDeviceNames') do |show|
+          template.show_device_names = show.attributes['enabled'] == '1'
+        end
+
+        return template
+      end
+      nil
+    end
+  end
+
+  # Section specific content to include.
+  class Section
+    # Name of the report section.
+    attr_accessor :name
+    # Map of properties specific to the report section.
+    attr_accessor :properties
+
+    def initialize(name)
+      @name = name
+      @properties = {}
+    end
+
+    include Sanitize
+
+    def to_xml
+      xml = %Q{<ReportSection name='#{@name}'>}
+      properties.each_pair do |name, value|
+        xml << %Q{<property name='#{name}'>#{replace_entities(value)}</property>}
+      end
+      xml << '</ReportSection>'
+    end
+
+    def self.parse(xml)
+      name = xml.attributes['name']
+      xml.elements.each("//ReportSection[@name='#{name}']") do |elem|
+        section = Section.new(name)
+        elem.elements.each("//ReportSection[@name='#{name}']/property") do |property|
+          section.properties[property.attributes['name']] = property.text
+        end
+        return section
+      end
+      nil
     end
   end
 end
