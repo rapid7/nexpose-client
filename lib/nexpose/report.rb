@@ -3,9 +3,28 @@ module Nexpose
     include XMLUtils
 
     # Generate a new report using the specified report definition.
-    def report_generate(report_id)
+    def report_generate(report_id, wait = false)
       xml = make_xml('ReportGenerateRequest', {'report-id' => report_id})
-      ReportSummary.parse_all(execute(xml))
+      response = execute(xml)
+      summary = nil
+      if response.success
+        response.res.elements.each('//ReportSummary') do |summary|
+          summary = ReportSummary.parse(summary)
+          # If not waiting or the report is finished, return now.
+          return summary unless wait and summary.status == 'Started'
+        end
+      end
+      so_far = 0
+      while wait
+        summary = report_last(report_id)
+        return summary unless summary.status == 'Started'
+        sleep 5
+        so_far += 5
+        if so_far % 60 == 0
+          puts "Still waiting. Current status: #{summary.status}"
+        end
+      end
+      nil
     end
 
     # Provide a history of all reports generated with the specified report
@@ -36,35 +55,12 @@ module Nexpose
 
     # Provide a list of all report templates the user can access on the
     # Security Console.
-    #
-    # Returns an array of maps containing:
-    # * :template_id The ID of the report template.
-    # * :name The name of the report template.
-    # * :description Description of the report template.
-    # * :scope The visibility (scope) of the report template. One of: global|silo
-    # * :type One of: data|document. With a data template, you can export comma-separated value (CSV) files with vulnerability-based data. With a document template, you can create PDF, RTF, HTML, or XML reports with asset-based information.
-    # --
-    # FIXME API Guide says this is returned, but it isn't.
-    # * :builtin Whether the report template is built-in, and therefore cannot be modified.
-    # ++
     def report_template_listing
       r = execute(make_xml('ReportTemplateListingRequest', {}))
       templates = []
       if (r.success)
         r.res.elements.each('//ReportTemplateSummary') do |template|
-          desc = ''
-          template.elements.each('description') do |ent|
-            desc = ent.text
-          end
-
-          templates << {
-            :template_id => template.attributes['id'],
-            :name => template.attributes['name'],
-            :description => desc,
-            :scope => template.attributes['scope'],
-            :type => template.attributes['type']
-            # :builtin => template.attributes['builtin']
-          }
+          templates << ReportTemplateSummary.parse(template)
         end
       end
       templates
@@ -78,29 +74,12 @@ module Nexpose
 
     # Provide a listing of all report definitions the user can access on the
     # Security Console.
-    #
-    # Returns an array of maps containing:
-    # * :template_id The ID of the report template.
-    # * :cfg_id The report definition (config) ID.
-    # * :status The current status of the report. One of: Started|Generated|Failed|Aborted|Unknown
-    # * :generated_on The date and time the report was generated, in ISO 8601 format.
-    # * :report_uri The URL to use to access the report.
-    # * :scope One of: global|silo
     def report_listing
       r = execute(make_xml('ReportListingRequest', {}))
       reports = []
       if (r.success)
         r.res.elements.each('//ReportConfigSummary') do |report|
-          reports << {
-            :template_id => report.attributes['template-id'],
-            :cfg_id => report.attributes['cfg-id'],
-            :status => report.attributes['status'],
-            :generated_on => report.attributes['generated-on'],
-            :report_uri => report.attributes['report-URI'],
-            # TODO Confirm scope is reported in multi-tenant environments.
-            #      Always nil in single-tenant.
-            :scope => report.attributes['scope']
-          }
+          reports << ReportConfigSummary.parse(report)
         end
       end
       reports
@@ -113,36 +92,43 @@ module Nexpose
     end
   end
 
-  # --
-  # === Description
-  # Object that represents the summary of a Report Configuration.
-  #
-  # TODO Class appears to be unused. Values can be retrieved through
-  # report_listing method above.
-  # ++
+  # Data object for report configuration information.
+  # Not meant for use in creating new configurations.
   class ReportConfigSummary
-    # The Report Configuration ID
-    attr_reader :id
-    # A unique name for the Report
-    attr_reader :name
-    # The report format
-    attr_reader :format
-    # The date of the last report generation
-    attr_reader :last_generated_on
-    # Relative URI of the last generated report
-    attr_reader :last_generated_uri
+    # The report definition (config) ID.
+    attr_reader :config_id
+    # The ID of the report template.
+    attr_reader :template_id
+    # The current status of the report.
+    # One of: Started|Generated|Failed|Aborted|Unknown
+    attr_reader :status
+    # The date and time the report was generated, in ISO 8601 format.
+    attr_reader :generated_on
+    # The URL to use to access the report (not set for database exports).
+    attr_reader :report_uri
+    # The visibility (scope) of the report definition.
+    # One of: (global|silo).
+    attr_reader :scope
 
-    # Constructor
-    def initialize(id, name, format, last_generated_on, last_generated_uri)
-      @id = id
-      @name = name
-      @format = format
-      @last_generated_on = last_generated_on
-      @last_generated_uri = last_generated_uri
+    def initialize(config_id, template_id, status, generated_on, report_uri, scope)
+      @config_id = config_id
+      @template_id = template_id
+      @status = status 
+      @generated_on = generated_on 
+      @report_uri = report_uri 
+      @scope = scope 
+    end
+
+    def self.parse(xml)
+      ReportConfigSummary.new(xml.attributes['cfg-id'],
+                              xml.attributes['template-id'],
+                              xml.attributes['status'],
+                              xml.attributes['generated-on'],
+                              xml.attributes['report-URI'],
+                              xml.attributes['scope'])
     end
   end
 
-  # === Description
   # Summary of a single report.
   class ReportSummary
     # The id of the generated report.
@@ -165,6 +151,11 @@ module Nexpose
       @report_uri = report_uri
     end
 
+    # Delete this report.
+    def delete(connection)
+      connection.report_delete(@id)
+    end
+
     def self.parse(xml)
       ReportSummary.new(xml.attributes['id'], xml.attributes['cfg-id'], xml.attributes['status'], xml.attributes['generated-on'], xml.attributes['report-URI'])
     end
@@ -180,68 +171,78 @@ module Nexpose
     end
   end
 
-  # === Description
-  class ReportAdHoc
+  # Definition object for an adhoc report configuration.
+  #
+  # NOTE: Only text, pdf, and csv currently work reliably.
+  class AdhocReportConfig
+    # The ID of the report template used.
+    attr_accessor :template_id
+    # Format. One of: pdf|html|rtf|xml|text|csv|db|raw-xml|raw-xml-v2|ns-xml|qualys-xml
+    attr_accessor :format
+
+    # Array of filters associated with this report.
+    attr_accessor :filters
+    # Baseline comparison highlights the changes between two scans, including
+    # newly discovered assets, services and vulnerabilities, assets and services
+    # that are no longer available and vulnerabilities that were mitigated or
+    # fixed. The current scan results can be compared against the results of the
+    # first scan, the most recent (previous) scan, or the scan results from a
+    # particular date.
+    attr_accessor :baseline
+
+    def initialize(template_id, format, site_id = nil)
+      @template_id = template_id 
+      @format = format 
+
+      @filters = []
+      @filters << Filter.new('site', site_id) if site_id
+    end
+
+    # Add a new filter to this report configuration.
+    def add_filter(type, id)
+      filters << Filter.new(type, id)
+    end
+
+    def to_xml
+      xml = %Q{<AdhocReportConfig format='#{@format}' template-id='#{@template_id}'>}
+
+      xml << '<Filters>'
+      @filters.each { |filter| xml << filter.to_xml }
+      xml << '</Filters>'
+
+      xml << %Q{<Baseline compareTo='#{@baseline}' />} if @baseline
+
+      xml << '</AdhocReportConfig>'
+    end
+
     include XMLUtils
 
-    attr_reader :error
-    attr_reader :error_msg
-    attr_reader :connection
-    # Report Template ID strong e.g. full-audit
-    attr_reader :template_id
-    # pdf|html|xml|text|csv|raw-xml
-    attr_reader :format
-    # Array of (Filter)*
-    attr_reader :filters
-    attr_reader :request_xml
-    attr_reader :response_xml
-    attr_reader :report_decoded
+    # Generate a report once using a simple configuration, and send it back
+    # in a multi-part mime response.
+    def generate(connection)
+      xml = %Q{<ReportAdhocGenerateRequest session-id='#{connection.session_id}'>}
+      xml << to_xml
+      xml << '</ReportAdhocGenerateRequest>'
+      response = connection.execute(xml)
+      if response.success
+        content_type_response = response.raw_response.header['Content-Type']
+        if content_type_response =~ /multipart\/mixed;\s*boundary=([^\s]+)/
+          # Nexpose sends an incorrect boundary format which breaks parsing
+          # e.g., boundary=XXX; charset=XXX
+          # Fix by removing everything from the last semi-colon onward.
+          last_semi_colon_index = content_type_response.index(/;/, content_type_response.index(/boundary/))
+          content_type_response = content_type_response[0, last_semi_colon_index]
 
-    def initialize(connection, template_id = 'full-audit', format = 'raw-xml')
-      @error = false
-      @connection = connection
-      @filters = []
-      @template_id = template_id
-      @format = format
-    end
-
-    def addFilter(filter_type, id)
-      # filter_type can be site|group|device|scan
-      # id is the ID number. For scan, you can use 'last' for the most recently run scan
-      filter = Filter.new(filter_type, id)
-      filters.push(filter)
-    end
-
-    def generate()
-      request_xml = '<ReportAdhocGenerateRequest session-id="' + @connection.session_id + '">'
-      request_xml += '<AdhocReportConfig template-id="' + @template_id + '" format="' + @format + '">'
-      request_xml += '<Filters>'
-      @filters.each do |f|
-        request_xml += '<filter type="' + f.type + '" id="'+ f.id.to_s + '"/>'
-      end
-      request_xml += '</Filters>'
-      request_xml += '</AdhocReportConfig>'
-      request_xml += '</ReportAdhocGenerateRequest>'
-
-      ad_hoc_request = APIRequest.new(request_xml, @connection.url)
-      ad_hoc_request.execute()
-
-      content_type_response = ad_hoc_request.raw_response.header['Content-Type']
-      if content_type_response =~ /multipart\/mixed;\s*boundary=([^\s]+)/
-        # Nexpose sends an incorrect boundary format which breaks parsing
-        # Eg: boundary=XXX; charset=XXX
-        # Fix by removing everything from the last semi-colon onward
-        last_semi_colon_index = content_type_response.index(/;/, content_type_response.index(/boundary/))
-        content_type_response = content_type_response[0, last_semi_colon_index]
-
-        data = "Content-Type: " + content_type_response + "\r\n\r\n" + ad_hoc_request.raw_response_data
-        doc = Rex::MIME::Message.new data
-        doc.parts.each do |part|
-          if /.*base64.*/ =~ part.header.to_s
-            if (@format == "text") or (@format == "pdf") or (@format == "csv")
-              return part.content.unpack("m*")[0]
-            else
-              return parse_xml(part.content.unpack("m*")[0])
+          data = 'Content-Type: ' + content_type_response + "\r\n\r\n" + response.raw_response_data
+          doc = Rex::MIME::Message.new(data)
+          doc.parts.each do |part|
+            if /.*base64.*/ =~ part.header.to_s
+              if (@format == 'text') or (@format == 'pdf') or (@format == 'csv')
+                return part.content.unpack('m*')[0]
+              else
+                # FIXME This isn't working.
+                return parse_xml(part.content.unpack("m*")[0])
+              end
             end
           end
         end
@@ -250,32 +251,19 @@ module Nexpose
   end
 
   # Definition object for a report configuration.
-  class ReportConfig
+  class ReportConfig < AdhocReportConfig
     # The ID of the report definition (config).
     # Use -1 to create a new definition.
     attr_accessor :id
     # The unique name assigned to the report definition.
     attr_accessor :name
-    # The ID of the report template used.
-    attr_accessor :template_id
-    # Format. One of: pdf|html|rtf|xml|text|csv|db|raw-xml|raw-xml-v2|ns-xml|qualys-xml
-    attr_accessor :format
     attr_accessor :owner
     attr_accessor :timezone
 
     # Description associated with this report.
     attr_accessor :description
-    # Array of filters associated with this report.
-    attr_accessor :filters
     # Array of user IDs which have access to resulting reports.
     attr_accessor :users
-    # Baseline comparison highlights the changes between two scans, including
-    # newly discovered assets, services and vulnerabilities, assets and services
-    # that are no longer available and vulnerabilities that were mitigated or
-    # fixed. The current scan results can be compared against the results of the
-    # first scan, the most recent (previous) scan, or the scan results from a
-    # particular date.
-    attr_accessor :baseline
     # Configuration of when a report is generated.
     attr_accessor :generate
     # Report delivery configuration.
@@ -284,11 +272,11 @@ module Nexpose
     attr_accessor :db_export
 
     # Construct a basic ReportConfig object.
-    def initialize(id, name, template_id, format, owner, timezone)
-      @id = id
+    def initialize(name, template_id, format, id = -1, owner = nil, timezone = nil)
       @name = name
       @template_id = template_id
       @format = format
+      @id = id
       @owner = owner
       @timezone = timezone
 
@@ -299,6 +287,19 @@ module Nexpose
     # Retrieve the configuration for an existing report definition.
     def self.get(connection, report_config_id)
       connection.get_report_config(report_config_id)
+    end
+
+    # Build and save a report configuration against the specified site using
+    # the supplied type and format.
+    #
+    # Returns the new configuration.
+    def self.build(connection, site_id, site_name, type, format, generate_now = false)
+      name = %Q{#{site_name} #{type} report in #{format}}
+      config = ReportConfig.new(name, type, format)
+      config.generate = Generate.new(true, false)
+      config.filters << Filter.new('site', site_id)
+      config.save(connection, generate_now)
+      config
     end
 
     # Save the configuration of this report definition.
@@ -313,8 +314,8 @@ module Nexpose
     end
 
     # Generate a new report using this report definition.
-    def generate(connection)
-      connection.report_generate(@id)
+    def generate(connection, wait = false)
+      connection.report_generate(@id, wait)
     end
 
     # Delete this report definition from the Security Console.
@@ -346,10 +347,10 @@ module Nexpose
 
     def self.parse(xml)
       xml.res.elements.each('//ReportConfig') do |cfg|
-        config = ReportConfig.new(cfg.attributes['id'],
-                                  cfg.attributes['name'],
+        config = ReportConfig.new(cfg.attributes['name'],
                                   cfg.attributes['template-id'],
                                   cfg.attributes['format'],
+                                  cfg.attributes['id'],
                                   cfg.attributes['owner'],
                                   cfg.attributes['timezone'])
 
@@ -377,14 +378,15 @@ module Nexpose
     end
   end
 
-  # === Description
   # Object that represents a report filter which determines which sites, asset
-  # groups, and/or devices that a report is run against.  gtypes are
-  # "SiteFilter", "AssetGroupFilter", "DeviceFilter", or "ScanFilter".  gid is
-  # the site-id, assetgroup-id, or devce-id.  ScanFilter, if used, specifies
-  # a specifies a specific scan to use as the data source for the report. The gid
-  # can be a specific scan-id or "first" for the first run scan, or “last” for
-  # the last run scan.
+  # groups, and/or devices that a report is run against.
+  # 
+  # The configuration must include at least one of device (asset), site,
+  # group (asset group) or scan filter to define the scope of report.
+  # The vuln-status filter can be used only with raw report formats: csv
+  # or raw_xml. If the vuln-status filter is not included in the configuration,
+  # all the vulnerability test results (including invulnerable instances) are
+  # exported by default in csv and raw_xml reports.
   class Filter
     # The ID of the specific site, group, device, or scan.
     # For scan, this can also be "last" for the most recently run scan.
@@ -415,7 +417,7 @@ module Nexpose
     end
   end
 
-  # Data object associated with when a report is generated
+  # Data object associated with when a report is generated.
   class Generate
     # Will the report be generated after a scan completes (1),
     # or is it ad-hoc/scheduled (0).
@@ -572,78 +574,43 @@ module Nexpose
     end
   end
 
-  # --
-  # TODO: Class duplicates functionality of report_template_listing call.
-  #       Should be removed if it doesn't add additional value.
-  # ++
-  class ReportTemplateListing
-    attr_reader :error_msg
-    attr_reader :error
-    attr_reader :request_xml
-    attr_reader :response_xml
-    attr_reader :connection
-    attr_reader :xml_tag_stack
-    attr_reader :report_template_summaries #;  //Array (ReportTemplateSummary*)
-
-    def initialize(connection)
-      @error = nil
-      @connection = connection
-      @report_template_summaries = []
-
-      r = @connection.execute('<ReportTemplateListingRequest session-id="' + connection.session_id.to_s + '"/>')
-      if (r.success)
-        r.res.elements.each('ReportTemplateListingResponse/ReportTemplateSummary') do |r|
-          @report_template_summaries.push(ReportTemplateSummary.new(r.attributes['id'], r.attributes['name'], r.attributes['description']))
-        end
-      else
-        @error = true
-        @error_msg = 'ReportTemplateListingRequest Parse Error'
-      end
-    end
-  end
-
-  # --
-  # TODO Same functionality in report_listing method.
-  # ++
-  class ReportListing
-    attr_reader :error_msg
-    attr_reader :error
-    attr_reader :request_xml
-    attr_reader :response_xml
-    attr_reader :connection
-    attr_reader :xml_tag_stack
-    attr_reader :report_summaries #; //Array (ReportSummary*)
-
-    def initialize(connection)
-      @error = nil
-      @connetion = connection
-      @report_summaries = []
-
-      r = @connetion.execute('<ReportListingRequest session-id="' + connection.session_id.to_s + '"/>')
-      if (r.success)
-        r.res.elements.each('ReportListingResponse/ReportConfigSummary') do |r|
-          # Note that this does record 'scope', which is in ReportConfigSummary, but not ReportSummary
-          @report_summaries.push(ReportSummary.new(r.attributes['template-id'], r.attributes['cfg-id'], r.attributes['status'], r.attributes['generated-on'], r.attributes['report-URI']))
-        end
-      else
-        @error = true
-        @error_msg = 'ReportListingRequest Parse Error'
-      end
-    end
-  end
-
-  # --
-  # TODO: Is this class useful? Summaries produced by report_template_listing.
-  # ++
+  # Data object for report template summary information.
+  # Not meant for use in creating new templates.
   class ReportTemplateSummary
+    # The ID of the report template.
     attr_reader :id
+    # The name of the report template.
     attr_reader :name
+    # One of: data|document. With a data template, you can export
+    # comma-separated value (CSV) files with vulnerability-based data.
+    # With a document template, you can create PDF, RTF, HTML, or XML reports
+    # with asset-based information.
+    attr_reader :type
+    # The visibility (scope) of the report template. One of: global|silo
+    attr_reader :scope
+    # Whether the report template is built-in, and therefore cannot be modified.
+    attr_reader :built_in
+    # Description of the report template.
     attr_reader :description
 
-    def initialize(id, name, description)
+    def initialize(id, name, type, scope, built_in, description)
       @id = id
       @name = name
+      @type = type
+      @scope = scope
+      @built_in = built_in
       @description = description
+    end
+
+    def self.parse(xml)
+      description = nil
+      xml.elements.each('description') { |desc| description = desc.text }
+      ReportTemplateSummary.new(xml.attributes['id'],
+                                xml.attributes['name'],
+                                xml.attributes['type'],
+                                xml.attributes['scope'],
+                                xml.attributes['builtin'] == '1',
+                                description)
     end
   end
 
@@ -676,7 +643,7 @@ module Nexpose
     # Display asset names with IPs.
     attr_accessor :show_device_names
 
-    def initialize(name, type = 'document', id = -1, scope = 'global', built_in = false)
+    def initialize(name, type = 'document', id = -1, scope = 'silo', built_in = false)
       @name = name
       @type = type
       @id = id
@@ -738,7 +705,7 @@ module Nexpose
         template = ReportTemplate.new(tmp.attributes['name'],
                                       tmp.attributes['type'],
                                       tmp.attributes['id'],
-                                      tmp.attributes['scope'] || 'global',
+                                      tmp.attributes['scope'] || 'silo',
                                       tmp.attributes['builtin'])
         tmp.elements.each('//description') do |desc|
           template.description = desc.text
@@ -762,7 +729,7 @@ module Nexpose
     end
   end
 
-  # Section specific content to include.
+  # Section specific content to include in a report template.
   class Section
     # Name of the report section.
     attr_accessor :name
