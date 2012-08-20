@@ -11,11 +11,12 @@ module Nexpose
 			if (r.success)
 				res = []
 				r.res.elements.each("//device") do |device|
+          puts device
 					res << {
 						:device_id => device.attributes['id'].to_i,
 						:address => device.attributes['address'].to_s,
-						:risk_factor => device.attributes['risk_factor'].to_f,
-						:risk_score => device.attributes['risk_score'].to_f,
+						:risk_factor => device.attributes['riskfactor'].to_f,
+						:risk_score => device.attributes['riskscore'].to_f,
 					}
 				end
 				res
