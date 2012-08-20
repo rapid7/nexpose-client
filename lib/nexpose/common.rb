@@ -8,7 +8,7 @@ module Nexpose
   # The send_to_acl attribute is required for sending e-mails to report access
   # list members.
   #
-  # E-mails and attachments are sent via the Internet in cleartext and are not
+  # E-mails and attachments are sent via the Internet in clear text and are not
   # encrypted. If you do not set a valid value for either attribute,
   # the application will save the report but not send it via e-mail.
   # If you set a valid value for the send_as attribute but not for the

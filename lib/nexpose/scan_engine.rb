@@ -2,17 +2,12 @@ module Nexpose
 
   # ==== Description
   # Object that represents a listing of all of the scan engines available on to an NSC.
-  #
   class EngineListing
     # true if an error condition exists; false otherwise
     attr_reader :error
     # Error message string
     attr_reader :error_msg
     # The last XML request sent by this object
-    attr_reader :request_xml
-    # The last XML response received by this object
-    attr_reader :response_xml
-    # The NSC Connection associated with this object
     attr_reader :connection
     # Array containing (EngineSummary*)
     attr_reader :engines
@@ -28,7 +23,7 @@ module Nexpose
       @error = false
       r = @connection.execute('<EngineListingRequest session-id="' + @connection.session_id + '"/>', '1.2')
 
-      if (r.success)
+      if r.success
         r.res.elements.each('EngineListingResponse/EngineSummary') do |v|
           @engines.push(EngineSummary.new(v.attributes['id'], v.attributes['name'], v.attributes['address'],
                                           v.attributes['port'], v.attributes['status']))
@@ -43,20 +38,6 @@ module Nexpose
 
   # TODO
   class EngineActivity
-    # true if an error condition exists; false otherwise
-    attr_reader :error
-    # Error message string
-    attr_reader :error_msg
-    # The last XML request sent by this object
-    attr_reader :request_xml
-    # The last XML response received by this object
-    attr_reader :response_xml
-    # The NSC Connection associated with this object
-    attr_reader :connection
-    # The Engine ID
-    attr_reader :engine_id
-    # Array containing (ScanSummary*)
-    attr_reader :scan_summaries
   end
 
   # ==== Description
@@ -101,7 +82,7 @@ module Nexpose
     end
 
     def to_s
-      "Engine: #{@name} [ID: #{@id}] #{@address}:#{@port}, Status: #{@status}, Scope: #{@scope}"
+      "Engine: #@name [ID: #@id] #@address:#@port, Status: #@status, Scope: #@scope"
     end
   end
 
@@ -131,13 +112,13 @@ module Nexpose
       @sites = []
 
       # If valid ID provided, retrieve data from server.
-      if (id > 0)
+      if id > 0
         xml = '<EngineConfigRequest session-id="' + @connection.session_id + '"'
         xml << %Q{ engine-id="#{id}"}
         xml << ' />'
         r = @connection.execute(xml, '1.2')
 
-        if (r.success)
+        if r.success
           r.res.elements.each('EngineConfigResponse/EngineConfig') do |v|
             @id = v.attributes['id']
             @address = v.attributes['address']
@@ -155,8 +136,8 @@ module Nexpose
       end
     end
 
-    def add_site(siteID)
-      sites << siteID
+    def add_site(site_id)
+      sites << site_id
     end
 
     def to_xml
@@ -187,7 +168,7 @@ module Nexpose
       xml << '</EngineSaveRequest>'
 
       r = @connection.execute(xml, '1.2')
-      if (r.success)
+      if r.success
         r.res.elements.each('EngineSaveResponse/EngineConfig') do |v|
           @id = v.attributes['id']
         end
@@ -227,7 +208,7 @@ module Nexpose
     # Creates a new engine pool, and adds scan engines to the pool.
     def create(connection)
       xml = '<EnginePoolCreateRequest session-id="' + connection.session_id + '">'
-      xml << %Q{<EnginePool name="#{@name}" scope="#{@scope}">}
+      xml << %Q{<EnginePool name="#@name" scope="#@scope">}
       @engines.each do |engine|
         xml << %Q{<Engine name="#{engine.name}" />}
       end
@@ -235,7 +216,7 @@ module Nexpose
       xml << '</EnginePoolCreateRequest>'
 
       r = connection.execute(xml, '1.2')
-      if (r.success)
+      if r.success
         r.res.elements.each('EnginePoolCreateResponse') do |v|
           @id = v.attributes['id']
         end
@@ -248,11 +229,11 @@ module Nexpose
     # Deletes an engine pool
     def delete(connection)
       xml = '<EnginePoolDeleteRequest session-id="' + connection.session_id + '">'
-      xml << %Q{<EnginePool name="#{@name}" scope="#{@scope}" />}
+      xml << %Q{<EnginePool name="#@name" scope="#@scope" />}
       xml << '</EnginePoolDeleteRequest>'
 
       r = connection.execute(xml, '1.2')
-      unless (r.success)
+      unless r.success
         @error = true
         @error_msg = 'EnginePoolDeleteResponse Parse Error'
       end
@@ -264,7 +245,7 @@ module Nexpose
     # the EnginePoolUpdateRequest.
     def update(connection)
       xml = '<EnginePoolUpdateRequest session-id="' + connection.session_id + '">'
-      xml << %Q{<EnginePool id="#{@id}" name="#{@name}" scope="#{@scope}">}
+      xml << %Q{<EnginePool id="#@id" name="#@name" scope="#@scope">}
       @engines.each do |engine|
         xml << %Q{<Engine name="#{engine.name}" />}
       end
@@ -272,7 +253,7 @@ module Nexpose
       xml << '</EnginePoolUpdateRequest>'
 
       r = connection.execute(xml, '1.2')
-      if (r.success)
+      if r.success
         r.res.elements.each('EnginePoolUpdateResponse') do |v|
           @id = v.attributes['id']
         end
@@ -285,11 +266,11 @@ module Nexpose
     # Returns detailed information about a single engine pool.
     def load_details(connection)
       xml = '<EnginePoolDetailsRequest session-id="' + connection.session_id + '">'
-      xml << %Q{<EnginePool name="#{@name}" scope="#{@scope}" />}
+      xml << %Q{<EnginePool name="#@name" scope="#@scope" />}
       xml << '</EnginePoolDetailsRequest>'
 
       r = connection.execute(xml, '1.2')
-      if (r.success)
+      if r.success
         r.res.elements.each('EnginePoolDetailsResponse/EnginePool') do |pool|
           @id = pool.attributes['id']
           @name = pool.attributes['name']
@@ -311,7 +292,7 @@ module Nexpose
     end
 
     def to_s
-      "Engine Pool: #{@name} [ID: #{@id}], Scope: #{@scope}\n" + @engines.map { |engine| "  #{engine}" }.join("\n")
+      "Engine Pool: #@name [ID: #@id], Scope: #@scope\n" + @engines.map { |engine| "  #{engine}" }.join("\n")
     end
   end
 
@@ -328,14 +309,14 @@ module Nexpose
     end
 
     def to_s
-      "Engine Pool: #{@name} [ID: #{@id}], scope: #{@scope}"
+      "Engine Pool: #@name [ID: #@id], scope: #@scope"
     end
 
     # Returns a summary list of all engine pools.
     def self.listing(connection)
       xml = '<EnginePoolListingRequest session-id="' + connection.session_id + '" />'
       r = connection.execute(xml, '1.2')
-      if (r.success)
+      if r.success
         list = []
         r.res.elements.each('EnginePoolListingResponse/EnginePoolSummary') do |eps|
           list << EnginePoolSummary.new(eps.attributes['id'], eps.attributes['name'], eps.attributes['scope'])
