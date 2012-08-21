@@ -13,6 +13,9 @@ module Nexpose
 				r.res.elements.each("//device") do |device|
 					res << {
 						:device_id => device.attributes['id'].to_i,
+            # TODO Covert to using?
+            #   require 'ipaddr'
+            #   :address => IPAddr.new(device.attributes['address']),
 						:address => device.attributes['address'].to_s,
 						:risk_factor => device.attributes['riskfactor'].to_f,
 						:risk_score => device.attributes['riskscore'].to_f,
