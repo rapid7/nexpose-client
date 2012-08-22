@@ -23,6 +23,18 @@ module Nexpose
       r.success ? r.attributes['status'] : nil
     end
 
+
+    #----------------------------------------------------------------
+    # Pauses a scan.
+    #
+    # @param scan_id The scan ID.
+    # @return The status(true|false) if it exists or null.
+    #----------------------------------------------------------------
+    def scan_pause(scan_id)
+      r = execute(make_xml('ScanPauseRequest',{ 'scan-id' => scan_id}))
+      r.success ? r.attributes['status'] : nil
+    end
+
 		def scan_activity
 			r = execute(make_xml('ScanActivityRequest', {}))
 			if (r.success)
