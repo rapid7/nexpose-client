@@ -81,42 +81,5 @@ module Nexpose
 				false
 			end
 		end
-
-
-		def console_command(cmd_string)
-			xml = make_xml('ConsoleCommandRequest', {})
-			cmd = REXML::Element.new('Command')
-			cmd.text = cmd_string
-			xml << cmd
-
-			r = execute(xml)
-
-			if (r.success)
-				res = ""
-				r.res.elements.each("//Output") do |out|
-					res << out.text.to_s
-				end
-
-				res
-			else
-				false
-			end
-		end
-
-		def system_information
-			r = execute(make_xml('SystemInformationRequest', {}))
-
-			if (r.success)
-				res = {}
-				r.res.elements.each("//Statistic") do |stat|
-					res[stat.attributes['name'].to_s] = stat.text.to_s
-				end
-
-				res
-			else
-				false
-			end
-		end
-
 	end
 end
