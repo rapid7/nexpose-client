@@ -70,7 +70,7 @@ end
 reports.each { |report| puts report.config_id }
 
 # Create a new report from scratch and download
-report = ReportConfig.new(-1, 'CSV Export', 'basic-vulnerability-check-results', 'csv', 2, 'America/Los_Angeles')
+report = ReportConfig.new('CSV Export', 'basic-vulnerability-check-results', 'csv')
 report.filters << Filter.new('site', 31)
 id = report.save(nsc, true)
 puts "Report saved with ID #{id}"
@@ -79,7 +79,7 @@ until nsc.report_last(id)
 end
 
 last = nsc.report_last(id)
-data = nsc.download(last.report_uri)
+data = nsc.download(last.uri)
 puts data.inspect
 
 # Generate an Adhoc report.

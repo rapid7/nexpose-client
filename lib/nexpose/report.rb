@@ -105,17 +105,17 @@ module Nexpose
     # The date and time the report was generated, in ISO 8601 format.
     attr_reader :generated_on
     # The URL to use to access the report (not set for database exports).
-    attr_reader :report_uri
+    attr_reader :uri
     # The visibility (scope) of the report definition.
     # One of: (global|silo).
     attr_reader :scope
 
-    def initialize(config_id, template_id, status, generated_on, report_uri, scope)
+    def initialize(config_id, template_id, status, generated_on, uri, scope)
       @config_id = config_id
       @template_id = template_id
       @status = status 
       @generated_on = generated_on 
-      @report_uri = report_uri 
+      @uri = uri 
       @scope = scope 
     end
 
@@ -141,14 +141,14 @@ module Nexpose
     # The date and time the report was generated, in ISO 8601 format.
     attr_reader :generated_on
     # The relative URI to use to access the report.
-    attr_reader :report_uri
+    attr_reader :uri
 
-    def initialize(id, cfg_id, status, generated_on, report_uri)
+    def initialize(id, cfg_id, status, generated_on, uri)
       @id = id
       @cfg_id = cfg_id
       @status = status
       @generated_on = generated_on
-      @report_uri = report_uri
+      @uri = uri
     end
 
     # Delete this report.
