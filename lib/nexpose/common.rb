@@ -97,12 +97,15 @@ module Nexpose
     # The earliest date to generate the report on (in ISO 8601 format).
     attr_accessor :start
 
+    # The amount of time, in minutes, to allow execution before stopping.
+    attr_accessor :max_duration
+    # The date after which the schedule is disabled, in ISO 8601 format.
+    attr_accessor :not_valid_after
+
     # --
     # TODO These are not captured or put to XML.
     # ++
     attr_accessor :incremental
-    attr_accessor :max_duration
-    attr_accessor :not_valid_after
     attr_accessor :repeater_type
 
     def initialize(type, interval, start, enabled = true)
@@ -113,15 +116,21 @@ module Nexpose
     end
 
     def to_xml
-      %Q{<Schedule enabled='#{@enabled ? 1 : 0}' type='#{@type}' interval='#{@interval}' start='#{@start}' />}
+      xml = %Q{<Schedule enabled='#{@enabled ? 1 : 0}' type='#{@type}' interval='#{@interval}' start='#{@start}'}
+      xml << %Q{ maxDuration='#@max_duration'} if @max_duration
+      xml << %Q{ notValidAfter='#@not_valid_after'} if @not_valid_after
+      xml << '/>'
     end
 
     def self.parse(xml)
       xml.elements.each('//Schedule') do |sched|
         schedule = Schedule.new(sched.attributes['type'],
-                                sched.attributes['interval'],
+                                sched.attributes['interval'].to_i,
                                 sched.attributes['start'],
                                 sched.attributes['enabled'] || true)
+        # Optional parameters.
+        schedule.max_duration = sched.attributes['maxDuration'].to_i if sched.attributes['maxDuration']
+        schedule.not_valid_after = sched.attributes['notValidAfter'] if sched.attributes['notValidAfter']
         return schedule
       end
     end
