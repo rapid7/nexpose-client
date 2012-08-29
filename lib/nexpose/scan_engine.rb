@@ -1,4 +1,13 @@
 module Nexpose
+  module NexposeAPI
+    include XMLUtils
+
+    # Removes a scan engine from the list of available engines.
+    def delete_engine(engine_id)
+      xml = make_xml('EngineDeleteRequest', {'engine-id' => engine_id})
+      execute(xml, '1.2')
+    end
+  end
 
   # ==== Description
   # Object that represents a listing of all of the scan engines available on to an NSC.
@@ -189,12 +198,16 @@ module Nexpose
       r = @connection.execute(xml, '1.2')
       if (r.success)
         r.res.elements.each('EngineSaveResponse/EngineConfig') do |v|
-          @id = v.attributes['id']
+          return @id = v.attributes['id']
         end
       else (r.success)
         @error = true
         @error_msg = 'EngineSaveRequest Parse Error'
       end
+    end
+
+    def delete
+      @connection.delete_engine(@id)
     end
   end
 
