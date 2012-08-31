@@ -16,11 +16,11 @@ module Nexpose
     # Resumes a scan.
     #
     # @param scan_id The scan ID.
-    # @return The status(true|false) if it exists or null.
+    # @return Success(0|1) if it exists or null.
     #----------------------------------------------------------------
     def scan_resume(scan_id)
       r = execute(make_xml('ScanResumeRequest', {'scan-id' => scan_id}))
-      r.success ? r.attributes['status'] : nil
+      r.success ? r.attributes['success'] : nil
     end
 
 
@@ -28,11 +28,11 @@ module Nexpose
     # Pauses a scan.
     #
     # @param scan_id The scan ID.
-    # @return The status(true|false) if it exists or null.
+    # @return Success(0|1) if it exists or null.
     #----------------------------------------------------------------
     def scan_pause(scan_id)
       r = execute(make_xml('ScanPauseRequest',{ 'scan-id' => scan_id}))
-      r.success ? r.attributes['status'] : nil
+      r.success ? r.attributes['success'] : nil
     end
 
 		def scan_activity
