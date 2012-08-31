@@ -11,6 +11,7 @@ module Nexpose
 			if (r.success)
 				res = []
 				r.res.elements.each("//device") do |device|
+          puts device
 					res << {
 						:device_id => device.attributes['id'].to_i,
             # TODO Covert to using?
@@ -302,7 +303,7 @@ module Nexpose
 
 			xml << ' <Schedules>'
 			@site_config.scanConfig.schedules.each do |s|
-				xml << %Q{<Schedule enabled="#{s.enabled}" type="#{s.type}" interval="#{s.interval}" start="#{s.start}" />}
+				xml << %Q{<Schedule enabled="#{s.enabled ? 1 : 0}" type="#{s.type}" interval="#{s.interval}" start="#{s.start}" />}
 			end
 			xml << ' </Schedules>'
 
@@ -850,6 +851,20 @@ module Nexpose
 			@hostname = hostname
 		end
 
+    include Comparable
+
+    def <=>(other)
+      to_xml <=> other.to_xml
+    end
+
+    def eql?(other)
+      to_xml == other.to_xml
+    end
+
+    def hash
+      to_xml.hash
+    end
+
 		include Sanitize
 
 		def to_xml
@@ -860,7 +875,6 @@ module Nexpose
 	# === Description
 	# Object that represents a single IP address or an inclusive range of IP addresses.
 	# If to is nil then the from field will be used to specify a single IP Address only.
-	#
 	class IPRange
 		# Start of Range *Required
 		attr_reader :from
@@ -871,6 +885,20 @@ module Nexpose
 			@from = from
 			@to = to
 		end
+
+    include Comparable
+
+    def <=>(other)
+      to_xml <=> other.to_xml
+    end
+
+    def eql?(other)
+      to_xml == other.to_xml
+    end
+
+    def hash
+      to_xml.hash
+    end
 
 		include Sanitize
 

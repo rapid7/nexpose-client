@@ -1,57 +1,91 @@
 #!/usr/bin/env ruby
-
-require 'rubygems'
 require 'nexpose'
+include Nexpose
 
+nsc = Connection.new('127.0.0.1', 'user', 'pass')
+nsc.login
 
-host = '127.0.0.1'
-port = 3780
-user = "user"
-pass = "pass"
+# Get details of last report run.
+last = nsc.last_report(15)
+puts "Report ID 15 last run on #{last.generated_on} with a status of #{last.status}."
 
-@nsc = Nexpose::Connection.new(host, user, pass, port)
+# Get the configuration of an existing template
+template = nsc.get_report_template('audit-report')
+  # or ...
+template = ReportTemplate.get(nsc, 'audit-report')
 
-@nsc.login
+# Create a new template based upon an existing one.
+template.name = "#{template.name} Copy"
+template.id = -1
+template.built_in = false
+template.show_device_names = true
+id = template.save(nsc)
+puts "New template saved with ID: #{id}"
 
-sites = @nsc.site_listing
+# Load existing report configuration.
+config = nsc.get_report_config(15)
+  # or ...
+config = ReportConfig.get(nsc, 15)
 
-sites.each do |site|
-  p site[:site_id].to_s + ". " + site[:name]
+# Try to generate a new report from the existing configuration.
+summary = config.generate(nsc)
+  # or ...
+summary = nsc.generate_report(15)
+unless summary.status == 'Started'
+  puts "Report ID 15 finished on #{summary.generated_on} with a status of #{summary.status}."
+else
+  puts 'Report ID 15 started.'
 end
 
-#must be the ID of the site, the int printed from above.
-site = gets
+# Generate a new report and wait for it to finish.
+summary = config.generate(nsc, true)
+puts "Report ID 15 finished on #{summary.generated_on} with a status of #{summary.status}."
 
-templates = @nsc.report_template_listing
+# Copy that configuration for a new report.
+config.id = -1
+config.name = "#{config.name} Copy"
 
-templates.each do |template|
-  p template[:template_id]
+# Save but do not generate a new report.
+id = config.save(nsc, false)
+puts "Saved report with report ID #{id}."
+
+# Delete failed reports from the report history.
+bad_reports = nsc.report_history(15).select do |summary|
+  summary.status == 'Failed'
+  || summary.status == 'Aborted'
+  || summary.status == 'Unknown'
+end
+bad_reports.each do |report|
+  report.delete(nsc)
 end
 
-p "Creating report config"
-report = Nexpose::ReportConfig.new(@nsc)
-report.set_name("Test" + Time.now.to_i.to_s)
-report.set_template_id("audit-report")
-report.addFilter("site", site.to_i)
-report.set_format("raw-xml")
+# Get a listing of all PCI-related report templates
+pci_templates = nsc.report_template_listing.select { |tmp| tmp.name =~ /PCI/ }
+pci_templates.each { |tmp| puts tmp.id }
 
-#report = Nexpose::ReportAdHoc.new(@nsc, 'audit-report', 'raw-xml')
-#report.addFilter('site', site.to_i)
-#p report.generate.to_s
+# Get a listing of all reports IDs successfully generated since 13 Aug 2012.
+reports = nsc.report_listing.select do |report|
+  report.status == 'Generated' && report.generated_on > '20120813T000000000'
+end
+reports.each { |report| puts report.config_id }
 
-#gets
-
-p "Saving report"
-report.saveReport()
-
-url = nil
-while not url
-  url = @nsc.report_last(report.config_id)
-  select(nil, nil, nil, 10)
+# Create a new report from scratch and download
+report = ReportConfig.new('CSV Export', 'basic-vulnerability-check-results', 'csv')
+report.filters << Filter.new('site', 31)
+id = report.save(nsc, true)
+puts "Report saved with ID #{id}"
+until nsc.last_report(id)
+  puts 'waiting . . .'
 end
 
-p url
-#gets
-data = @nsc.download(url)
+last = nsc.last_report(id)
+data = nsc.download(last.uri)
+puts data.inspect
 
-p data.inspect
+# Generate an Adhoc report.
+adhoc = AdhocReportConfig.new('audit-report', 'pdf', 31)
+data = adhoc.generate(nsc)
+File.open('site-31-audit.pdf', 'w') { |file| file.write(data) }
+
+# Logout your Nexpose connection.
+nsc.logout

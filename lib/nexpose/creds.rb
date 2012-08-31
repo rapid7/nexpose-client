@@ -1,11 +1,10 @@
 module Nexpose
-  # === Description
+
   # Object that represents administrative credentials to be used
-  # during a scan. When retrived from an existing site configuration
+  # during a scan. When retrieved from an existing site configuration
   # the credentials will be returned as a security blob and can only
   # be passed back as is during a Site Save operation. This object
   # can only be used to create a new set of credentials.
-  #
   class AdminCredentials
     include XMLUtils
 
@@ -91,6 +90,20 @@ module Nexpose
       xml.add_element(@headers.to_xml_elem) if @headers
       xml.add_element(@html_forms.to_xml_elem) if @html_forms
       xml
+    end
+
+    include Comparable
+
+    def <=>(other)
+      to_xml <=> other.to_xml
+    end
+
+    def eql?(other)
+      to_xml == other.to_xml
+    end
+
+    def hash
+      to_xml.hash
     end
   end
 
