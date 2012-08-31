@@ -3,7 +3,7 @@ module Nexpose
     include XMLUtils
 
     # Generate a new report using the specified report definition.
-    def report_generate(report_id, wait = false)
+    def generate_report(report_id, wait = false)
       xml = make_xml('ReportGenerateRequest', {'report-id' => report_id})
       response = execute(xml)
       summary = nil
@@ -16,7 +16,7 @@ module Nexpose
       end
       so_far = 0
       while wait
-        summary = report_last(report_id)
+        summary = last_report(report_id)
         return summary unless summary.status == 'Started'
         sleep 5
         so_far += 5
@@ -35,20 +35,20 @@ module Nexpose
     end
 
     # Get the details of the last report generated with the specified report id.
-    def report_last(report_config_id)
+    def last_report(report_config_id)
       history = report_history(report_config_id)
       history.sort { |a, b| b.generated_on <=> a.generated_on }.first
     end
 
     # Delete a previously generated report definition.
     # Also deletes any reports generated from that configuration.
-    def report_config_delete(report_config_id)
+    def delete_report_config(report_config_id)
       xml = make_xml('ReportDeleteRequest', {'reportcfg-id' => report_config_id})
       execute(xml).success
     end
 
     # Delete a previously generated report.
-    def report_delete(report_id)
+    def delete_report(report_id)
       xml = make_xml('ReportDeleteRequest', {'report-id' => report_id})
       execute(xml).success
     end
@@ -134,7 +134,7 @@ module Nexpose
     # The id of the generated report.
     attr_reader :id
     # The report definition (configuration) ID.
-    attr_reader :cfg_id
+    attr_reader :config_id
     # The current status of the report.
     # One of: Started|Generated|Failed|Aborted|Unknown
     attr_reader :status
@@ -143,9 +143,9 @@ module Nexpose
     # The relative URI to use to access the report.
     attr_reader :uri
 
-    def initialize(id, cfg_id, status, generated_on, uri)
+    def initialize(id, config_id, status, generated_on, uri)
       @id = id
-      @cfg_id = cfg_id
+      @config_id = config_id
       @status = status
       @generated_on = generated_on
       @uri = uri
@@ -153,7 +153,7 @@ module Nexpose
 
     # Delete this report.
     def delete(connection)
-      connection.report_delete(@id)
+      connection.delete_report(@id)
     end
 
     def self.parse(xml)
@@ -258,7 +258,7 @@ module Nexpose
     # The unique name assigned to the report definition.
     attr_accessor :name
     attr_accessor :owner
-    attr_accessor :timezone
+    attr_accessor :time_zone
 
     # Description associated with this report.
     attr_accessor :description
@@ -272,13 +272,13 @@ module Nexpose
     attr_accessor :db_export
 
     # Construct a basic ReportConfig object.
-    def initialize(name, template_id, format, id = -1, owner = nil, timezone = nil)
+    def initialize(name, template_id, format, id = -1, owner = nil, time_zone = nil)
       @name = name
       @template_id = template_id
       @format = format
       @id = id
       @owner = owner
-      @timezone = timezone
+      @time_zone = time_zone
 
       @filters = []
       @users = []
@@ -315,18 +315,18 @@ module Nexpose
 
     # Generate a new report using this report definition.
     def generate(connection, wait = false)
-      connection.report_generate(@id, wait)
+      connection.generate_report(@id, wait)
     end
 
     # Delete this report definition from the Security Console.
     # Deletion will also remove all reports previously generated from the
     # configuration.
     def delete(connection)
-      connection.report_config_delete(@id)
+      connection.delete_report_config(@id)
     end
 
     def to_xml
-      xml = %Q{<ReportConfig format='#{@format}' id='#{@id}' name='#{@name}' owner='#{@owner}' template-id='#{@template_id}' timezone='#{@timezone}'>}
+      xml = %Q{<ReportConfig format='#{@format}' id='#{@id}' name='#{@name}' owner='#{@owner}' template-id='#{@template_id}' timezone='#{@time_zone}'>}
       xml << %Q{<description>#{@description}</description>} if @description
 
       xml << '<Filters>'
@@ -419,10 +419,10 @@ module Nexpose
 
   # Data object associated with when a report is generated.
   class Generate
-    # Will the report be generated after a scan completes (1),
-    # or is it ad-hoc/scheduled (0).
+    # Will the report be generated after a scan completes (true),
+    # or is it ad-hoc/scheduled (false).
     attr_accessor :after_scan
-    # Whether or not a scan is scheduled (0|1).
+    # Whether or not a scan is scheduled.
     attr_accessor :scheduled
     # Schedule associated with the report.
     attr_accessor :schedule
@@ -536,13 +536,13 @@ module Nexpose
 
   # DBExport credentials configuration object.
   #
-  # The userid, password and realm attributes should ONLY be used
+  # The user_id, password and realm attributes should ONLY be used
   # if a security blob cannot be generated and the data is being
   # transmitted/stored using external encryption (e.g., HTTPS).
   class ExportCredential
     # Security blob for exporting to a database.
     attr_accessor :credential
-    attr_accessor :userid
+    attr_accessor :user_id
     attr_accessor :password
     # DB specific, usually the database name.
     attr_accessor :realm
@@ -553,7 +553,7 @@ module Nexpose
 
     def to_xml
       xml = '<credentials'
-      xml << %Q{ userid='#{@userid}'} if @userid
+      xml << %Q{ userid='#{@user_id}'} if @user_id
       xml << %Q{ password='#{@password}'} if @password
       xml << %Q{ realm='#{@realm}'} if @realm
       xml << '>'
@@ -565,7 +565,7 @@ module Nexpose
       xml.elements.each('//credentials') do |creds|
         credential = ExportCredential.new(creds.text)
         # The following attributes may not exist.
-        credential.userid = creds.attributes['userid']
+        credential.user_id = creds.attributes['userid']
         credential.password = creds.attributes['password']
         credential.realm = creds.attributes['realm']
         return credential

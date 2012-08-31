@@ -6,7 +6,7 @@ nsc = Connection.new('127.0.0.1', 'user', 'pass')
 nsc.login
 
 # Get details of last report run.
-last = nsc.report_last(15)
+last = nsc.last_report(15)
 puts "Report ID 15 last run on #{last.generated_on} with a status of #{last.status}."
 
 # Get the configuration of an existing template
@@ -30,7 +30,7 @@ config = ReportConfig.get(nsc, 15)
 # Try to generate a new report from the existing configuration.
 summary = config.generate(nsc)
   # or ...
-summary = nsc.report_generate(15)
+summary = nsc.generate_report(15)
 unless summary.status == 'Started'
   puts "Report ID 15 finished on #{summary.generated_on} with a status of #{summary.status}."
 else
@@ -74,11 +74,11 @@ report = ReportConfig.new('CSV Export', 'basic-vulnerability-check-results', 'cs
 report.filters << Filter.new('site', 31)
 id = report.save(nsc, true)
 puts "Report saved with ID #{id}"
-until nsc.report_last(id)
+until nsc.last_report(id)
   puts 'waiting . . .'
 end
 
-last = nsc.report_last(id)
+last = nsc.last_report(id)
 data = nsc.download(last.uri)
 puts data.inspect
 
