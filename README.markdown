@@ -1,9 +1,15 @@
 # Nexpose
 
-This is the official gem package for the Ruby Nexpose API included in the Metasploit Framework. This version is based on SVN revision 12430.
-The upstream for this gem can be found at https://metasploit.com/svn/framework3/trunk/lib/rapid7
+This is the official gem package for the Ruby Nexpose API.
 
 For assistance with using the gem, to share your scripts, or to discuss different approaches, please visit the Rapid7 forums for Nexpose: https://community.rapid7.com/community/nexpose
 
-# Credits
+## Contributions
+
+This package is currently a work in progress. Most of the Nexpose API is exposed, but there are some operations missing. Also, there are stylistic differences between different calls that we hope to eliminate over time. We welcome contributions to this package. We ask only that pull requests and patches adhere to our coding standards.
+
+* Unless otherwise noted, code should adhere to the Ruby Style Guide: https://github.com/bbatsov/ruby-style-guide
+* Favor returning classes over key-value maps. Classes tend to be easier for users to manipulate and use.
+
+## Credits
 Rapid7 LLC
