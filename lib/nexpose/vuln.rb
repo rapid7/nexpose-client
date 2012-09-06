@@ -359,7 +359,7 @@ module Nexpose
         end
       else
         @error = true
-        @error_msg = 'VulnerabilitySummaryRequest Parse Error'
+        @error_msg = 'VulnerabilitySummary Parse Error'
       end
       @vulnerability_count = @vulnerability_summaries.length
     end
@@ -461,7 +461,7 @@ module Nexpose
         end
       else
         @error = true
-        @error_msg = 'VulnerabilitySummaryRequest Parse Error'
+        @error_msg = 'VulnerabilitySummary Parse Error'
       end
 
     end
