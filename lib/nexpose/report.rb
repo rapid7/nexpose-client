@@ -640,6 +640,8 @@ module Nexpose
     attr_accessor :sections
     # Map of report properties.
     attr_accessor :properties
+    # Array of report attributes, in the order they will be present in a report.
+    attr_accessor :attributes
     # Display asset names with IPs.
     attr_accessor :show_device_names
 
@@ -652,6 +654,7 @@ module Nexpose
 
       @sections = []
       @properties = {}
+      @attributes = []
       @show_device_names = false
     end
 
@@ -689,12 +692,22 @@ module Nexpose
       xml << '>'
       xml << %Q{<description>#{@description}</description>} if @description
 
-      xml << '<ReportSections>'
-      properties.each_pair do |name, value|
-        xml << %Q{<property name='#{name}'>#{replace_entities(value)}</property>}
+      unless @attributes.empty?
+        xml << '<ReportAttributes>'
+        @attributes.each do |attr|
+          xml << %Q(<ReportAttribute name='#{attr}'/>)
+        end
+        xml << '</ReportAttributes>'
       end
-      @sections.each { |section| xml << section.to_xml }
-      xml << '</ReportSections>'
+
+      unless @sections.empty?
+        xml << '<ReportSections>'
+        properties.each_pair do |name, value|
+          xml << %Q{<property name='#{name}'>#{replace_entities(value)}</property>}
+        end
+        @sections.each { |section| xml << section.to_xml }
+        xml << '</ReportSections>'
+      end
 
       xml << %Q{<Settings><showDeviceNames enabled='#{@show_device_names ? 1 : 0}' /></Settings>}
       xml << '</ReportTemplate>'
@@ -709,6 +722,10 @@ module Nexpose
                                       tmp.attributes['builtin'])
         tmp.elements.each('//description') do |desc|
           template.description = desc.text
+        end
+
+        tmp.elements.each('//ReportAttributes/ReportAttribute') do |attr|
+          template.attributes << attr.attributes['name']
         end
 
         tmp.elements.each('//ReportSections/property') do |property|

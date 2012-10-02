@@ -538,7 +538,7 @@ module Nexpose
     # Array containing ((SmtpAlera|SnmpAlert|SyslogAlert)*)
     attr_accessor :alerts
     # ScanConfig object which holds Schedule and ScanTrigger Objects
-    attr_reader :scanConfig
+    attr_accessor :scanConfig
     attr_reader :is_dynamic
 
     def initialize()
@@ -566,11 +566,11 @@ module Nexpose
     end
 
     # TODO
-    def self.getSiteConfig(connection, site_id)
+    def getSiteConfig(connection, site_id)
       @connection = connection
       @id = @site_id = site_id
 
-      r = APIRequest.execute(@connection.url, '<SiteConfigRequest session-id="' + @connection.session_id + '" site-id="' + "#{@site_id}" + '"/>')
+      r = APIRequest.execute(@connection.url, %Q(<SiteConfigRequest session-id="#{@connection.session_id}" site-id="#{@site_id}"/>))
       parse(r.res)
     end
 

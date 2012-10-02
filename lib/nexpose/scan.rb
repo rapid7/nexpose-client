@@ -223,7 +223,7 @@ module Nexpose
     attr_reader :templateID
     # The configuration version (default is 2)
     attr_reader :configVersion
-    attr_reader :engine_id
+    attr_accessor :engine_id
     # Array of (Schedule)* ... TODO: There can be only 0 or 1 schedules
     attr_reader :schedules
     # Array of (ScanTrigger)*
