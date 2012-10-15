@@ -257,6 +257,11 @@ module Nexpose
       @site_config.hosts
     end
 
+    # Set the hosts array with user provided value.
+    def hosts=(value)
+      @site_config.hosts = value
+    end
+
     # Add the host to the existing lists of hosts for this site.
     def add_host(host)
       @site_config.hosts << host
