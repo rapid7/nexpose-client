@@ -11,7 +11,6 @@ module Nexpose
       if (r.success)
         res = []
         r.res.elements.each("//device") do |device|
-          puts device
           res << {
             :device_id => device.attributes['id'].to_i,
             # TODO Covert to using?
@@ -158,146 +157,131 @@ module Nexpose
   #
   #   status = site.saveSite()
   #-------------------------------------------------------------------------------------------------------------------
+
+
+
+  # Configuration object representing a Nexpose site.
   class Site
-    # true if an error condition exists; false otherwise
-    attr_reader :error
-    # Error message string
-    attr_reader :error_msg
-    # The last XML request sent by this object
-    attr_reader :request_xml
-    # The last XML response received by this object
-    attr_reader :response_xml
-    # The NSC Connection associated with this object
-    attr_reader :connection
-    # The Site ID
-    # site_id = -1 means create a new site. The NSC will assign a new site_id on SiteSave.
-    attr_reader :site_id
-    # A summary overview of this site
-    # SiteSummary Object
-    attr_reader :site_summary
-    # The configuration of this site
-    # SiteConfig Object
-    attr_reader :site_config
-    # The device listing for this site
-    # SiteDeviceListing Object
-    attr_reader :site_device_listing
-    # The scan history of this site
-    # SiteScanHistory Object
-    attr_reader :site_scan_history
 
-    def initialize(connection = nil, site_id = -1)
-      @error = false
-      @connection = connection
-      @site_id = site_id
+    # The site ID. An ID of -1 is used to designate a site that has not been
+    # saved to a Nexpose console.
+    attr_accessor :id
 
-      # If site_id > 0 then retrieve site configuration from security console.
-      if (@site_id.to_i > 0)
-        # Create new SiteConfig object
-        @site_config = SiteConfig.new()
-        # Populate SiteConfig Obect with Data from the NSC
-        @site_config.getSiteConfig(@connection, @site_id)
-        @site_summary = SiteSummary.new(@site_id, @site_config.site_name, @site_config.description, @site_config.riskfactor)
-        @site_scan_history = SiteScanHistory.new(@connection, @site_id)
-        @site_device_listing = SiteDeviceListing.new(@connection, @site_id)
+    # Unique name of the site. Required.
+    attr_accessor :name
 
-      else
-        # Just in case user enters a number > -1 or = 0
-        @site_id = -1
+    # Description of the site.
+    attr_accessor :description
 
-        @site_config = SiteConfig.new()
-        # setSiteConfig("New Site " + rand(999999999999).to_s, "")
-        @site_summary = nil
+    # [Array] Collection of assets. May be IPv4, IPv6, or DNS names.
+    # @see HostName
+    # @see IPRange
+    attr_accessor :assets
 
+    # Scan template to use when starting a scan job. Default: full-audit
+    attr_accessor :scan_template
+
+    # Friendly name of scan template to use when starting a scan job.
+    # Value is populated when a site is saved or loaded from a console.
+    attr_accessor :scan_template_name
+
+    # Scan Engine to use. Will use the default engine if nil or -1.
+    attr_accessor :engine
+
+    # [Array] Schedule starting dates and times for scans, and set their frequency.
+    attr_accessor :schedules
+
+    # The risk factor associated with this site. Default: 1.0
+    attr_accessor :risk_factor
+
+    # [Array] Collection of credentials associated with this site.
+    attr_accessor :credentials
+
+    # [Array] Collection of real-time alerts.
+    # @see SMTPAlert
+    # @see SNMPAlert
+    # @see SyslogAlert
+    attr_accessor :alerts
+
+    # Configuration version. Default: 3
+    attr_accessor :config_version
+
+    # Whether or not this site is dynamic.
+    # Dynamic sites are created through Asset Discovery Connections.
+    # Modifying their behavior through the API is not recommended.
+    attr_accessor :is_dynamic
+
+    # Site constructor. Both arguments are optional.
+    #
+    # @param [String] name Unique name of the site.
+    # @param [String] scan_template ID of the scan template to use.
+    def initialize(name = nil, scan_template = 'full-audit')
+      @name = name;
+      @scan_template = scan_template
+
+      @id = -1
+      @risk_factor = 1.0
+      @config_version = 3
+      @is_dynamic = false
+      @assets = []
+      @schedules = []
+      @credentials = []
+      @alerts = []
+    end
+
+    # Returns true when the site is dynamic.
+    def dynamic?
+      is_dynamic
+    end
+
+    # Load an existing configuration from a Nexpose instance.
+    #
+    # @param [Connection] connection Connection to console where scan will be launched.
+    # @param [Fixnum] id Site ID of an existing site.
+    # @return [Site] Site configuration loaded from a Nexpose console.
+    def self.load(connection, id)
+      r = APIRequest.execute(connection.url, %Q(<SiteConfigRequest session-id="#{connection.session_id}" site-id="#{id}"/>))
+      parse(r.res)
+    end
+
+    # Copy an existing configuration from a Nexpose instance.
+    #
+    # @param [Connection] connection Connection to console where scan will be launched.
+    # @param [Fixnum] id Site ID of an existing site.
+    # @return [Site] Site configuration loaded from a Nexpose console.
+    def self.copy(connection, id)
+      site = self.load(connection, id)
+      site.id = -1
+      site.name = "#{site.name} Copy"
+      site
+    end
+
+    # Saves this site to a Nexpose console.
+    #
+    # @param [Connection] connection Connection to console where this site will be saved.
+    # @return [Fixnum] Site ID assigned to this configuration, if successful.
+    def save(connection)
+      r = connection.execute('<SiteSaveRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiteSaveRequest>')
+      if (r.success)
+        @id = r.attributes['site-id']
+        return @id
       end
     end
 
-    # Unique identifier for this site.
-    def id
-      @site_config.id
-    end
-
-    # Set the ID for this site. -1 indicates that this configuration will be
-    # saved as a new site when saved.
-    def id=(value)
-      @site_config.id = value
-    end
-
-    # The name of this site.
-    def name
-      @site_config.name
-    end
-
-    # Set the name of this site.
-    def name=(value)
-      @site_config.name = value
-    end
-
-    # A description of this site configuration.
-    def description
-      @site_config.description
-    end
-
-    # Set the description for this site.
-    def description=(value)
-      @site_config.description = value
-    end
-
-    # The risk factor associated with assets on this site.
-    def risk_factor
-      @site_config.riskfactor
-    end
-
-    # Set the risk factor for this site.
-    def risk_factor=(value)
-      @site_config.riskfactor = value
-    end
-
-    # The hosts (IPRange or HostName) associated with this site.
-    def hosts
-      @site_config.hosts
-    end
-
-    # Set the hosts array with user provided value.
-    def hosts=(value)
-      @site_config.hosts = value
-    end
-
-    # Add the host to the existing lists of hosts for this site.
-    def add_host(host)
-      @site_config.hosts << host
-    end
-
-    # Set the host for this site to the value supplied, overriding any previous
-    # values.
-    def set_host(host)
-      @site_config.hosts = [host]
-    end
-
-    # Credentials to be used when scanning this site.
-    def credentials
-      @site_config.credentials
-    end
-
-    # Creates a new site summary
-    def setSiteSummary(site_name, description, riskfactor = 1.0)
-      @site_summary = SiteSummary.new(-1, site_name, description, riskfactor)
-
-    end
-
-    # Creates a new site configuration
-    def setSiteConfig(site_name, description, riskfactor = 1.0)
-      setSiteSummary(site_name, description, riskfactor)
-      @site_config = SiteConfig.new()
-      @site_config._set_site_id(-1)
-      @site_config._set_site_name(site_name)
-      @site_config._set_description(description)
-      @site_config._set_riskfactor(riskfactor)
-      @site_config._set_scanConfig(ScanConfig.new(-1, "tmp", "full-audit"))
-      @site_config._set_connection(@connection)
-
+    # Delete this site from a Nexpose console.
+    #
+    # @param [Connection] connection Connection to console where this site will be saved.
+    # @return [Boolean] Whether or not the site was successfully deleted.
+    def delete(connection)
+      r = connection.execute('<SiteDeleteRequest session-id="' + connection.session_id.to_s + '" site-id="' + @id + '"/>')
+      r.success
     end
 
     # Scan this site.
+    #
+    # @param [Connection] connection Connection to console where scan will be launched.
+    # @param [String] sync_id Optional syncronization token.
+    # @return [Fixnum, Fixnum] Scan ID and engine ID where the scan was launched.
     def scan(connection, sync_id = nil)
       xml = REXML::Element.new('SiteScanRequest')
       xml.add_attributes({'session-id' => connection.session_id,
@@ -307,78 +291,18 @@ module Nexpose
       response = connection.execute(xml)
       if response.success
         response.res.elements.each('/SiteScanResponse/Scan/') do |scan|
-          return [scan.attributes['scan-id'], scan.attributes['engine-id']]
+          return [scan.attributes['scan-id'].to_i, scan.attributes['engine-id'].to_i]
         end
       end
     end
 
-    # Initiates a scan of this site. If successful returns scan_id and engine_id in an associative array. Returns false if scan is unsuccessful.
-    def scanSite()
-      r = @connection.execute('<SiteScanRequest session-id="' + "#{@connection.session_id}" + '" site-id="' + "#{@site_id}" + '"/>')
-      if (r.success)
-        res = {}
-        r.res.elements.each('//Scan/') do |s|
-          res[:scan_id] = s.attributes['scan-id']
-          res[:engine_id] = s.attributes['engine-id']
-        end
-        return res
-      else
-        return false
-      end
-    end
-
-    # Saves this site in the NSC
-    def saveSite
-      r = @connection.execute('<SiteSaveRequest session-id="' + @connection.session_id + '">' + getSiteXML + ' </SiteSaveRequest>')
-      if (r.success)
-        @site_id = r.attributes['site-id']
-        @site_config._set_site_id(@site_id)
-        @site_config.scanConfig._set_configID(@site_id)
-        @site_config.scanConfig._set_name(@site_id)
-        return true
-      else
-        return false
-      end
-    end
-
-    def deleteSite
-      r = @connection.execute('<SiteDeleteRequest session-id="' + @connection.session_id.to_s + '" site-id="' + @site_id + '"/>')
-      r.success
-    end
-
-
-    def printSite
-      puts "Site ID: " + @site_summary.id
-      puts "Site Name: " + @site_summary.site_name
-      puts "Site Description: " + @site_summary.description
-      puts "Site Risk Factor: " + @site_summary.riskfactor
-    end
-
-    def to_xml_elem
-      xml = REXML::Element.new('Site')
-      xml.add_attributes({'id' => id,
-                          'name' => name,
-                          'description' => description,
-                          'riskfactor' => risk_factor})
-
-      host_xml = REXML::Element.new('Hosts', xml)
-      hosts.each { |host| host_xml.add_element(host.to_xml_elem) }
-
-      unless credentials.empty?
-        cred_xml = REXML::Element.new('Credentials', xml)
-        credentials.each { |cred| cred_xml.add_element(cred.to_xml_elem) }
-      end
-
-      # TODO
-      xml
-    end
-
-    def getSiteXML
-
+    # Generate an XML representation of this site configuration
+    # @return [String] XML valid for submission as part of other requests.
+    def to_xml
       xml = %Q(<Site id='#{id}' name='#{name}' description='#{description}' riskfactor='#{risk_factor}'>)
 
       xml << '<Hosts>'
-      xml << hosts.reduce('') { |acc, host| acc << host.to_xml }
+      xml << assets.reduce('') { |acc, host| acc << host.to_xml }
       xml << '</Hosts>'
 
       unless credentials.empty?
@@ -386,40 +310,109 @@ module Nexpose
         credentials.each do |c|
           xml << c.to_xml if c.respond_to? :to_xml
         end
-        xml << ' </Credentials>'
+        xml << '</Credentials>'
       end
 
-      unless @site_config.alerts.empty?
-        xml << ' <Alerting>'
-        @site_config.alerts.each do |a|
+      unless alerts.empty?
+        xml << '<Alerting>'
+        alerts.each do |a|
           xml << a.to_xml if a.respond_to? :to_xml
         end
-        xml << ' </Alerting>'
+        xml << '</Alerting>'
       end
 
-      xml << %Q{<ScanConfig configID="#{@site_config.scanConfig.configID}" name="#{@site_config.scanConfig.name}" templateID="#{@site_config.scanConfig.templateID}" configVersion="#{@site_config.scanConfig.configVersion}" engineID="#{@site_config.scanConfig.engine_id}">}
+      xml << %Q(<ScanConfig configID="#{@id}" name="#{@scan_template_name || @scan_template}" templateID="#{@scan_template}" configVersion="#{@config_version || 3}" engineID="#{@engine}">)
 
-      xml << ' <Schedules>'
-      @site_config.scanConfig.schedules.each do |s|
-        xml << %Q{<Schedule enabled="#{s.enabled ? 1 : 0}" type="#{s.type}" interval="#{s.interval}" start="#{s.start}" />}
+      xml << '<Schedules>'
+      @schedules.each do |sched|
+        xml << %Q{<Schedule enabled="#{sched.enabled ? 1 : 0}" type="#{sched.type}" interval="#{sched.interval}" start="#{sched.start}" />}
       end
-      xml << ' </Schedules>'
+      xml << '</Schedules>'
+      xml << '</ScanConfig>'
+      xml << '</Site>'
+    end
 
-      unless @site_config.scanConfig.scanTriggers.empty?
-        xml << ' <ScanTriggers>'
-        @site_config.scanConfig.scanTriggers.each do |s|
-          if (s.class.to_s == "Nexpose::AutoUpdate")
-            xml << ' <autoUpdate enabled="' + s.enabled + '" incremental="' + s.incremental + '"/>'
+    # Parse a response from a Nexpose console into a valid Site object.
+    #
+    # @param [REXML::Document] rexml XML document to parse.
+    # @return [Site] Site object represented by the XML.
+    #  ## TODO What is returned on failure?
+    def self.parse(rexml)
+      rexml.elements.each('SiteConfigResponse/Site') do |s|
+        site = Site.new(s.attributes['name'])
+        site.id = s.attributes['id'].to_i
+        site.description = s.attributes['description']
+        site.risk_factor = s.attributes['riskfactor'] || 1.0
+        site.is_dynamic = true if s.attributes['isDynamic'] == '1'
+
+        s.elements.each('Hosts/range') do |r|
+          site.assets << IPRange.new(r.attributes['from'], r.attributes['to'])
+        end
+        s.elements.each('Hosts/host') do |host|
+          site.assets << HostName.new(host.text)
+        end
+
+        s.elements.each('ScanConfig') do |scan_config|
+          site.scan_template_name = scan_config.attributes['name']
+          site.scan_template = scan_config.attributes['templateID']
+          site.config_version = scan_config.attributes['configVersion'].to_i
+          site.engine = scan_config.attributes['engineID'].to_i
+          scan_config.elements.each('Schedules/Schedule') do |sched|
+            schedule = Schedule.new(sched.attributes['type'],
+                                    sched.attributes['interval'],
+                                    sched.attributes['start'],
+                                    sched.attributes['enabled'])
+            site.schedules << schedule
           end
         end
-        xml << ' </ScanTriggers>'
+
+        s.elements.each('Credentials') do |cred|
+          # TODO
+        end
+
+        s.elements.each('Alerting/Alert') do |a|
+          a.elements.each('smtpAlert') do |smtp|
+            smtp_alert = SMTPAlert.new(a.attributes['name'], smtp.attributes['sender'], smtp.attributes['limitText'], a.attributes['enabled'])
+
+            smtp.elements.each('recipient') do |recipient|
+              smtp_alert.addRecipient(recipient.text)
+            end
+            site.alerts << smtp_alert
+          end
+
+          a.elements.each('snmpAlert') do |snmp|
+            snmp_alert = SNMPAlert.new(a.attributes['name'], snmp.attributes['community'], snmp.attributes['server'], a.attributes['enabled'])
+            site.alerts << snmp_alert
+          end
+
+          a.elements.each('syslogAlert') do |syslog|
+            syslog_alert = SyslogAlert.new(a.attributes['name'], syslog.attributes['server'], a.attributes['enabled'])
+            site.alerts << syslog_alert
+          end
+
+          a.elements.each('vulnFilter') do |vulnFilter|
+
+            #vulnfilter = new VulnFilter.new(a.attributes["typemask"], a.attributes["severityThreshold"], $attrs["MAXALERTS"])
+            # Pop off the top alert on the stack
+            #$alert = @alerts.pop()
+            # Add the new recipient string to the Alert Object
+            #$alert.setVulnFilter($vulnfilter)
+            # Push the alert back on to the alert stack
+            #array_push($this->alerts, $alert)
+          end
+
+          a.elements.each('scanFilter') do |scanFilter|
+            #<scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
+            #scanfilter = ScanFilter.new(scanFilter.attributes['scanStop'],scanFilter.attributes['scanFailed'],scanFilter.attributes['scanStart'])
+            #alert = @alerts.pop()
+            #alert.setScanFilter(scanfilter)
+            #@alerts.push(alert)
+          end
+        end
+
+        return site
       end
-
-      xml << ' </ScanConfig>'
-
-      xml << ' </Site>'
-
-      xml
+      nil
     end
   end
 
@@ -509,166 +502,6 @@ module Nexpose
 
     def _set_id(id)
       @id = id
-    end
-  end
-
-  # === Description
-  # Object that represents the configuration of a Site. This object is automatically created when a new Site object is instantiated.
-  #
-  class SiteConfig
-    # true if an error condition exists; false otherwise
-    attr_reader :error
-    # Error message string
-    attr_reader :error_msg
-    # The last XML request sent by this object
-    attr_reader :request_xml
-    # The last XML response received by this object
-    attr_reader :response_xml
-    # The NSC Connection associated with this object
-    attr_reader :connection
-    # The Site ID
-    attr_accessor :id
-    attr_reader :site_id
-    # The Site Name
-    attr_accessor :name
-    attr_reader :site_name
-    # A Description of the Site
-    attr_accessor :description
-    # User assigned risk multiplier
-    attr_accessor :riskfactor
-    # Array containing ((IPRange|HostName)*)
-    attr_accessor :hosts
-    # Array containing (AdminCredentials*)
-    attr_accessor :credentials
-    # Array containing ((SmtpAlera|SnmpAlert|SyslogAlert)*)
-    attr_accessor :alerts
-    # ScanConfig object which holds Schedule and ScanTrigger Objects
-    attr_accessor :scanConfig
-    attr_reader :is_dynamic
-
-    def initialize()
-      @id = -1
-      @xml_tag_stack = []
-      @hosts = []
-      @credentials = []
-      @alerts = []
-      @error = false
-    end
-
-    # Adds a new host to the hosts array
-    def addHost(host)
-      @hosts.push(host)
-    end
-
-    # Adds a new alert to the alerts array
-    def addAlert(alert)
-      @alerts.push(alert)
-    end
-
-    # Adds a new set of credentials to the credentials array
-    def addCredentials(credential)
-      @credentials.push(credential)
-    end
-
-    # TODO
-    def getSiteConfig(connection, site_id)
-      @connection = connection
-      @id = @site_id = site_id
-
-      r = APIRequest.execute(@connection.url, %Q(<SiteConfigRequest session-id="#{@connection.session_id}" site-id="#{@site_id}"/>))
-      parse(r.res)
-    end
-
-    def self.get_site_config(connection, site_id)
-      config = SiteConfig.new
-      config.getSiteConfig(connection, site_id)
-      config
-    end
-
-    def _set_site_id(site_id)
-      @site_id = site_id
-    end
-
-    def _set_site_name(site_name)
-      @site_name = site_name
-    end
-
-    def _set_description(description)
-      @description = description
-    end
-
-    def _set_riskfactor(riskfactor)
-      @riskfactor = riskfactor
-    end
-
-    def _set_scanConfig(scanConfig)
-      @scanConfig = scanConfig
-    end
-
-    def _set_connection(connection)
-      @connection = connection
-    end
-
-    def parse(response)
-      response.elements.each('SiteConfigResponse/Site') do |s|
-        @id = @site_id = s.attributes['id']
-        @name = @site_name = s.attributes['name']
-        @description = s.attributes['description']
-        @riskfactor = s.attributes['riskfactor'] || 1.0
-        @is_dynamic = s.attributes['isDynamic']
-        s.elements.each('Hosts/range') do |r|
-          @hosts.push(IPRange.new(r.attributes['from'], r.attributes['to']))
-        end
-        s.elements.each('Hosts/host') do |host|
-          @hosts << HostName.new(host.text)
-        end
-        # TODO: This should just be passed to ScanConfig to parse.
-        s.elements.each('ScanConfig') do |c|
-          @scanConfig = ScanConfig.parse(c)
-        end
-        s.elements.each('Credentials') do |cred|
-          # TODO
-        end
-        s.elements.each('Alerting/Alert') do |a|
-
-          a.elements.each('smtpAlert') do |smtp|
-            smtp_alert = SmtpAlert.new(a.attributes["name"], smtp.attributes["sender"], smtp.attributes["limitText"], a.attributes["enabled"])
-
-            smtp.elements.each('recipient') do |recipient|
-              smtp_alert.addRecipient(recipient.text)
-            end
-            @alerts.push(smtp_alert)
-          end
-
-          a.elements.each('snmpAlert') do |snmp|
-            snmp_alert = SnmpAlert.new(a.attributes["name"], snmp.attributes["community"], snmp.attributes["server"], a.attributes["enabled"])
-            @alerts.push(snmp_alert)
-          end
-          a.elements.each('syslogAlert') do |syslog|
-            syslog_alert = SyslogAlert.new(a.attributes["name"], syslog.attributes["server"], a.attributes["enabled"])
-            @alerts.push(syslog_alert)
-          end
-
-          a.elements.each('vulnFilter') do |vulnFilter|
-
-            #vulnfilter = new VulnFilter.new(a.attributes["typemask"], a.attributes["severityThreshold"], $attrs["MAXALERTS"])
-            # Pop off the top alert on the stack
-            #$alert = @alerts.pop()
-            # Add the new recipient string to the Alert Object
-            #$alert.setVulnFilter($vulnfilter)
-            # Push the alert back on to the alert stack
-            #array_push($this->alerts, $alert)
-          end
-
-          a.elements.each('scanFilter') do |scanFilter|
-            #<scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
-            #scanfilter = ScanFilter.new(scanFilter.attributes['scanStop'],scanFilter.attributes['scanFailed'],scanFilter.attributes['scanStart'])
-            #alert = @alerts.pop()
-            #alert.setScanFilter(scanfilter)
-            #@alerts.push(alert)
-          end
-        end
-      end
     end
   end
 
@@ -839,7 +672,7 @@ module Nexpose
   # === Description
   # Object that represents an SNMP Alert.
   #
-  class SnmpAlert
+  class SNMPAlert
     include Sanitize
 
     # A unique name for this alert
@@ -886,7 +719,7 @@ module Nexpose
   # === Description
   # Object that represents an SMTP (Email) Alert.
   #
-  class SmtpAlert
+  class SMTPAlert
     # A unique name for this alert
     attr_reader :name
     # If this alert is enabled or not

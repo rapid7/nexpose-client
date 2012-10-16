@@ -1,0 +1,25 @@
+<SiteConfigResponse success="1">
+  <Site id="2" name="Test Site" description="Description goes here" riskfactor="2.0" isDynamic="0">
+    <Hosts>
+      <range from="127.0.0.1"/>
+      <range from="10.0.0.1" to="10.0.0.26"/>
+      <host>test.rapid7.com</host>
+    </Hosts>
+    <Credentials>
+    </Credentials>
+    <Alerting>
+      <Alert name="notify" enabled="1" maxAlerts="1">
+        <scanFilter scanStart="0" scanStop="1" scanFailed="0" scanResumed="0" scanPaused="0"/>
+        <vulnFilter severityThreshold="1" confirmed="1" unconfirmed="0" potential="0"/>
+        <smtpAlert sender="rspec@rapid7.com" server="smtp.rapid7.com" limitText="0">
+          <recipient>rspec@rapid7.com</recipient>
+        </smtpAlert>
+      </Alert>
+    </Alerting>
+    <ScanConfig configID="2" name="Full audit" templateID="full-audit" engineID="2" configVersion="3">
+      <Schedules>
+        <Schedule enabled="1" incremental="0" type="monthly-date" interval="1" start="20121008T160000000" maxDuration="30" repeaterType="continue"/>
+      </Schedules>
+    </ScanConfig>
+  </Site>
+</SiteConfigResponse>
