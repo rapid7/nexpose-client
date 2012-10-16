@@ -2,8 +2,21 @@ module Nexpose
   module NexposeAPI
     include XMLUtils
 
-    def scan_stop(param)
-      r = execute(make_xml('ScanStopRequest', {'scan-id' => param}))
+    # Stop a running or paused scan.
+    #
+    # @param [Fixnum] scan_id ID of the scan to stop.
+    # @param [Fixnum] wait_sec Number of seconds to wait for status to be updated. Default: 0
+    def scan_stop(scan_id, wait_sec = 0)
+      r = execute(make_xml('ScanStopRequest', {'scan-id' => scan_id}))
+      if r.success
+        so_far = 0
+        while so_far < wait_sec
+          status = scan_status(scan_id)
+          return status if status == 'stopped'
+          sleep 5
+          so_far += 5
+        end
+      end
       r.success
     end
 
