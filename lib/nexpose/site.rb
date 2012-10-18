@@ -11,7 +11,6 @@ module Nexpose
       if (r.success)
         res = []
         r.res.elements.each("//device") do |device|
-          puts device
           res << {
             :device_id => device.attributes['id'].to_i,
             # TODO Covert to using?
