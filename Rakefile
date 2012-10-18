@@ -1,6 +1,6 @@
 # encoding: utf-8
  
-task :build => :update do
+task :build do
 	Rake::Task['clean'].execute
 	puts "[*] Building nexpose.gemspec"
 	system "gem build nexpose.gemspec &> /dev/null"
@@ -14,9 +14,4 @@ end
 
 task :clean do
 	system "rm *.gem &> /dev/null"
-end
-
-task :update do
-	system "rm -f lib/nexpose.rb"
-	system "svn export https://metasploit.com/svn/framework3/trunk/lib/rapid7/nexpose.rb lib/nexpose.rb"
 end
