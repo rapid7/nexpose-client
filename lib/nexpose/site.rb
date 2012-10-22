@@ -14,7 +14,6 @@ module Nexpose
           res << {
             :device_id => device.attributes['id'].to_i,
             # TODO Covert to using?
-            #   require 'ipaddr'
             #   :address => IPAddr.new(device.attributes['address']),
             :address => device.attributes['address'].to_s,
             :risk_factor => device.attributes['riskfactor'].to_f,
@@ -134,33 +133,9 @@ module Nexpose
     end
   end
 
-  #-------------------------------------------------------------------------------------------------------------------
-  # === Description
-  # Object that represents a site, including the site configuration, scan history, and device listing.
-  #
-  # === Example
-  #   # Create a new Nexpose Connection on the default port and Login
-  #   nsc = Connection.new("10.1.40.10","nxadmin","password")
-  #   nsc.login()
-  #
-  #   # Get an Existing Site
-  #   site_existing = Site.new(nsc,184)
-  #
-  #   # Create a New Site, add some hosts, and save it to the NSC
-  #   site = Site.new(nsc)
-  #   site.setSiteConfig("New Site", "New Site Created in the API")
-  #
-  #   # Add the hosts
-  #   site.hosts << HostName.new('localhost')
-  #   site.hosts << IPRange.new('192.168.7.1', '192.168.7.255')
-  #   site.hosts << IPRange.new('10.1.20.30')
-  #
-  #   status = site.saveSite()
-  #-------------------------------------------------------------------------------------------------------------------
-
-
-
   # Configuration object representing a Nexpose site.
+  #
+  # For a basic walk-through, see {https://github.com/rapid7/nexpose-client/wiki/Using-Sites}
   class Site
 
     # The site ID. An ID of -1 is used to designate a site that has not been
@@ -813,7 +788,6 @@ module Nexpose
   # Object that represents a single IP address or an inclusive range of IP addresses.
   # If to is nil then the from field will be used to specify a single IP Address only.
   class IPRange
-    require 'ipaddr'
 
     # Start of range *Required
     attr_accessor :from
