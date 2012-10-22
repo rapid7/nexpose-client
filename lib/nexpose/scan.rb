@@ -228,47 +228,6 @@ module Nexpose
   # Object that represents the scanning configuration for a Site.
   #
   class ScanConfig
-    # A unique ID for this scan configuration
-    attr_reader :configID
-    # The name of the scan template
-    attr_reader :name
-    # The ID of the scan template used full-audit, exhaustive-audit, web-audit, dos-audit, internet-audit, network-audit
-    attr_reader :templateID
-    # The configuration version (default is 2)
-    attr_reader :configVersion
-    attr_accessor :engine_id
-    # Array of (Schedule)* ... TODO: There can be only 0 or 1 schedules
-    attr_reader :schedules
-    # Array of (ScanTrigger)*
-    attr_reader :scanTriggers
-
-    def initialize(configID, name, templateID, configVersion = 2, engine_id = nil)
-      @configID = configID
-      @name = name
-      @templateID = templateID
-      @configVersion = configVersion
-      @engine_id = engine_id
-      @schedules = []
-      @scanTriggers = []
-    end
-
-    # Adds a new Schedule for this ScanConfig
-    def addSchedule(schedule)
-      @schedules.push(schedule)
-    end
-
-    # Adds a new ScanTrigger to the scanTriggers array
-    def addScanTrigger(scanTrigger)
-      @scanTriggers.push(scanTrigger)
-    end
-
-    def _set_configID(configID)
-      @configID = configID
-    end
-
-    def _set_name(name)
-      @name = name
-    end
 
     def self.parse(xml)
       config = ScanConfig.new(xml.attributes['configID'],
@@ -283,9 +242,6 @@ module Nexpose
                                 sched.attributes['enabled'])
         config.addSchedule(schedule)
       end
-      # TODO
-      # xml.elements.each('ScanTriggers') do |trigger|
-      # end
       config
     end
   end
@@ -305,17 +261,4 @@ module Nexpose
       @scanStart = scan_start
     end
   end
-
-  # === Description
-  # Object that holds an event that triggers the start of a scan.
-  class ScanTrigger
-    attr_reader :type, :enabled, :incremental
-
-    def initialize(type, incremental, enabled = 1)
-      @type = type
-      @incremental = incremental
-      @enabled = enabled
-    end
-  end
-
 end
