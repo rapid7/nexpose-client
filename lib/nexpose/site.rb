@@ -248,7 +248,7 @@ module Nexpose
     # @param [Connection] connection Connection to console where this site will be saved.
     # @return [Boolean] Whether or not the site was successfully deleted.
     def delete(connection)
-      r = connection.execute('<SiteDeleteRequest session-id="' + connection.session_id.to_s + '" site-id="' + @id + '"/>')
+      r = connection.execute(%Q{<SiteDeleteRequest session-id="#{connection.session_id}" site-id="#@id"/>})
       r.success
     end
 
