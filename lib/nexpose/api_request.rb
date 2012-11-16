@@ -81,6 +81,11 @@ module Nexpose
         # drops our HTTP connection before processing. We try 5 times to establish a
         # connection in these situations. The actual exception occurs in the Ruby
         # http library, which is why we use such generic error classes.
+      rescue OpenSSL::SSL::SSLError
+        if @conn_tries < 5
+          @conn_tries += 1
+          retry
+        end
       rescue ::ArgumentError, ::NoMethodError
         if @conn_tries < 5
           @conn_tries += 1
