@@ -69,6 +69,8 @@ module Nexpose
   end
 
   class UserConfig
+    include Sanitize
+
     # user id, set to -1 to create a new user
     attr_reader :id
     # valid roles: global-admin|security-manager|site-admin|system-admin|user|custom
@@ -117,7 +119,7 @@ module Nexpose
       xml << %Q{ name="#{@name}"}
       xml << %Q{ fullname="#{@full_name}"}
       xml << %Q{ role-name="#{@role_name}"}
-      xml << %Q{ password="#{@password}"} if @password
+      xml << %Q{ password="#{replace_entities(@password)}"} if @password
       xml << %Q{ email="#{@email}"} if @email
       xml << %Q{ enabled="#{@enabled}"}
       # These two fields are keying off role_name to work around a defect.
