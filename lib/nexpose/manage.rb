@@ -17,7 +17,7 @@ module Nexpose
       if (r.success)
         res = ''
         r.res.elements.each('//Output') do |out|
-          out.text.to_s
+          return out.text.to_s
         end
       else
         false
