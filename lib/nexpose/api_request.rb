@@ -55,7 +55,7 @@ module Nexpose
         @raw_response_data = @raw_response.read_body
         @res = parse_xml(@raw_response_data)
 
-        if (not @res.root)
+        unless @res.root
           @error = 'Nexpose service returned invalid XML.'
           return @sid
         end
@@ -68,12 +68,19 @@ module Nexpose
           @success = true
         else
           @success = false
-          @res.elements.each('//Failure/Exception') do |s|
-            s.elements.each('message') do |m|
-              @error = m.text
+          if @api_version =~ /1.2/
+            @res.elements.each('//Exception/Message') do |message|
+              @error = message.text.sub(/.*Exception: */, '')
             end
-            s.elements.each('stacktrace') do |m|
-              @trace = m.text
+            @res.elements.each('//Exception/Stacktrace') do |stacktrace|
+              @trace = stacktrace.text
+            end
+          else
+            @res.elements.each('//message') do |message|
+              @error = message.text.sub(/.*Exception: */, '')
+            end
+            @res.elements.each('//stacktrace') do |stacktrace|
+              @trace = stacktrace.text
             end
           end
         end
@@ -123,9 +130,7 @@ module Nexpose
     def self.execute(url, req, api_version='1.1')
       obj = self.new(req, url, api_version)
       obj.execute
-      if (not obj.success)
-        raise APIError.new(obj, "Action failed: #{obj.error}")
-      end
+      raise APIError.new(obj, "Action failed: #{obj.error}") unless obj.success
       obj
     end
 
