@@ -179,6 +179,8 @@ module Nexpose
     attr_accessor :template_id
     # Format. One of: pdf|html|rtf|xml|text|csv|db|raw-xml|raw-xml-v2|ns-xml|qualys-xml
     attr_accessor :format
+    attr_accessor :owner
+    attr_accessor :time_zone
 
     # Array of filters associated with this report.
     attr_accessor :filters
@@ -190,9 +192,11 @@ module Nexpose
     # particular date.
     attr_accessor :baseline
 
-    def initialize(template_id, format, site_id = nil)
+    def initialize(template_id, format, site_id = nil, owner = nil, time_zone = nil)
       @template_id = template_id 
       @format = format 
+      @owner = owner
+      @time_zone = time_zone
 
       @filters = []
       @filters << Filter.new('site', site_id) if site_id
@@ -204,13 +208,16 @@ module Nexpose
     end
 
     def to_xml
-      xml = %Q{<AdhocReportConfig format='#{@format}' template-id='#{@template_id}'>}
+      xml = %Q(<AdhocReportConfig format='#{@format}' template-id='#{@template_id}')
+      xml << %Q( owner='#{@owner}') if @owner
+      xml << %Q( timezone='#{@time_zone}') if @time_zone
+      xml << '>'
 
       xml << '<Filters>'
       @filters.each { |filter| xml << filter.to_xml }
       xml << '</Filters>'
 
-      xml << %Q{<Baseline compareTo='#{@baseline}' />} if @baseline
+      xml << %Q(<Baseline compareTo='#{@baseline}' />) if @baseline
 
       xml << '</AdhocReportConfig>'
     end
@@ -257,8 +264,6 @@ module Nexpose
     attr_accessor :id
     # The unique name assigned to the report definition.
     attr_accessor :name
-    attr_accessor :owner
-    attr_accessor :time_zone
 
     # Description associated with this report.
     attr_accessor :description
