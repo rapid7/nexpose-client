@@ -54,6 +54,8 @@ require 'net/http'
 require 'uri'
 require 'rex/mime'
 require 'ipaddr'
+require 'json'
+require 'rest-client'
 require 'nexpose/error'
 require 'nexpose/util'
 require 'nexpose/user'
@@ -71,6 +73,7 @@ require 'nexpose/creds'
 require 'nexpose/connection'
 require 'nexpose/role'
 require 'nexpose/common'
+require 'nexpose/asset'
 
 module Nexpose
 
