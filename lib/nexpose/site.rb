@@ -56,28 +56,21 @@ module Nexpose
       end
     end
 
-    #-----------------------------------------------------------------------
-    # TODO: Needs to be expanded to included details
-    #       Also confusing. Name clashes with field on Site
-    #-----------------------------------------------------------------------
+    # Retrieve a list of all previous scans of the site.
+    #
+    # @param [FixNum] site_id Site ID to request scan history for.
+    # @return [Array[ScanSummary]] Array of ScanSummary objects representing
+    #   each scan run to date on the site provided.
+    #
     def site_scan_history(site_id)
-      r = execute(make_xml('SiteScanHistoryRequest', {'site-id' => site_id.to_s}))
-
-      if (r.success)
-        res = []
-        r.res.elements.each("//ScanSummary") do |site_scan_history|
-          res << {
-            :site_id => site_scan_history.attributes['site-id'].to_i,
-            :scan_id => site_scan_history.attributes['scan-id'].to_i,
-            :engine_id => site_scan_history.attributes['engine-id'].to_i,
-            :start_time => site_scan_history.attributes['startTime'].to_s,
-            :end_time => site_scan_history.attributes['endTime'].to_s
-          }
+      r = execute(make_xml('SiteScanHistoryRequest', {'site-id' => site_id}))
+      res = []
+      if r.success
+        r.res.elements.each("//ScanSummary") do |scan_event|
+          res << ScanSummary.parse(scan_event)
         end
-        res
-      else
-        false
       end
+      res
     end
 
     #-----------------------------------------------------------------------
@@ -477,50 +470,6 @@ module Nexpose
 
     def _set_id(id)
       @id = id
-    end
-  end
-
-  # === Description
-  # Object that represents the scan history of a site.
-  #
-  class SiteScanHistory
-    # true if an error condition exists; false otherwise
-    attr_reader :error
-    # Error message string
-    attr_reader :error_msg
-    # The last XML request sent by this object
-    attr_reader :request_xml
-    # The last response received by this object
-    attr_reader :response
-    # The NSC Connection associated with this object
-    attr_reader :connection
-    # The Site ID
-    attr_reader :site_id
-    # //Array containing (ScanSummary*)
-    attr_reader :scan_summaries
-
-    def initialize(connection, id)
-      @site_id = id
-      @error = false
-      @connection = connection
-      @scan_summaries = []
-
-      @request_xml = '<SiteScanHistoryRequest' + ' session-id="' + @connection.session_id + '" site-id="' + "#{@site_id}" + '"/>'
-      r = @connection.execute(@request_xml)
-      @response = r
-
-      if r and r.success
-        r.res.elements.each('//ScanSummary') do |summary|
-          scan_id=summary.attributes['scan-id'].to_i
-          engine_id=summary.attributes['engine-id'].to_i
-          name=summary.attributes['name'].to_s
-          start_time=summary.attributes['startTime'].to_s
-          end_time=summary.attributes['endTime'].to_s
-          status=summary.attributes['status'].to_s
-          scan_summary = ScanSummary.new(scan_id, engine_id, name, start_time, end_time, status)
-          scan_summaries << scan_summary
-        end
-      end
     end
   end
 

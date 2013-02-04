@@ -7,6 +7,23 @@ module Nexpose
       xml = make_xml('EngineDeleteRequest', {'engine-id' => engine_id})
       execute(xml, '1.2')
     end
+
+    # Provide a list of current scan activities for a specific Scan Engine.
+    #
+    # @return [Array[ScanSummary]] Array of ScanSummary objects associated with
+    #   each active scan on the engine.
+    #
+    def engine_activity(engine_id)
+      xml = make_xml('EngineActivityRequest', {'engine-id' => engine_id})
+      r = execute(xml)
+      arr = []
+      if r.success
+        r.res.elements.each("//ScanSummary") do |scan_event|
+          arr << ScanSummary.parse(scan_event)
+        end
+      end
+      arr
+    end
   end
 
   # ==== Description
@@ -43,10 +60,6 @@ module Nexpose
       end
       @engine_count = @engines.length
     end
-  end
-
-  # TODO
-  class EngineActivity
   end
 
   # ==== Description
