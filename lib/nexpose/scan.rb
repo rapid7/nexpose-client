@@ -56,7 +56,6 @@ module Nexpose
     #
     def scan_activity
       r = execute(make_xml('ScanActivityRequest', {}))
-      puts r.res
       res = []
       if (r.success)
         r.res.elements.each("//ScanSummary") do |scan|
@@ -66,6 +65,10 @@ module Nexpose
       res
     end
 
+    # Get scan statistics, including node and vulnerability breakdowns.
+    #
+    # @return [ScanSummary] ScanSummary object providing statistics for the scan.
+    #
     def scan_statistics(scan_id)
       r = execute(make_xml('ScanStatisticsRequest', {'scan-id' => scan_id}))
       if r.success
