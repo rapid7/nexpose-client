@@ -24,10 +24,73 @@ module Nexpose
       end
       arr
     end
+
+    # Retrieve a list of all Scan Engines managed by the Security Console.
+    #
+    # @return [Array[EngineSummary]] Array of EngineSummary objects associated with
+    #   each engine associated with this security console.
+    #
+    def list_engines
+      response = execute(make_xml('EngineListingRequest'))
+      arr = []
+      if response.success
+        response.res.elements.each("//EngineSummary") do |engine|
+          arr << EngineSummary.new(engine.attributes['id'],
+                                   engine.attributes['name'],
+                                   engine.attributes['address'],
+                                   engine.attributes['port'],
+                                   engine.attributes['status'])
+        end
+      end
+      arr
+    end
+
+    alias_method :engines, :list_engines
+  end
+
+  # Object representing the current details of a scan engine attached to the security console.
+  #
+  class EngineSummary
+
+    # A unique ID that identifies this scan engine.
+    attr_reader :id
+    # The name of this scan engine.
+    attr_reader :name
+    # The hostname or IP address of the engine.
+    attr_reader :address
+    # The port there the engine is listening.
+    attr_reader :port
+    # The engine status. One of: active|pending-auth|incompatible|not-responding|unknown
+    attr_reader :status
+    # A parameter that specifies whether the engine has a global
+    # or silo-specific scope.
+    attr_reader :scope
+
+    def initialize(id, name, address, port, status, scope = 'silo')
+      @id = id
+      @name = name
+      @address = address
+      @port = port
+      @status = status
+      @scope = scope
+    end
   end
 
   # ==== Description
   # Object that represents a listing of all of the scan engines available on to an NSC.
+  #
+  # ==== Examples
+  #
+  #   # Create a new Nexpose Connection on the default port and Login
+  #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password')
+  #   nsc.login()
+  #
+  #   # Get the engine listing for the connection
+  #   engine_listing = EngineListing.new(nsc)
+  #
+  #   # Print out the status of the first scan engine
+  #   puts engine_listing.engines[0].status
+  #
   class EngineListing
     # true if an error condition exists; false otherwise
     attr_reader :error
@@ -59,52 +122,6 @@ module Nexpose
         @error_msg = 'EngineListingRequest Parse Error'
       end
       @engine_count = @engines.length
-    end
-  end
-
-  # ==== Description
-  # Object that represents the summary of a scan engine.
-  #
-  # ==== Examples
-  #
-  #   # Create a new Nexpose Connection on the default port and Login
-  #   nsc = Connection.new("10.1.40.10","nxadmin","password")
-  #   nsc.login()
-  #
-  #   # Get the engine listing for the connection
-  #   enginelisting = EngineListing.new(nsc)
-  #
-  #   # Print out the status of the first scan engine
-  #   puts enginelisting.engines[0].status
-  #
-  class EngineSummary
-    # A unique ID that identifies this scan engine
-    attr_reader :id
-    # The name of this scan engine
-    attr_reader :name
-    # The hostname or IP address of the engine
-    attr_reader :address
-    # The port there the engine is listening
-    attr_reader :port
-    # The engine status (active|pending-auth| incompatible|not-responding|unknown)
-    attr_reader :status
-    # A parameter that specifies whether the engine has a global
-    # or silo-specific scope.
-    attr_reader :scope
-
-    # Constructor
-    # EngineSummary(id, name, address, port, status, scope)
-    def initialize(id, name, address, port, status, scope = 'silo')
-      @id = id
-      @name = name
-      @address = address
-      @port = port
-      @status = status
-      @scope = scope
-    end
-
-    def to_s
-      "Engine: #@name [ID: #@id] #@address:#@port, Status: #@status, Scope: #@scope"
     end
   end
 
