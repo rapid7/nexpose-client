@@ -35,10 +35,10 @@ module Nexpose
       arr = []
       if response.success
         response.res.elements.each("//EngineSummary") do |engine|
-          arr << EngineSummary.new(engine.attributes['id'],
+          arr << EngineSummary.new(engine.attributes['id'].to_i,
                                    engine.attributes['name'],
                                    engine.attributes['address'],
-                                   engine.attributes['port'],
+                                   engine.attributes['port'].to_i,
                                    engine.attributes['status'])
         end
       end
@@ -73,55 +73,6 @@ module Nexpose
       @port = port
       @status = status
       @scope = scope
-    end
-  end
-
-  # ==== Description
-  # Object that represents a listing of all of the scan engines available on to an NSC.
-  #
-  # ==== Examples
-  #
-  #   # Create a new Nexpose Connection on the default port and Login
-  #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password')
-  #   nsc.login()
-  #
-  #   # Get the engine listing for the connection
-  #   engine_listing = EngineListing.new(nsc)
-  #
-  #   # Print out the status of the first scan engine
-  #   puts engine_listing.engines[0].status
-  #
-  class EngineListing
-    # true if an error condition exists; false otherwise
-    attr_reader :error
-    # Error message string
-    attr_reader :error_msg
-    # The last XML request sent by this object
-    attr_reader :connection
-    # Array containing (EngineSummary*)
-    attr_reader :engines
-    # The number of scan engines
-    attr_reader :engine_count
-
-    # Constructor
-    # EngineListing (connection)
-    def initialize(connection)
-      @connection = connection
-      @engines = []
-      @engine_count = 0
-      @error = false
-      r = @connection.execute('<EngineListingRequest session-id="' + @connection.session_id + '"/>', '1.2')
-
-      if r.success
-        r.res.elements.each('EngineListingResponse/EngineSummary') do |v|
-          @engines.push(EngineSummary.new(v.attributes['id'], v.attributes['name'], v.attributes['address'],
-                                          v.attributes['port'], v.attributes['status']))
-        end
-      else
-        @error = true
-        @error_msg = 'EngineListingRequest Parse Error'
-      end
-      @engine_count = @engines.length
     end
   end
 
@@ -320,10 +271,10 @@ module Nexpose
           @scope = pool.attributes['scope']
           @engines = []
           r.res.elements.each('EnginePoolDetailsResponse/EnginePool/EngineSummary') do |summary|
-            @engines.push(EngineSummary.new(summary.attributes['id'],
+            @engines.push(EngineSummary.new(summary.attributes['id'].to_i,
                                             summary.attributes['name'],
                                             summary.attributes['address'],
-                                            summary.attributes['port'],
+                                            summary.attributes['port'].to_i,
                                             summary.attributes['status'],
                                             summary.attributes['scope']))
           end
