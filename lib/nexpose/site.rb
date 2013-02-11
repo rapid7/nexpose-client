@@ -3,29 +3,36 @@ module Nexpose
     include XMLUtils
 
     # Retrieve a list of all of the assets in a site.
-    # If no site-id is specified, then this will return all of the assets
-    # for the Scan Engine, grouped by site-id.
     #
-    def site_device_listing(site_id)
-      r = execute(make_xml('SiteDeviceListingRequest', {'site-id' => site_id.to_s}))
+    # If no site-id is specified, then return all of the assets
+    # for the Nexpose console, grouped by site-id.
+    #
+    # @param [FixNum] site_id Site ID to request device listing for. Optional.
+    # @return [Array[Device]] Array of devices associated with the site, or
+    #   all devices on the console if no site is provided.
+    #
+    def site_device_listing(site_id = nil)
+      r = execute(make_xml('SiteDeviceListingRequest', {'site-id' => site_id}))
 
-      if (r.success)
-        res = []
-        r.res.elements.each("//device") do |device|
-          res << {
-            :device_id => device.attributes['id'].to_i,
-            # TODO Covert to using?
-            #   :address => IPAddr.new(device.attributes['address']),
-            :address => device.attributes['address'],
-            :risk_factor => device.attributes['riskfactor'].to_f,
-            :risk_score => device.attributes['riskscore'].to_f,
-          }
+      arr = []
+      if r.success
+        r.res.elements.each('//SiteDevices') do |site|
+          site_id = site.attributes['site-id'].to_i
+          site.elements.each("//SiteDevices[contains(@site-id,'#{site_id}')]/device") do |device|
+            arr << Device.new(device.attributes['id'].to_i,
+                              device.attributes['address'],
+                              site_id,
+                              device.attributes['riskfactor'].to_f,
+                              device.attributes['riskscore'].to_f)
+          end
         end
-        res
-      else
-        false
       end
+      arr
     end
+
+    alias_method :assets, :site_device_listing
+    alias_method :devices, :site_device_listing
+    alias_method :list_devices, :site_device_listing
 
     # Delete the specified site and all associated scan data.
     #
@@ -488,77 +495,27 @@ module Nexpose
   end
 
   # === Description
-  # Object that represents a listing of devices for a site or the entire NSC. Note that only devices which are accessible to the account used to create the connection object will be returned. This object is created and populated automatically with the instantiation of a new Site object.
-  #
-  class SiteDeviceListing
-
-    # true if an error condition exists; false otherwise
-    attr_reader :error
-    # Error message string
-    attr_reader :error_msg
-    # The last XML request sent by this object
-    attr_reader :request_xml
-    # The last XML response received by this object
-    attr_reader :response_xml
-    # The NSC Connection associated with this object
-    attr_reader :connection
-    # The Site ID. 0 if all sites are specified.
-    attr_reader :site_id
-    # //Array of (Device)*
-    attr_reader :devices
-
-    def initialize(connection, site_id = 0)
-
-      @site_id = site_id
-      @error = false
-      @connection = connection
-      @devices = []
-
-      r = nil
-      if (@site_id)
-        r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '" site-id="' + "#{@site_id}" + '"/>')
-        if r.success
-          r.res.elements.each('SiteDeviceListingResponse/SiteDevices/device') do |d|
-            @devices.push(Device.new(d.attributes['id'], @site_id, d.attributes["address"], d.attributes["riskfactor"], d.attributes["riskscore"]))
-          end
-        end
-      else
-        r = @connection.execute('<SiteDeviceListingRequest session-id="' + connection.session_id + '"/>')
-        if r.success
-          r.res.elements.each('SiteDeviceListingResponse/SiteDevices') do |rr|
-            @sid = rr.attribute("site-id")
-            rr.elements.each('device') do |d|
-              @devices.push(Device.new(d.attributes['id'], @sid, d.attributes["address"], d.attributes['riskfactor'], d.attributes['riskscore']))
-            end
-          end
-        end
-      end
-    end
-  end
-
-  # === Description
-  # Object that represents a single device in an NSC.
+  # Object that represents a single device in a Nexpose security console.
   #
   class Device
 
-    # A unique device ID (assigned by the NSC)
+    # A unique device ID (assigned automatically by the Nexpose console).
     attr_reader :id
-    # The site ID of this devices site
-    attr_reader :site_id
-    # IP Address or Hostname of this device
+    # IP Address or Hostname of this device.
     attr_reader :address
-    # User assigned risk multiplier
-    attr_reader :riskfactor
-    # Nexpose risk score
-    attr_reader :riskscore
+    # User assigned risk multiplier.
+    attr_reader :risk_factor
+    # Nexpose risk score.
+    attr_reader :risk_score
+    # Site ID that this device is associated with.
+    attr_reader :site_id
 
-    def initialize(id, site_id, address, riskfactor=1, riskscore=0)
+    def initialize(id, address, site_id, risk_factor = 1.0, risk_score = 0.0)
       @id = id
-      @site_id = site_id
       @address = address
-      @riskfactor = riskfactor
-      @riskscore = riskscore
-
+      @site_id = site_id
+      @risk_factor = risk_factor
+      @risk_score = risk_score
     end
   end
 
