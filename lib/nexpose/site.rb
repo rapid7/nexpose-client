@@ -2,8 +2,9 @@ module Nexpose
   module NexposeAPI
     include XMLUtils
 
-    #
-    #
+    # Retrieve a list of all of the assets in a site.
+    # If no site-id is specified, then this will return all of the assets
+    # for the Scan Engine, grouped by site-id.
     #
     def site_device_listing(site_id)
       r = execute(make_xml('SiteDeviceListingRequest', {'site-id' => site_id.to_s}))
@@ -15,7 +16,7 @@ module Nexpose
             :device_id => device.attributes['id'].to_i,
             # TODO Covert to using?
             #   :address => IPAddr.new(device.attributes['address']),
-            :address => device.attributes['address'].to_s,
+            :address => device.attributes['address'],
             :risk_factor => device.attributes['riskfactor'].to_f,
             :risk_score => device.attributes['riskscore'].to_f,
           }
@@ -26,35 +27,36 @@ module Nexpose
       end
     end
 
+    # Delete the specified site and all associated scan data.
     #
-    #
+    # @return Whether or not the delete request succeeded.
     #
     def site_delete(param)
       r = execute(make_xml('SiteDeleteRequest', {'site-id' => param}))
       r.success
     end
 
+    # Retrieve a list of all sites the user is authorized to view or manage.
     #
-    #
-    # TODO Should just return empty array if doesn't work?
+    # @return [Array[SiteSummary]] Array of SiteSummary objects.
+    # 
     def site_listing
-      r = execute(make_xml('SiteListingRequest', {}))
-
+      r = execute(make_xml('SiteListingRequest'))
+      arr = []
       if (r.success)
-        res = []
         r.res.elements.each("//SiteSummary") do |site|
-          res << {
-            :site_id => site.attributes['id'].to_i,
-            :name => site.attributes['name'].to_s,
-            :risk_factor => site.attributes['riskfactor'].to_f,
-            :risk_score => site.attributes['riskscore'].to_f,
-          }
+          arr << SiteSummary.new(site.attributes['id'].to_i,
+                                 site.attributes['name'],
+                                 site.attributes['description'],
+                                 site.attributes['riskfactor'].to_f,
+                                 site.attributes['riskscore'].to_f)
         end
-        res
-      else
-        false
       end
+      arr
     end
+
+    alias_method :list_sites, :site_listing
+    alias_method :sites, :site_listing
 
     # Retrieve a list of all previous scans of the site.
     #
@@ -71,6 +73,18 @@ module Nexpose
         end
       end
       res
+    end
+
+    # Retrieve the scan summary statistics for the latest completed scan
+    # on a site.
+    #
+    # Method will not return data on an active scan.
+    #
+    # @param [FixNum] site_id Site ID to find latest scan for.
+    #
+    def last_scan(site_id)
+      site_scan_history(site_id).select { |scan| scan.end_time }
+                                .max_by { |scan| scan.end_time }
     end
 
     #-----------------------------------------------------------------------
@@ -436,8 +450,8 @@ module Nexpose
       r.elements.each('SiteListingResponse/SiteSummary') do |s|
         site_summary = SiteSummary.new(
           s.attributes['id'].to_s,
-          s.attributes['name'].to_s,
-          s.attributes['description'].to_s,
+          s.attributes['name'],
+          s.attributes['description'],
           s.attributes['riskfactor'].to_s
         )
         @sites.push(site_summary)
@@ -450,26 +464,26 @@ module Nexpose
   # Object that represents the summary of a Nexpose Site.
   #
   class SiteSummary
-    # The Site ID
+
+    # The Site ID.
     attr_reader :id
-    # The Site Name
-    attr_reader :site_name
-    # A Description of the Site
+    # The Site Name.
+    attr_reader :name
+    # A Description of the Site.
     attr_reader :description
-    # User assigned risk multiplier
-    attr_reader :riskfactor
+    # User assigned risk multiplier.
+    attr_reader :risk_factor
+    # Current computed risk score for the site.
+    attr_reader :risk_factor
 
     # Constructor
-    # SiteSummary(id, site_name, description, riskfactor = 1)
-    def initialize(id, site_name, description, riskfactor = 1.0)
+    # SiteSummary(id, name, description, riskfactor = 1)
+    def initialize(id, name, description, risk_factor = 1.0, risk_score = 0.0)
       @id = id
-      @site_name = site_name
+      @name = name
       @description = description
-      @riskfactor = riskfactor
-    end
-
-    def _set_id(id)
-      @id = id
+      @risk_factor = risk_factor
+      @risk_score = risk_score
     end
   end
 
