@@ -120,31 +120,27 @@ module Nexpose
     # @return [ScanSummary] Scan summary represented by the XML.
     #
     def self.parse(rexml)
-      tasks = Tasks.parse(rexml)
-      nodes = Nodes.parse(rexml)
-      vulns = Vulnerabilities.parse(rexml)
-      msg = nil
-      rexml.elements.each("//ScanSummary/message") do |message|
-        msg = message.text
-      end
+      tasks = Tasks.parse(rexml.elements['tasks'])
+      nodes = Nodes.parse(rexml.elements['nodes'])
+      vulns = Vulnerabilities.parse(rexml.attributes['scan-id'], rexml)
+      msg = rexml.elements['message'] ?  rexml.elements['message'].text : nil
 
-      rexml.elements.each("//ScanSummary") do |scan|
-        start_time = DateTime.parse(scan.attributes['startTime'].to_s).to_time
-        # End time is often not present, since reporting on running scans.
-        if scan.attributes['endTime']
-          end_time = DateTime.parse(scan.attributes['endTime'].to_s).to_time
-        end
-        return ScanSummary.new(scan.attributes['scan-id'].to_i,
-                               scan.attributes['site-id'].to_i,
-                               scan.attributes['engine-id'].to_i,
-                               scan.attributes['status'], 
-                               start_time,
-                               end_time,
-                               msg,
-                               tasks,
-                               nodes,
-                               vulns)
+      start_time = DateTime.parse(rexml.attributes['startTime'].to_s).to_time
+      # End time is often not present, since reporting on running scans.
+      end_time = nil
+      if rexml.attributes['endTime']
+        end_time = DateTime.parse(rexml.attributes['endTime'].to_s).to_time
       end
+      return ScanSummary.new(rexml.attributes['scan-id'].to_i,
+                             rexml.attributes['site-id'].to_i,
+                             rexml.attributes['engine-id'].to_i,
+                             rexml.attributes['status'], 
+                             start_time,
+                             end_time,
+                             msg,
+                             tasks,
+                             nodes,
+                             vulns)
     end
 
     # Value class to tracking task counts.
@@ -162,11 +158,9 @@ module Nexpose
       # @return [Tasks] Task summary represented by the XML.
       #
       def self.parse(rexml)
-        rexml.elements.each("//ScanSummary/tasks") do |task|
-          return Tasks.new(task.attributes['pending'],
-                           task.attributes['active'],
-                           task.attributes['completed'])
-        end
+        return Tasks.new(rexml.attributes['pending'].to_i,
+                         rexml.attributes['active'].to_i,
+                         rexml.attributes['completed'].to_i)
       end
     end
 
@@ -185,13 +179,11 @@ module Nexpose
       # @return [Nodes] Node summary represented by the XML.
       #
       def self.parse(rexml)
-        rexml.elements.each("//ScanSummary/nodes") do |node|
-          return Nodes.new(node.attributes['live'],
-                           node.attributes['dead'],
-                           node.attributes['filtered'],
-                           node.attributes['unresolved'],
-                           node.attributes['other'])
-        end
+        return Nodes.new(rexml.attributes['live'].to_i,
+                         rexml.attributes['dead'].to_i,
+                         rexml.attributes['filtered'].to_i,
+                         rexml.attributes['unresolved'].to_i,
+                         rexml.attributes['other'].to_i)
       end
     end
 
@@ -215,12 +207,13 @@ module Nexpose
       
       # Parse REXML to Vulnerabilities object.
       #
+      # @param [FixNum] scan_id Scan ID to collect vulnerability data for.
       # @param [REXML::Document] rexml XML document to parse.
       # @return [Vulnerabilities] Vulnerability summary represented by the XML.
       #
-      def self.parse(rexml)
+      def self.parse(scan_id, rexml)
         map = {}
-        rexml.elements.each("//ScanSummary/vulnerabilities") do |vuln|
+        rexml.elements.each("//ScanSummary[contains(@scan-id,'#{scan_id}')]/vulnerabilities") do |vuln|
           status = map[vuln.attributes['status']]
           if status && vuln.attributes['status'] =~ /^vuln-/
             status.add_severity(vuln.attributes['severity'].to_i, vuln.attributes['count'].to_i)
