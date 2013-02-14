@@ -72,7 +72,7 @@ module Nexpose
     def scan_statistics(scan_id)
       r = execute(make_xml('ScanStatisticsRequest', {'scan-id' => scan_id}))
       if r.success
-        ScanSummary.parse(r.res)
+        ScanSummary.parse(r.res.elements['//ScanSummary'])
       else
         false
       end
