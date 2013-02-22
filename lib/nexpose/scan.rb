@@ -125,7 +125,12 @@ module Nexpose
       vulns = Vulnerabilities.parse(rexml.attributes['scan-id'], rexml)
       msg = rexml.elements['message'] ?  rexml.elements['message'].text : nil
 
-      start_time = DateTime.parse(rexml.attributes['startTime'].to_s).to_time
+      # Start time can be empty in some error conditions.
+      start_time = nil
+      unless rexml.attributes['startTime'] == ''
+        start_time = DateTime.parse(rexml.attributes['startTime'].to_s).to_time
+      end
+
       # End time is often not present, since reporting on running scans.
       end_time = nil
       if rexml.attributes['endTime']
@@ -158,6 +163,7 @@ module Nexpose
       # @return [Tasks] Task summary represented by the XML.
       #
       def self.parse(rexml)
+        return nil unless rexml
         return Tasks.new(rexml.attributes['pending'].to_i,
                          rexml.attributes['active'].to_i,
                          rexml.attributes['completed'].to_i)
@@ -179,6 +185,7 @@ module Nexpose
       # @return [Nodes] Node summary represented by the XML.
       #
       def self.parse(rexml)
+        return nil unless rexml
         return Nodes.new(rexml.attributes['live'].to_i,
                          rexml.attributes['dead'].to_i,
                          rexml.attributes['filtered'].to_i,
@@ -212,6 +219,7 @@ module Nexpose
       # @return [Vulnerabilities] Vulnerability summary represented by the XML.
       #
       def self.parse(scan_id, rexml)
+        return nil unless rexml
         map = {}
         rexml.elements.each("//ScanSummary[contains(@scan-id,'#{scan_id}')]/vulnerabilities") do |vuln|
           status = map[vuln.attributes['status']]
