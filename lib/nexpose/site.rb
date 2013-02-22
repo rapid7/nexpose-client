@@ -481,7 +481,7 @@ module Nexpose
     # User assigned risk multiplier.
     attr_reader :risk_factor
     # Current computed risk score for the site.
-    attr_reader :risk_factor
+    attr_reader :risk_score
 
     # Constructor
     # SiteSummary(id, name, description, riskfactor = 1)
