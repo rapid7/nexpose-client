@@ -4,7 +4,7 @@ module Nexpose
 
     # Delete an asset group and all associated data.
     #
-    # @param [FixNum] id Asset group ID to delete.
+    # @param [Fixnum] id Asset group ID to delete.
     #
     # @return [Boolean] Whether group deletion succeeded.
     #
@@ -66,6 +66,22 @@ module Nexpose
     def initialize(id, name, desc, risk)
       @id, @name, @description, @risk_score = id, name, desc, risk
       @devices = []
+    end
+
+    # Launch adhoc scans against each group of assets per site.
+    #
+    # @param [Connection] connection Connection to console where asset group is configured.
+    # @return [Array[Hash[Fixnum, Fixnum]]] Array of scan ID and engine ID
+    #   pairs for each scan launched.
+    #
+    def rescan_assets(connection)
+      sites_ids = @devices.collect { |d| d.site_id }.uniq
+      scans = []
+      sites_ids.each do |id|
+        dev_ids = @devices.select { |d| d.site_id == id }.map { |d| d.id }
+        scans << connection.site_device_scan_start(id, dev_ids)
+      end
+      scans
     end
 
     # Load an existing configuration from a Nexpose instance.
