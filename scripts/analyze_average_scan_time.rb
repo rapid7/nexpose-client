@@ -38,5 +38,5 @@ engines = nsc.engines
 engine_times.each do |id, time|
   name = engines.find { |eng| eng.id == id }.name
   avg_time = '%.2f' % (time / engine_assets[id] / 60)
-  puts "#{name} : #{avg_time} minutes / assset"
+  puts "#{name} : #{avg_time} minutes / asset"
 end

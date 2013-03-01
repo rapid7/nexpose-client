@@ -15,7 +15,7 @@ nsc.sites.each do |site|
   count_by_config[config.engine] = 0
   config.assets.each do |asset|
     count = 1
-    count += (asset.to.to_i - asset.from.to_i) if defined? asset.to and asset.to
+    count += (asset.to.to_i - asset.from.to_i) if defined? asset.from and asset.to
     count_by_config[config.engine] += count
   end
 end
