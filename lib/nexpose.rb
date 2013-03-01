@@ -71,6 +71,7 @@ require 'nexpose/creds'
 require 'nexpose/connection'
 require 'nexpose/role'
 require 'nexpose/common'
+require 'nexpose/group'
 
 module Nexpose
 

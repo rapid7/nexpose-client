@@ -7,56 +7,6 @@ module Nexpose
       r.success
     end
 
-    def asset_group_delete(connection, id, debug = false)
-      r = execute(make_xml('AssetGroupDeleteRequest', {'group-id' => param}))
-      r.success
-    end
-
-    #-------------------------------------------------------------------------
-    # Returns all asset group information
-    #-------------------------------------------------------------------------
-    def asset_groups_listing()
-      r = execute(make_xml('AssetGroupListingRequest'))
-
-      if r.success
-        res = []
-        r.res.elements.each('//AssetGroupSummary') do |group|
-          res << {
-            :asset_group_id => group.attributes['id'].to_i,
-            :name => group.attributes['name'].to_s,
-            :description => group.attributes['description'].to_s,
-            :risk_score => group.attributes['riskscore'].to_f,
-          }
-        end
-        res
-      else
-        false
-      end
-    end
-
-    #-------------------------------------------------------------------------
-    # Returns an asset group configuration information for a specific group ID
-    #-------------------------------------------------------------------------
-    def asset_group_config(group_id)
-      r = execute(make_xml('AssetGroupConfigRequest', {'group-id' => group_id}))
-
-      if r.success
-        res = []
-        r.res.elements.each('//Devices/device') do |device_info|
-          res << {
-            :device_id => device_info.attributes['id'].to_i,
-            :site_id => device_info.attributes['site-id'].to_i,
-            :address => device_info.attributes['address'].to_s,
-            :riskfactor => device_info.attributes['riskfactor'].to_f,
-          }
-        end
-        res
-      else
-        false
-      end
-    end
-
-    #
     # Lists all the users for the NSC along with the user details.
     #
     def list_users

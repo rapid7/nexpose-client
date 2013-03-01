@@ -98,9 +98,9 @@ module Nexpose
     # Starts device specific site scanning.
     #
     # devices - An Array of device IDs
-    # hosts - An Array of Hashes [o]=>{:range=>"to,from"} [1]=>{:host=>host}
+    # hosts - An Array of Hashes [o]=>{:range=>"from,to"} [1]=>{:host=>host}
     #-----------------------------------------------------------------------
-    def site_device_scan_start(site_id, devices, hosts)
+    def site_device_scan_start(site_id, devices, hosts = nil)
 
       if hosts == nil and devices == nil
         raise ArgumentError.new("Both the device and host list is nil")
@@ -120,9 +120,12 @@ module Nexpose
         inner_xml = REXML::Element.new 'Hosts'
         hosts.each_index do |x|
           if hosts[x].key? :range
-            to = hosts[x][:range].split(',')[0]
-            from = hosts[x][:range].split(',')[1]
-            inner_xml.add_element 'range', {'to' => "#{to}", 'from' => "#{from}"}
+            from, to = hosts[x][:range].split(',')
+            if to
+              inner_xml.add_element 'range', {'to' => to, 'from' => from}
+            else
+              inner_xml.add_element 'range', {'from' => from}
+            end
           end
           if hosts[x].key? :host
             host_element = REXML::Element.new 'host'
@@ -225,7 +228,7 @@ module Nexpose
 
     # Load an existing configuration from a Nexpose instance.
     #
-    # @param [Connection] connection Connection to console where scan will be launched.
+    # @param [Connection] connection Connection to console where site exists.
     # @param [Fixnum] id Site ID of an existing site.
     # @return [Site] Site configuration loaded from a Nexpose console.
     def self.load(connection, id)
