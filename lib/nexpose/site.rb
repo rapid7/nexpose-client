@@ -226,6 +226,37 @@ module Nexpose
       is_dynamic
     end
 
+    # Adds an asset to this site by host name.
+    #
+    # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
+    def add_host(hostname)
+      @assets << HostName.new(hostname)
+    end
+
+    # Adds an asset to this site by IP address.
+    #
+    # @param [String] ip IP address of an asset.
+    def add_ip(ip)
+      @assets << IPRange.new(ip)
+    end
+
+    # Adds an asset to this site, resolving whether an IP or hostname is
+    # provided.
+    #
+    # @param [String] asset Identifier of an asset, either IP or host name.
+    #
+    def add_asset(asset)
+      begin
+        add_ip(asset)
+      rescue ArgumentError => e
+        if e.message == 'invalid address'
+          add_host(asset)
+        else
+          raise "Unable to parse asset: '#{asset}'"
+        end
+      end
+    end
+
     # Load an existing configuration from a Nexpose instance.
     #
     # @param [Connection] connection Connection to console where site exists.
