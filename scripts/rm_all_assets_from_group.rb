@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'optparse'
 require 'highline/import'
 require 'nexpose'
@@ -34,17 +35,17 @@ def get_password(prompt = 'Password: ')
   ask(prompt) { |query| query.echo = false }
 end
 puts 'Upon entering a password, deletion will begin.'
-puts 'Use --dry-run to ensure only the desired assets will be deleted.'
+puts 'Use --dry-run to ensure only the desired assets will be deleted.' unless @dry_run
 @password = get_password
 
 nsc = Nexpose::Connection.new(@host, @user, @password, @port)
 nsc.login
 
-nsc.asset_group_config(group_id).each do |device|
+Nexpose::AssetGroup.load(nsc, group_id).devices.each do |device|
   if @dry_run
-    puts "#{device[:address]} [ID: #{device[:device_id]}] Site: #{device[:site_id]}"
+    puts "#{device.address} [ID: #{device.id}] Site: #{device.site_id}"
   else
-    nsc.device_delete(device[:device_id])
+    nsc.device_delete(device.id)
   end
 end
 
