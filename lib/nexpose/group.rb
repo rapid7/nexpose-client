@@ -79,7 +79,7 @@ module Nexpose
       scans = []
       sites_ids.each do |id|
         dev_ids = @devices.select { |d| d.site_id == id }.map { |d| d.id }
-        scans << connection.site_device_scan_start(id, dev_ids)
+        scans << connection.site_device_scan_start(id, dev_ids).merge(:site_id => id)
       end
       scans
     end
