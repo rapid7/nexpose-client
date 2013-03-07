@@ -16,7 +16,7 @@ module Nexpose
     #
     # @return The ticket ID if the ticket creation was successful, {@code false} otherwise
     #
-    def create_ticket ticket_info
+    def create_ticket(ticket_info)
       ticket_name = ticket_info[:name]
       unless ticket_name
         raise ArgumentError.new 'Ticket name is required'
@@ -46,10 +46,10 @@ module Nexpose
       base_xml = make_xml 'TicketCreateRequest'
 
       required_attributes = {
-        'name' => ticket_name,
-        'priority' => priority,
-        'device-id' => device_id,
-        'assigned-to' => assigned_to
+          'name' => ticket_name,
+          'priority' => priority,
+          'device-id' => device_id,
+          'assigned-to' => assigned_to
       }
 
       create_request_xml = REXML::Element.new 'TicketCreate'

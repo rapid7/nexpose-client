@@ -6,7 +6,6 @@ module Nexpose
     def generate_report(report_id, wait = false)
       xml = make_xml('ReportGenerateRequest', {'report-id' => report_id})
       response = execute(xml)
-      summary = nil
       if response.success
         response.res.elements.each('//ReportSummary') do |summary|
           summary = ReportSummary.parse(summary)
@@ -58,7 +57,7 @@ module Nexpose
     def report_template_listing
       r = execute(make_xml('ReportTemplateListingRequest', {}))
       templates = []
-      if (r.success)
+      if r.success
         r.res.elements.each('//ReportTemplateSummary') do |template|
           templates << ReportTemplateSummary.parse(template)
         end
@@ -77,7 +76,7 @@ module Nexpose
     def report_listing
       r = execute(make_xml('ReportListingRequest', {}))
       reports = []
-      if (r.success)
+      if r.success
         r.res.elements.each('//ReportConfigSummary') do |report|
           reports << ReportConfigSummary.parse(report)
         end
@@ -113,10 +112,10 @@ module Nexpose
     def initialize(config_id, template_id, status, generated_on, uri, scope)
       @config_id = config_id
       @template_id = template_id
-      @status = status 
-      @generated_on = generated_on 
-      @uri = uri 
-      @scope = scope 
+      @status = status
+      @generated_on = generated_on
+      @uri = uri
+      @scope = scope
     end
 
     def self.parse(xml)
@@ -162,7 +161,7 @@ module Nexpose
 
     def self.parse_all(response)
       summaries = []
-      if (response.success)
+      if response.success
         response.res.elements.each('//ReportSummary') do |summary|
           summaries << ReportSummary.parse(summary)
         end
@@ -193,8 +192,8 @@ module Nexpose
     attr_accessor :baseline
 
     def initialize(template_id, format, site_id = nil, owner = nil, time_zone = nil)
-      @template_id = template_id 
-      @format = format 
+      @template_id = template_id
+      @format = format
       @owner = owner
       @time_zone = time_zone
 
@@ -385,7 +384,7 @@ module Nexpose
 
   # Object that represents a report filter which determines which sites, asset
   # groups, and/or devices that a report is run against.
-  # 
+  #
   # The configuration must include at least one of device (asset), site,
   # group (asset group) or scan filter to define the scope of report.
   # The vuln-status filter can be used only with raw report formats: csv
@@ -416,7 +415,7 @@ module Nexpose
     def self.parse(xml)
       filters = []
       xml.res.elements.each('//Filters/filter') do |filter|
-        filters << Filter.new(filter.attributes['type'], filter.attributes['id']) 
+        filters << Filter.new(filter.attributes['type'], filter.attributes['id'])
       end
       filters
     end
@@ -485,7 +484,7 @@ module Nexpose
     end
 
     def self.parse(xml)
-      xml.elements.each('//Delivery') do |delivery|
+      xml.elements.each('//Delivery') do
         on_server = false
         location = nil
         xml.elements.each('//Storage') do |storage|
@@ -529,7 +528,7 @@ module Nexpose
     def self.parse(xml)
       xml.elements.each('//DBExport') do |dbexport|
         config = DBExport.new(dbexport.attributes['type'])
-        config.credentials = ExportCredential.parse(xml) 
+        config.credentials = ExportCredential.parse(xml)
         xml.elements.each('//param') do |param|
           config.parameters[param.attributes['name']] = param.text
         end

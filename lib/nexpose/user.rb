@@ -22,9 +22,9 @@ module Nexpose
     def to_s
       out = "#{@user_name} (#{@full_name}) [ID: #{@id}]"
       out << " e-mail: #{@email}" unless @email.empty?
-      out << " Administrator" if @is_admin
-      out << " Disabled" if @is_disabled
-      out << " Locked" if @is_locked
+      out << ' Administrator' if @is_admin
+      out << ' Disabled' if @is_disabled
+      out << ' Locked' if @is_locked
       out << ", sites: #{@site_count}"
       out << ", groups: #{@group_count}"
     end
@@ -104,16 +104,16 @@ module Nexpose
     end
 
     def to_s
-      out = "#{@user_name} (#{@full_name}) [ID: #{@id}, Role: #{@role_name}]"
-      out << " Disabled" unless @enabled
-      out << " All-Sites" if @all_sites
-      out << " All-Groups" if @all_groups
+      out = "#{@name} (#{@full_name}) [ID: #{@id}, Role: #{@role_name}]"
+      out << ' Disabled' unless @enabled
+      out << ' All-Sites' if @all_sites
+      out << ' All-Groups' if @all_groups
       out << " e-mail: #{@email}" unless @email.nil? || @email.empty?
       out
     end
 
     def to_xml
-      xml = "<UserConfig"
+      xml = '<UserConfig'
       xml << %Q{ id="#{@id}"}
       xml << %Q{ authsrcid="#{@authsrcid}"}
       xml << %Q{ name="#{@name}"}
@@ -125,7 +125,7 @@ module Nexpose
       # These two fields are keying off role_name to work around a defect.
       xml << %Q{ allGroups="#{@all_groups || @role_name == 'global-admin'}"}
       xml << %Q{ allSites="#{@all_sites || @role_name == 'global-admin'}"}
-      xml << ">"
+      xml << '>'
       @sites.each do |site|
         xml << %Q{<site id="#{site}" />}
       end
@@ -142,7 +142,6 @@ module Nexpose
       xml << '</UserSaveRequest>'
       r = connection.execute(xml, '1.1')
       if r.success
-        res = []
         r.res.elements.each('UserSaveResponse') do |attr|
           @id = attr.attributes['id'].to_i
         end
@@ -162,7 +161,7 @@ module Nexpose
         r.res.elements.each('UserConfigResponse/UserConfig') do |config|
           id = config.attributes['id']
           role_name = config.attributes['role-name']
-          authsrcid = config.attributes['authsrcid']
+          #authsrcid = config.attributes['authsrcid']
           name = config.attributes['name']
           fullname = config.attributes['fullname']
 

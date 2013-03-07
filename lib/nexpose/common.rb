@@ -39,8 +39,8 @@ module Nexpose
     def initialize(to_all_authorized, send_to_owner_as, send_to_acl_as, send_as)
       @to_all_authorized = to_all_authorized
       @send_to_owner_as = send_to_owner_as
-      @send_to_acl_as = send_to_acl_as 
-      @send_as = send_as 
+      @send_to_acl_as = send_to_acl_as
+      @send_as = send_as
 
       @recipients = []
     end

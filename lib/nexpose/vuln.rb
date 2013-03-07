@@ -29,7 +29,7 @@ module Nexpose
 
       if r.success
         res = []
-        r.res.elements.each("//VulnerabilityException") do |ve|
+        r.res.elements.each('//VulnerabilityException') do |ve|
           submitter_comment = ve.elements['submitter-comment']
           reviewer_comment = ve.elements['reviewer-comment']
           res << {
@@ -112,7 +112,7 @@ module Nexpose
         end
 
         if scope =~ /All Instances on a Specific Asset/ && (vuln_key || port)
-          raise ArgumentError.new "Vulnerability key or port cannot be used with the scope specified"
+          raise ArgumentError.new 'Vulnerability key or port cannot be used with the scope specified'
         end
 
         if vuln_key
@@ -137,7 +137,7 @@ module Nexpose
 
       r = execute xml, '1.2'
       if r.success
-        r.res.elements.each("//VulnerabilityExceptionCreateResponse") do |vecr|
+        r.res.elements.each('//VulnerabilityExceptionCreateResponse') do |vecr|
           return vecr.attributes['exception-id']
         end
       else
@@ -355,7 +355,7 @@ module Nexpose
 
       if r.success
         r.res.elements.each('VulnerabilityListingResponse/VulnerabilitySummary') do |v|
-          @vulnerability_summaries.push(VulnerabilitySummary.new(v.attributes['id'], v.attributes["title"], v.attributes["severity"]))
+          @vulnerability_summaries.push(VulnerabilitySummary.new(v.attributes['id'], v.attributes['title'], v.attributes['severity']))
         end
       else
         @error = true
@@ -438,8 +438,8 @@ module Nexpose
       if r.success
         r.res.elements.each('VulnerabilityDetailsResponse/Vulnerability') do |v|
           @id = v.attributes['id']
-          @title = v.attributes["title"]
-          @severity = v.attributes["severity"]
+          @title = v.attributes['title']
+          @severity = v.attributes['severity']
           @pciSeverity = v.attributes['pciSeverity']
           @cvssScore = v.attributes['cvssScore']
           @cvssVector = v.attributes['cvssVector']
@@ -498,13 +498,12 @@ module Nexpose
     include Sanitize
 
     def to_xml
-      xml = '<vulnFilter '
+      xml = '<vuln_filter '
       xml << %Q{ type_mask="#{replace_entities(typeMask)}"}
       xml << %Q{ maxAlerts="#{replace_entities(maxAlerts)}"}
       xml << %Q{ severity_threshold="#{replace_entities(severityThreshold)}"}
       xml << '/>'
       xml
     end
-
   end
 end

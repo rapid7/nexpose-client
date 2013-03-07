@@ -90,8 +90,7 @@ module Nexpose
     # @param [FixNum] site_id Site ID to find latest scan for.
     #
     def last_scan(site_id)
-      site_scan_history(site_id).select { |scan| scan.end_time }
-                                .max_by { |scan| scan.end_time }
+      site_scan_history(site_id).select { |scan| scan.end_time }.max_by { |scan| scan.end_time }
     end
 
     #-----------------------------------------------------------------------
@@ -103,7 +102,7 @@ module Nexpose
     def site_device_scan_start(site_id, devices, hosts = nil)
 
       if hosts == nil and devices == nil
-        raise ArgumentError.new("Both the device and host list is nil")
+        raise ArgumentError.new('Both the device and host list is nil.')
       end
 
       xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
@@ -148,6 +147,9 @@ module Nexpose
         false
       end
     end
+
+    alias_method :site_device_scan, :site_device_scan_start
+    alias_method :adhoc_device_scan, :site_device_scan_start
   end
 
   # Configuration object representing a Nexpose site.
@@ -208,7 +210,7 @@ module Nexpose
     # @param [String] name Unique name of the site.
     # @param [String] scan_template ID of the scan template to use.
     def initialize(name = nil, scan_template = 'full-audit')
-      @name = name;
+      @name = name
       @scan_template = scan_template
 
       @id = -1
@@ -285,9 +287,8 @@ module Nexpose
     # @return [Fixnum] Site ID assigned to this configuration, if successful.
     def save(connection)
       r = connection.execute('<SiteSaveRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiteSaveRequest>')
-      if (r.success)
+      if r.success
         @id = r.attributes['site-id']
-        return @id
       end
     end
 
@@ -296,14 +297,14 @@ module Nexpose
     # @param [Connection] connection Connection to console where this site will be saved.
     # @return [Boolean] Whether or not the site was successfully deleted.
     def delete(connection)
-      r = connection.execute(%Q{<SiteDeleteRequest session-id="#{connection.session_id}" site-id="#@id"/>})
+      r = connection.execute(%Q{<SiteDeleteRequest session-id="#{connection.session_id}" site-id="#{@id}"/>})
       r.success
     end
 
     # Scan this site.
     #
     # @param [Connection] connection Connection to console where scan will be launched.
-    # @param [String] sync_id Optional syncronization token.
+    # @param [String] sync_id Optional synchronization token.
     # @return [Fixnum, Fixnum] Scan ID and engine ID where the scan was launched.
     def scan(connection, sync_id = nil)
       xml = REXML::Element.new('SiteScanRequest')
@@ -389,16 +390,16 @@ module Nexpose
           end
         end
 
-        s.elements.each('Credentials') do |cred|
-          # TODO
-        end
+        #s.elements.each('Credentials') do |cred|
+        #  # TODO
+        #end
 
         s.elements.each('Alerting/Alert') do |a|
           a.elements.each('smtpAlert') do |smtp|
             smtp_alert = SMTPAlert.new(a.attributes['name'], smtp.attributes['sender'], smtp.attributes['limitText'], a.attributes['enabled'])
 
             smtp.elements.each('recipient') do |recipient|
-              smtp_alert.addRecipient(recipient.text)
+              smtp_alert.add_recipient(recipient.text)
             end
             site.alerts << smtp_alert
           end
@@ -413,24 +414,23 @@ module Nexpose
             site.alerts << syslog_alert
           end
 
-          a.elements.each('vulnFilter') do |vulnFilter|
+          #a.elements.each('vuln_filter') do |vulnFilter|
+          #  vulnfilter = new VulnFilter.new(a.attributes["typemask"], a.attributes["severityThreshold"], $attrs["MAXALERTS"])
+          #  Pop off the top alert on the stack
+          #  $alert = @alerts.pop()
+          #  Add the new recipient string to the Alert Object
+          #  $alert.setVulnFilter($vulnfilter)
+          #  Push the alert back on to the alert stack
+          #  array_push($this->alerts, $alert)
+          #end
 
-            #vulnfilter = new VulnFilter.new(a.attributes["typemask"], a.attributes["severityThreshold"], $attrs["MAXALERTS"])
-            # Pop off the top alert on the stack
-            #$alert = @alerts.pop()
-            # Add the new recipient string to the Alert Object
-            #$alert.setVulnFilter($vulnfilter)
-            # Push the alert back on to the alert stack
-            #array_push($this->alerts, $alert)
-          end
-
-          a.elements.each('scanFilter') do |scanFilter|
-            #<scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
-            #scanfilter = ScanFilter.new(scanFilter.attributes['scanStop'],scanFilter.attributes['scanFailed'],scanFilter.attributes['scanStart'])
-            #alert = @alerts.pop()
-            #alert.setScanFilter(scanfilter)
-            #@alerts.push(alert)
-          end
+          #a.elements.each('scanFilter') do |scanFilter|
+          #  <scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
+          #  scanfilter = ScanFilter.new(scanFilter.attributes['scanStop'],scanFilter.attributes['scanFailed'],scanFilter.attributes['scanStart'])
+          #  alert = @alerts.pop()
+          #  alert.setScanFilter(scanfilter)
+          #  @alerts.push(alert)
+          #end
         end
 
         return site
@@ -456,14 +456,7 @@ module Nexpose
   #   end
   #
   class SiteListing
-    # true if an error condition exists; false otherwise
-    attr_reader :error
-    # Error message string
-    attr_reader :error_msg
-    # The last XML request sent by this object
-    attr_reader :request_xml
-    # The last XML response received by this object
-    attr_reader :response_xml
+
     # The NSC Connection associated with this object
     attr_reader :connection
     # Array containing SiteSummary objects for each site in the connection
@@ -480,10 +473,10 @@ module Nexpose
 
       r = @connection.execute('<SiteListingRequest session-id="' + @connection.session_id.to_s + '"/>')
 
-      if (r.success)
+      if r.success
         parse(r.res)
       else
-        raise APIError.new(r, "Failed to get site listing")
+        raise APIError.new(r, 'Failed to get site listing.')
       end
     end
 
@@ -565,7 +558,7 @@ module Nexpose
     # The Syslog server to sent this alert
     attr_reader :server
     # The vulnerability filter to trigger the alert
-    attr_reader :vulnFilter
+    attr_accessor :vuln_filter
     # The alert type
     attr_reader :type
 
@@ -575,24 +568,19 @@ module Nexpose
       @server = server
       @enabled = enabled
       # Sets default vuln filter - All Events
-      setVulnFilter(VulnFilter.new("50790400", 1))
+      @vuln_filter = VulnFilter.new('50790400', 1)
 
-    end
-
-    # Sets the Vulnerability Filter for this alert.
-    def setVulnFilter(vulnFilter)
-      @vulnFilter = vulnFilter
     end
 
     include Sanitize
 
     def to_xml
-      xml = "<syslogAlert"
+      xml = '<syslogAlert'
       xml << %Q{ name="#{replace_entities(name)}"}
       xml << %Q{ enabled="#{replace_entities(enabled)}"}
       xml << %Q{ server="#{replace_entities(server)}">}
-      xml << vulnFilter.to_xml
-      xml << "</syslogAlert>"
+      xml << vuln_filter.to_xml
+      xml << '</syslogAlert>'
       xml
     end
 
@@ -613,7 +601,7 @@ module Nexpose
     # The SNMP server to sent this alert
     attr_reader :server
     # The vulnerability filter to trigger the alert
-    attr_reader :vulnFilter
+    attr_reader :vuln_filter
     # The alert type
     attr_reader :type
 
@@ -624,22 +612,17 @@ module Nexpose
       @server = server
       @enabled = enabled
       # Sets default vuln filter - All Events
-      setVulnFilter(VulnFilter.new("50790400", 1))
-    end
-
-    # Sets the Vulnerability Filter for this alert.
-    def setVulnFilter(vulnFilter)
-      @vulnFilter = vulnFilter
+      @vuln_filter = VulnFilter.new('50790400', 1)
     end
 
     def to_xml
-      xml = "<snmpAlert"
+      xml = '<snmpAlert'
       xml << %Q{ name="#{replace_entities(name)}"}
       xml << %Q{ enabled="#{replace_entities(enabled)}"}
       xml << %Q{ community="#{replace_entities(community)}"}
       xml << %Q{ server="#{replace_entities(server)}">}
-      xml << vulnFilter.to_xml
-      xml << "</snmpAlert>"
+      xml << vuln_filter.to_xml
+      xml << '</snmpAlert>'
       xml
     end
 
@@ -656,49 +639,44 @@ module Nexpose
     # The email address of the sender
     attr_reader :sender
     # Limit the text for mobile devices
-    attr_reader :limitText
+    attr_reader :limit_text
     # Array containing Strings of email addresses
     # Array of strings with the email addresses of the intended recipients
     attr_reader :recipients
     # The vulnerability filter to trigger the alert
-    attr_reader :vulnFilter
+    attr_accessor :vuln_filter
     # The alert type
     attr_reader :type
 
-    def initialize(name, sender, limitText, enabled = 1)
+    def initialize(name, sender, limit_text, enabled = 1)
       @type = :smtp
       @name = name
       @sender = sender
       @enabled = enabled
-      @limitText = limitText
+      @limit_text = limit_text
       @recipients = []
       # Sets default vuln filter - All Events
-      setVulnFilter(VulnFilter.new("50790400", 1))
+      @vuln_filter = VulnFilter.new('50790400', 1)
     end
 
     # Adds a new Recipient to the recipients array
-    def addRecipient(recipient)
+    def add_recipient(recipient)
       @recipients.push(recipient)
-    end
-
-    # Sets the Vulnerability Filter for this alert.
-    def setVulnFilter(vulnFilter)
-      @vulnFilter = vulnFilter
     end
 
     include Sanitize
 
     def to_xml
-      xml = "<smtpAlert"
+      xml = '<smtpAlert'
       xml << %Q{ name="#{replace_entities(name)}"}
       xml << %Q{ enabled="#{replace_entities(enabled)}"}
       xml << %Q{ sender="#{replace_entities(sender)}"}
-      xml << %Q{ limitText="#{replace_entities(limitText)}">}
+      xml << %Q{ limitText="#{replace_entities(limit_text)}">}
       recipients.each do |recpt|
         xml << "<recipient>#{replace_entities(recpt)}</recipient>"
       end
-      xml << vulnFilter.to_xml
-      xml << "</smtpAlert>"
+      xml << vuln_filter.to_xml
+      xml << '</smtpAlert>'
       xml
     end
   end

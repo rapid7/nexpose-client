@@ -75,31 +75,10 @@ require 'nexpose/group'
 
 module Nexpose
 
-  # TODO add
-  def self.site_device_scan(connection, site_id, device_array, host_array, debug = false)
-
-    request_xml = '<SiteDevicesScanRequest session-id="' + connection.session_id.to_s + '" site-id="' + site_id.to_s + '">'
-    request_xml += '<Devices>'
-    device_array.each do |d|
-      request_xml += '<device id="' + d.to_s + '"/>'
-    end
-    request_xml += '</Devices>'
-    request_xml += '<Hosts>'
-    # The host array can only by single IP addresses for now. TODO: Expand to full API Spec.
-    host_array.each do |h|
-      request_xml += '<range from="' + h.to_s + '"/>'
-    end
-    request_xml += '</Hosts>'
-    request_xml += '</SiteDevicesScanRequest>'
-
-    r = connection.execute(request_xml)
-    r.success ? {:engine_id => r.attributes['engine_id'], :scan_id => r.attributes['scan-id']} : nil
-  end
-
   # ==== Description
   # Echos the last XML API request and response for the specified object.  (Useful for debugging)
-  def self.printXML(object)
-    puts "request" + object.request_xml.to_s
-    puts "response is " + object.response_xml.to_s
+  def self.print_xml(object)
+    puts 'request: ' + object.request_xml.to_s
+    puts 'response: ' + object.response_xml.to_s
   end
 end

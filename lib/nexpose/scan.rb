@@ -57,8 +57,8 @@ module Nexpose
     def scan_activity
       r = execute(make_xml('ScanActivityRequest', {}))
       res = []
-      if (r.success)
-        r.res.elements.each("//ScanSummary") do |scan|
+      if r.success
+        r.res.elements.each('//ScanSummary') do |scan|
           res << ScanSummary.parse(scan)
         end
       end
@@ -139,7 +139,7 @@ module Nexpose
       return ScanSummary.new(rexml.attributes['scan-id'].to_i,
                              rexml.attributes['site-id'].to_i,
                              rexml.attributes['engine-id'].to_i,
-                             rexml.attributes['status'], 
+                             rexml.attributes['status'],
                              start_time,
                              end_time,
                              msg,
@@ -211,7 +211,7 @@ module Nexpose
           not_vuln_exploit, not_vuln_version,
           error, disabled, other
       end
-      
+
       # Parse REXML to Vulnerabilities object.
       #
       # @param [FixNum] scan_id Scan ID to collect vulnerability data for.
@@ -269,42 +269,19 @@ module Nexpose
     end
   end
 
-  # TODO add engineID
-  # === Description
-  # Object that represents the scanning configuration for a Site.
-  #
-  class ScanConfig
-
-    def self.parse(xml)
-      config = ScanConfig.new(xml.attributes['configID'],
-                              xml.attributes['name'],
-                              xml.attributes['templateID'],
-                              xml.attributes['configVersion'],
-                              xml.attributes['engineID'])
-      xml.elements.each('Schedules/Schedule') do |sched|
-        schedule = Schedule.new(sched.attributes['type'],
-                                sched.attributes['interval'],
-                                sched.attributes['start'],
-                                sched.attributes['enabled'])
-        config.addSchedule(schedule)
-      end
-      config
-    end
-  end
-
   # TODO: review
   # <scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
   # === Description
   #
   class ScanFilter
-    attr_reader :scanStop
-    attr_reader :scanFailed
-    attr_reader :scanStart
+    attr_reader :scan_stop
+    attr_reader :scan_failed
+    attr_reader :scan_start
 
     def initialize(scan_stop, scan_failed, scan_start)
-      @scanStop = scan_stop
-      @scanFailed = scan_failed
-      @scanStart = scan_start
+      @scan_stop = scan_stop
+      @scan_failed = scan_failed
+      @scan_start = scan_start
     end
   end
 end

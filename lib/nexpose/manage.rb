@@ -5,7 +5,7 @@ module Nexpose
 
     # Execute an arbitrary console command that is supplied as text via the
     # supplied parameter. Console commands are documented in the
-    # administrator's guide. If you use a command that is not listed in the 
+    # administrator's guide. If you use a command that is not listed in the
     # administrator's guide, the application will return the XMLResponse.
     def console_command(cmd_string)
       xml = make_xml('ConsoleCommandRequest', {})
@@ -14,8 +14,7 @@ module Nexpose
       xml << cmd
 
       r = execute(xml)
-      if (r.success)
-        res = ''
+      if r.success
         r.res.elements.each('//Output') do |out|
           return out.text.to_s
         end
@@ -30,9 +29,9 @@ module Nexpose
     def system_information
       r = execute(make_xml('SystemInformationRequest', {}))
 
-      if (r.success)
+      if r.success
         res = {}
-        r.res.elements.each("//Statistic") do |stat|
+        r.res.elements.each('//Statistic') do |stat|
           res[stat.attributes['name'].to_s] = stat.text.to_s
         end
         res
@@ -48,7 +47,7 @@ module Nexpose
     end
 
     # Restart the application.
-    # 
+    #
     # There is no response to a RestartRequest. When the application
     # shuts down as part of the restart process, it terminates any active
     # connections. Therefore, the application cannot issue a response when it

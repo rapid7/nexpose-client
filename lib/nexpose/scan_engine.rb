@@ -18,7 +18,7 @@ module Nexpose
       r = execute(xml)
       arr = []
       if r.success
-        r.res.elements.each("//ScanSummary") do |scan_event|
+        r.res.elements.each('//ScanSummary') do |scan_event|
           arr << ScanSummary.parse(scan_event)
         end
       end
@@ -34,7 +34,7 @@ module Nexpose
       response = execute(make_xml('EngineListingRequest'))
       arr = []
       if response.success
-        response.res.elements.each("//EngineSummary") do |engine|
+        response.res.elements.each('//EngineSummary') do |engine|
           arr << EngineSummary.new(engine.attributes['id'].to_i,
                                    engine.attributes['name'],
                                    engine.attributes['address'],
@@ -202,7 +202,7 @@ module Nexpose
     # Creates a new engine pool, and adds scan engines to the pool.
     def create(connection)
       xml = '<EnginePoolCreateRequest session-id="' + connection.session_id + '">'
-      xml << %Q{<EnginePool name="#@name" scope="#@scope">}
+      xml << %Q{<EnginePool name="#{@name}" scope="#{@scope}">}
       @engines.each do |engine|
         xml << %Q{<Engine name="#{engine.name}" />}
       end
@@ -214,7 +214,7 @@ module Nexpose
         r.res.elements.each('EnginePoolCreateResponse') do |v|
           @id = v.attributes['id']
         end
-      else 
+      else
         @error = true
         @error_msg = 'EnginePoolCreateResponse Parse Error'
       end
@@ -223,7 +223,7 @@ module Nexpose
     # Deletes an engine pool
     def delete(connection)
       xml = '<EnginePoolDeleteRequest session-id="' + connection.session_id + '">'
-      xml << %Q{<EnginePool name="#@name" scope="#@scope" />}
+      xml << %Q{<EnginePool name="#{@name}" scope="#{@scope}" />}
       xml << '</EnginePoolDeleteRequest>'
 
       r = connection.execute(xml, '1.2')
@@ -239,7 +239,7 @@ module Nexpose
     # the EnginePoolUpdateRequest.
     def update(connection)
       xml = '<EnginePoolUpdateRequest session-id="' + connection.session_id + '">'
-      xml << %Q{<EnginePool id="#@id" name="#@name" scope="#@scope">}
+      xml << %Q{<EnginePool id="#{@id}" name="#{@name}" scope="#{@scope}">}
       @engines.each do |engine|
         xml << %Q{<Engine name="#{engine.name}" />}
       end
@@ -251,7 +251,7 @@ module Nexpose
         r.res.elements.each('EnginePoolUpdateResponse') do |v|
           @id = v.attributes['id']
         end
-      else 
+      else
         @error = true
         @error_msg = 'EnginePoolCreateResponse Parse Error'
       end
@@ -260,7 +260,7 @@ module Nexpose
     # Returns detailed information about a single engine pool.
     def load_details(connection)
       xml = '<EnginePoolDetailsRequest session-id="' + connection.session_id + '">'
-      xml << %Q{<EnginePool name="#@name" scope="#@scope" />}
+      xml << %Q{<EnginePool name="#{@name}" scope="#{@scope}" />}
       xml << '</EnginePoolDetailsRequest>'
 
       r = connection.execute(xml, '1.2')
@@ -279,14 +279,14 @@ module Nexpose
                                             summary.attributes['scope']))
           end
         end
-      else 
+      else
         @error = true
         @error_msg = 'EnginePoolListingResponse Parse Error'
       end
     end
 
     def to_s
-      "Engine Pool: #@name [ID: #@id], Scope: #@scope\n" + @engines.map { |engine| "  #{engine}" }.join("\n")
+      "Engine Pool: #{@name} [ID: #{@id}], Scope: #{@scope}\n" + @engines.map { |engine| "  #{engine}" }.join("\n")
     end
   end
 
@@ -303,7 +303,7 @@ module Nexpose
     end
 
     def to_s
-      "Engine Pool: #@name [ID: #@id], scope: #@scope"
+      "Engine Pool: #{@name} [ID: #{@id}], scope: #{@scope}"
     end
 
     # Returns a summary list of all engine pools.
@@ -316,7 +316,7 @@ module Nexpose
           list << EnginePoolSummary.new(eps.attributes['id'], eps.attributes['name'], eps.attributes['scope'])
         end
         list
-      else 
+      else
         @error = true
         @error_msg = 'EnginePoolListingResponse Parse Error'
       end
