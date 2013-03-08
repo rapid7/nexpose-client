@@ -105,7 +105,7 @@ module Nexpose
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE # XXX: security issue
       headers = {'Cookie' => "nexposeCCSessionID=#{@session_id}"}
-      resp = http.get(uri.path, headers)
+      resp = http.get(uri.to_s, headers)
 
       if file_name
         File.open(file_name, 'w') { |file| file.write(resp.body) }
