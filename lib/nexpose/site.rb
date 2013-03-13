@@ -172,6 +172,9 @@ module Nexpose
     # @see IPRange
     attr_accessor :assets
 
+    # [Array] Collection of excluded assets. May be IPv4, IPv6, or DNS names.
+    attr_accessor :exclude
+
     # Scan template to use when starting a scan job. Default: full-audit
     attr_accessor :scan_template
 
@@ -221,6 +224,7 @@ module Nexpose
       @schedules = []
       @credentials = []
       @alerts = []
+      @exclude = []
     end
 
     # Returns true when the site is dynamic.
@@ -329,6 +333,10 @@ module Nexpose
       xml << assets.reduce('') { |acc, host| acc << host.to_xml }
       xml << '</Hosts>'
 
+      xml << '<ExcludedHosts>'
+      xml << exclude.reduce('') { |acc, host| acc << host.to_xml }
+      xml << '</ExcludedHosts>'
+
       unless credentials.empty?
         xml << '<Credentials>'
         credentials.each do |c|
@@ -374,6 +382,13 @@ module Nexpose
         end
         s.elements.each('Hosts/host') do |host|
           site.assets << HostName.new(host.text)
+        end
+
+        s.elements.each('ExcludedHosts/range') do |r|
+          site.exclude << IPRange.new(r.attributes['from'], r.attributes['to'])
+        end
+        s.elements.each('ExcludedHosts/host') do |host|
+          site.exclude << HostName.new(host.text)
         end
 
         s.elements.each('ScanConfig') do |scan_config|
