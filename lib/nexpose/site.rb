@@ -327,6 +327,13 @@ module Nexpose
           site.assets << HostName.new(host.text)
         end
 
+        s.elements.each('Credentials/adminCredentials') do |credconf|
+          cred = AdminCredentials.new(true)
+          cred.set_service(credconf.attributes['service'])
+          cred.set_blob(credconf.get_text)
+          site.credentials << cred
+        end
+
         s.elements.each('ScanConfig') do |scan_config|
           site.scan_template_name = scan_config.attributes['name']
           site.scan_template = scan_config.attributes['templateID']
@@ -339,10 +346,6 @@ module Nexpose
                                     sched.attributes['enabled'])
             site.schedules << schedule
           end
-        end
-
-        s.elements.each('Credentials') do |cred|
-          # TODO
         end
 
         s.elements.each('Alerting/Alert') do |a|
