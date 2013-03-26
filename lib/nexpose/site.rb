@@ -388,6 +388,12 @@ module Nexpose
         end
         s.elements.each('ExcludedHosts/host') do |host|
           site.exclude << HostName.new(host.text)
+
+        s.elements.each('Credentials/adminCredentials') do |credconf|
+          cred = AdminCredentials.new(true)
+          cred.set_service(credconf.attributes['service'])
+          cred.set_blob(credconf.get_text)
+          site.credentials << cred
         end
 
         s.elements.each('ScanConfig') do |scan_config|
@@ -403,10 +409,6 @@ module Nexpose
             site.schedules << schedule
           end
         end
-
-        #s.elements.each('Credentials') do |cred|
-        #  # TODO
-        #end
 
         s.elements.each('Alerting/Alert') do |a|
           a.elements.each('smtpAlert') do |smtp|

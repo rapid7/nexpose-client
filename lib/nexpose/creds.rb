@@ -30,6 +30,12 @@ module Nexpose
     # When using htmlforms, this represents the tho form to pass the
     # authentication request to.
     attr_reader :html_forms
+	# The type of privilege escalation to use (sudo/su)
+	attr_reader :priv_type
+	# The userid to use when escalating privileges (optional)
+	attr_reader :priv_username
+	# The password to use when escalating privileges (optional)
+	attr_reader :priv_password
 
     def initialize(isblob = false)
       @isblob = isblob
@@ -47,7 +53,16 @@ module Nexpose
       @realm = realm
     end
 
-    # TODO: add description
+	# Sets privilege escalation credentials.  Type should be either
+	# sudo/su.
+    def set_privilege_credentials(type, username, password)
+	  @priv_type = type
+	  @priv_username = username
+	  @priv_password = password
+    end
+
+    # The name of the service.  Possible values are outlined in the
+    # Nexpose API docs.
     def set_service(service)
       @service = service
     end
@@ -56,7 +71,9 @@ module Nexpose
       @host = host
     end
 
-    # TODO: add description
+    # Credentials fetched from the API are encrypted into a
+    # securityblob.  If you want to use those credentials on a
+    # different site, copy the blob into the credential.
     def set_blob(securityblob)
       @isblob = true
       @securityblob = securityblob
@@ -84,6 +101,10 @@ module Nexpose
       attributes['realm'] = @realm
       attributes['host'] = @host
       attributes['port'] = @port
+
+      attributes['privilegeelevationtype'] = @priv_type if @priv_type
+      attributes['privilegeelevationusername'] = @priv_username if @priv_username
+      attributes['privilegeelevationpassword'] = @priv_password if @priv_password
 
       data = isblob ? securityblob : ''
       xml = make_xml('adminCredentials', attributes, data)
