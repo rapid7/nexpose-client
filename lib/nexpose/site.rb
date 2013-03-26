@@ -318,9 +318,8 @@ module Nexpose
 
       response = connection.execute(xml)
       if response.success
-        response.res.elements.each('/SiteScanResponse/Scan/') do |scan|
-          return [scan.attributes['scan-id'].to_i, scan.attributes['engine-id'].to_i]
-        end
+        scan = REXML::XPath.first(response.res, '/SiteScanResponse/Scan/')
+        [scan.attributes['scan-id'].to_i, scan.attributes['engine-id'].to_i]
       end
     end
 
