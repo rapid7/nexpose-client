@@ -388,6 +388,7 @@ module Nexpose
         end
         s.elements.each('ExcludedHosts/host') do |host|
           site.exclude << HostName.new(host.text)
+        end
 
         s.elements.each('Credentials/adminCredentials') do |credconf|
           cred = AdminCredentials.new(true)
