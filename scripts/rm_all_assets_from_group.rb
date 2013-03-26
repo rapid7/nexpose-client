@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'optparse'
+require 'rubygems'
 require 'highline/import'
 require 'nexpose'
 
