@@ -55,7 +55,7 @@ module Nexpose
     #   each active scan on the engines.
     #
     def scan_activity
-      r = execute(make_xml('ScanActivityRequest', {}))
+      r = execute(make_xml('ScanActivityRequest'))
       res = []
       if r.success
         r.res.elements.each('//ScanSummary') do |scan|

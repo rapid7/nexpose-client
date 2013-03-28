@@ -19,22 +19,11 @@ module Nexpose
   #
   #   # //Logout
   #   logout_success = nsc.logout
-  #   if (! logout_success)
-  #       puts "Logout Failure" + "<p>" + nsc.error_msg.to_s
-  #   end
   #
   class Connection
     include XMLUtils
     include NexposeAPI
 
-    # true if an error condition exists; false otherwise
-    attr_reader :error
-    # Error message string
-    attr_reader :error_msg
-    # The last XML request sent by this object
-    attr_reader :request_xml
-    # The last XML response received by this object
-    attr_reader :response_xml
     # Session ID of this connection
     attr_reader :session_id
     # The hostname or IP Address of the NSC
@@ -48,6 +37,11 @@ module Nexpose
     # The URL for communication
     attr_reader :url
 
+    # The last XML request sent by this object, useful for debugging.
+    attr_reader :request_xml
+    # The last XML response received by this object, useful for debugging.
+    attr_reader :response_xml
+
     # Constructor for Connection
     def initialize(ip, user, pass, port = 3780, silo_id = nil)
       @host = ip
@@ -56,7 +50,6 @@ module Nexpose
       @password = pass
       @silo_id = silo_id
       @session_id = nil
-      @error = false
       @url = "https://#{@host}:#{@port}/api/API_VERSION/xml"
     end
 
@@ -88,8 +81,11 @@ module Nexpose
 
     # Execute an API request
     def execute(xml, version = '1.1')
+      @request_xml = xml.to_s
       @api_version = version
-      APIRequest.execute(@url, xml.to_s, @api_version)
+      response = APIRequest.execute(@url, @request_xml, @api_version)
+      @response_xml = response.raw_response_data
+      response
     end
 
     # Download a specific URL, typically a report.
