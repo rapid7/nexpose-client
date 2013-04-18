@@ -172,7 +172,8 @@ module Nexpose
 
   # Definition object for an adhoc report configuration.
   #
-  # NOTE: Only text, pdf, and csv currently work reliably.
+  # NOTE: XML reports only return the text of the report, but no images.
+  #
   class AdhocReportConfig
     # The ID of the report template used.
     attr_accessor :template_id
@@ -223,8 +224,13 @@ module Nexpose
 
     include XMLUtils
 
-    # Generate a report once using a simple configuration, and send it back
-    # in a multi-part mime response.
+    # Generate a report once using a simple configuration.
+    # 
+    # For XML-based reports, only the raw report is returned and not any images.
+    #
+    # @param [Connection] connection Nexpose connection.
+    # @return Report in text format except for PDF, which returns binary data.
+    #
     def generate(connection)
       xml = %Q{<ReportAdhocGenerateRequest session-id='#{connection.session_id}'>}
       xml << to_xml
@@ -243,11 +249,12 @@ module Nexpose
           doc = Rex::MIME::Message.new(data)
           doc.parts.each do |part|
             if /.*base64.*/ =~ part.header.to_s
-              if (@format == 'text') or (@format == 'pdf') or (@format == 'csv')
+              if @format =~ /(?:ht|x)ml/
+                if part.header.to_s =~ %r(text/(?:ht|x)ml)
+                  return parse_xml(part.content.unpack("m*")[0]).to_s
+                end
+              else # text|pdf|csv|rtf
                 return part.content.unpack('m*')[0]
-              else
-                # FIXME This isn't working.
-                return parse_xml(part.content.unpack("m*")[0])
               end
             end
           end
