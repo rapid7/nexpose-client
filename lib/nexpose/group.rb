@@ -59,16 +59,45 @@ module Nexpose
   # Asset group configuration object containing Device details.
   #
   class AssetGroup < AssetGroupSummary
+    attr_accessor :name, :description, :id
 
     # Array[Device] of devices associated with this asset group.
     attr_accessor :devices
 
-    def initialize(id, name, desc, risk)
-      @id, @name, @description, @risk_score = id, name, desc, risk
+    def initialize(name, desc, id = -1, risk = 0.0)
+      @name, @description, @id, @risk_score = name, desc, id, risk
       @devices = []
     end
 
-    # Launch adhoc scans against each group of assets per site.
+    def save(connection)
+      xml = %Q(<AssetGroupSaveRequest session-id='#{connection.session_id}'>)
+      xml << to_xml
+      xml << '</AssetGroupSaveRequest>'
+      response = connection.execute(xml)
+      if response.success
+        @id = response.attributes['group-id'] if @id < 0
+      end
+    end
+
+    # Get an XML representation of the group that is valid for a save request.
+    # Note that only name, description, and device ID information is accepted
+    # by a save request.
+    #
+    # @return [String] XML representation of the asset group.
+    #
+    def to_xml
+      xml = %Q(<AssetGroup id="#{@id}" name="#{@name}")
+      xml << %Q( description="#{@description}") if @description
+      xml << '>'
+      xml << '<Devices>'
+      @devices.each do |device|
+        xml << %Q(<device id="#{device.id}"/>)
+      end
+      xml << '</Devices>'
+      xml << '</AssetGroup>'
+    end
+
+    # Launch ad hoc scans against each group of assets per site.
     #
     # @param [Connection] connection Connection to console where asset group is configured.
     # @return [Array[Hash[Fixnum, Fixnum]]] Array of scan ID and engine ID
@@ -96,13 +125,15 @@ module Nexpose
       parse(r.res)
     end
 
+    alias_method :get, :load
+
     def self.parse(rexml)
       return nil unless rexml
 
       rexml.elements.each('//AssetGroup') do |group|
-        asset_group = new(group.attributes['id'].to_i,
-                          group.attributes['name'].to_s,
+        asset_group = new(group.attributes['name'].to_s,
                           group.attributes['description'].to_s,
+                          group.attributes['id'].to_i,
                           group.attributes['riskscore'].to_f)
         rexml.elements.each('//Devices/device') do |dev|
           asset_group.devices << Device.new(dev.attributes['id'].to_i,
