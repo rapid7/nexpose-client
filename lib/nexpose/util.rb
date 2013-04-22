@@ -1,13 +1,7 @@
 module Nexpose
   module Sanitize
     def replace_entities(str)
-      ret = str.dup
-      ret.gsub!(/&/, '&amp;')
-      ret.gsub!(/'/, '&apos;')
-      ret.gsub!(/"/, '&quot;')
-      ret.gsub!(/</, '&lt;')
-      ret.gsub!(/>/, '&gt;')
-      ret
+      str.to_s.gsub(/&/, '&amp;').gsub(/'/, '&apos;').gsub(/"/, '&quot;').gsub(/</, '&lt;').gsub(/>/, '&gt;')
     end
   end
 

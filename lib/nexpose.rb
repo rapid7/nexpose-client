@@ -72,6 +72,7 @@ require 'nexpose/connection'
 require 'nexpose/role'
 require 'nexpose/common'
 require 'nexpose/group'
+require 'nexpose/alert'
 
 module Nexpose
 

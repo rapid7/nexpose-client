@@ -195,6 +195,7 @@ module Nexpose
     attr_accessor :credentials
 
     # [Array] Collection of real-time alerts.
+    # @see Alert
     # @see SMTPAlert
     # @see SNMPAlert
     # @see SyslogAlert
@@ -332,9 +333,11 @@ module Nexpose
       xml << assets.reduce('') { |acc, host| acc << host.to_xml }
       xml << '</Hosts>'
 
-      xml << '<ExcludedHosts>'
-      xml << exclude.reduce('') { |acc, host| acc << host.to_xml }
-      xml << '</ExcludedHosts>'
+      unless exclude.empty?
+        xml << '<ExcludedHosts>'
+        xml << exclude.reduce('') { |acc, host| acc << host.to_xml }
+        xml << '</ExcludedHosts>'
+      end
 
       unless credentials.empty?
         xml << '<Credentials>'
@@ -411,43 +414,8 @@ module Nexpose
           end
         end
 
-        s.elements.each('Alerting/Alert') do |a|
-          a.elements.each('smtpAlert') do |smtp|
-            smtp_alert = SMTPAlert.new(a.attributes['name'], smtp.attributes['sender'], smtp.attributes['limitText'], a.attributes['enabled'])
-
-            smtp.elements.each('recipient') do |recipient|
-              smtp_alert.add_recipient(recipient.text)
-            end
-            site.alerts << smtp_alert
-          end
-
-          a.elements.each('snmpAlert') do |snmp|
-            snmp_alert = SNMPAlert.new(a.attributes['name'], snmp.attributes['community'], snmp.attributes['server'], a.attributes['enabled'])
-            site.alerts << snmp_alert
-          end
-
-          a.elements.each('syslogAlert') do |syslog|
-            syslog_alert = SyslogAlert.new(a.attributes['name'], syslog.attributes['server'], a.attributes['enabled'])
-            site.alerts << syslog_alert
-          end
-
-          #a.elements.each('vuln_filter') do |vulnFilter|
-          #  vulnfilter = new VulnFilter.new(a.attributes["typemask"], a.attributes["severityThreshold"], $attrs["MAXALERTS"])
-          #  Pop off the top alert on the stack
-          #  $alert = @alerts.pop()
-          #  Add the new recipient string to the Alert Object
-          #  $alert.setVulnFilter($vulnfilter)
-          #  Push the alert back on to the alert stack
-          #  array_push($this->alerts, $alert)
-          #end
-
-          #a.elements.each('scanFilter') do |scanFilter|
-          #  <scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
-          #  scanfilter = ScanFilter.new(scanFilter.attributes['scanStop'],scanFilter.attributes['scanFailed'],scanFilter.attributes['scanStart'])
-          #  alert = @alerts.pop()
-          #  alert.setScanFilter(scanfilter)
-          #  @alerts.push(alert)
-          #end
+        s.elements.each('Alerting/Alert') do |alert|
+          site.alerts << Alert.parse(alert)
         end
 
         return site
@@ -563,142 +531,6 @@ module Nexpose
     end
   end
 
-  # === Description
-  # Object that represents a Syslog Alert.
-  #
-  class SyslogAlert
-
-    # A unique name for this alert
-    attr_reader :name
-    # If this alert is enabled or not
-    attr_reader :enabled
-    # The Syslog server to sent this alert
-    attr_reader :server
-    # The vulnerability filter to trigger the alert
-    attr_accessor :vuln_filter
-    # The alert type
-    attr_reader :type
-
-    def initialize(name, server, enabled = 1)
-      @type = :syslog
-      @name = name
-      @server = server
-      @enabled = enabled
-      # Sets default vuln filter - All Events
-      @vuln_filter = VulnFilter.new('50790400', 1)
-
-    end
-
-    include Sanitize
-
-    def to_xml
-      xml = '<syslogAlert'
-      xml << %Q{ name="#{replace_entities(name)}"}
-      xml << %Q{ enabled="#{replace_entities(enabled)}"}
-      xml << %Q{ server="#{replace_entities(server)}">}
-      xml << vuln_filter.to_xml
-      xml << '</syslogAlert>'
-      xml
-    end
-
-  end
-
-  # === Description
-  # Object that represents an SNMP Alert.
-  #
-  class SNMPAlert
-    include Sanitize
-
-    # A unique name for this alert
-    attr_reader :name
-    # If this alert is enabled or not
-    attr_reader :enabled
-    # The community string
-    attr_reader :community
-    # The SNMP server to sent this alert
-    attr_reader :server
-    # The vulnerability filter to trigger the alert
-    attr_reader :vuln_filter
-    # The alert type
-    attr_reader :type
-
-    def initialize(name, community, server, enabled = 1)
-      @type = :snmp
-      @name = name
-      @community = community
-      @server = server
-      @enabled = enabled
-      # Sets default vuln filter - All Events
-      @vuln_filter = VulnFilter.new('50790400', 1)
-    end
-
-    def to_xml
-      xml = '<snmpAlert'
-      xml << %Q{ name="#{replace_entities(name)}"}
-      xml << %Q{ enabled="#{replace_entities(enabled)}"}
-      xml << %Q{ community="#{replace_entities(community)}"}
-      xml << %Q{ server="#{replace_entities(server)}">}
-      xml << vuln_filter.to_xml
-      xml << '</snmpAlert>'
-      xml
-    end
-
-  end
-
-  # === Description
-  # Object that represents an SMTP (Email) Alert.
-  #
-  class SMTPAlert
-    # A unique name for this alert
-    attr_reader :name
-    # If this alert is enabled or not
-    attr_reader :enabled
-    # The email address of the sender
-    attr_reader :sender
-    # Limit the text for mobile devices
-    attr_reader :limit_text
-    # Array containing Strings of email addresses
-    # Array of strings with the email addresses of the intended recipients
-    attr_reader :recipients
-    # The vulnerability filter to trigger the alert
-    attr_accessor :vuln_filter
-    # The alert type
-    attr_reader :type
-
-    def initialize(name, sender, limit_text, enabled = 1)
-      @type = :smtp
-      @name = name
-      @sender = sender
-      @enabled = enabled
-      @limit_text = limit_text
-      @recipients = []
-      # Sets default vuln filter - All Events
-      @vuln_filter = VulnFilter.new('50790400', 1)
-    end
-
-    # Adds a new Recipient to the recipients array
-    def add_recipient(recipient)
-      @recipients.push(recipient)
-    end
-
-    include Sanitize
-
-    def to_xml
-      xml = '<smtpAlert'
-      xml << %Q{ name="#{replace_entities(name)}"}
-      xml << %Q{ enabled="#{replace_entities(enabled)}"}
-      xml << %Q{ sender="#{replace_entities(sender)}"}
-      xml << %Q{ limitText="#{replace_entities(limit_text)}">}
-      recipients.each do |recpt|
-        xml << "<recipient>#{replace_entities(recpt)}</recipient>"
-      end
-      xml << vuln_filter.to_xml
-      xml << '</smtpAlert>'
-      xml
-    end
-  end
-
-  # === Description
   # Object that represents a hostname to be added to a site.
   class HostName
     # Named host (usually DNS or Netbios name).
