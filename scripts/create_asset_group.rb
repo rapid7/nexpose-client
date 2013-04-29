@@ -62,7 +62,11 @@ nsc.logout
 group = Nexpose::AssetGroup.new(@name, @desc)
 
 ips.each do |ip|
-  group.devices << all_assets[ip] if all_assets.member? ip
+  if all_assets.member? ip
+    group.devices << all_assets[ip]
+  elsif @debug
+    $stderr.puts("No asset with IP #{ip} found.")
+  end
 end
 
 nsc.login
