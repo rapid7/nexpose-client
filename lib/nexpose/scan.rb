@@ -119,27 +119,27 @@ module Nexpose
     # @param [REXML::Document] rexml XML document to parse.
     # @return [ScanSummary] Scan summary represented by the XML.
     #
-    def self.parse(rexml)
-      tasks = Tasks.parse(rexml.elements['tasks'])
-      nodes = Nodes.parse(rexml.elements['nodes'])
-      vulns = Vulnerabilities.parse(rexml.attributes['scan-id'], rexml)
-      msg = rexml.elements['message'] ?  rexml.elements['message'].text : nil
+    def self.parse(xml)
+      tasks = Tasks.parse(xml.elements['tasks'])
+      nodes = Nodes.parse(xml.elements['nodes'])
+      vulns = Vulnerabilities.parse(xml.attributes['scan-id'], xml)
+      msg = xml.elements['message'] ?  xml.elements['message'].text : nil
 
       # Start time can be empty in some error conditions.
       start_time = nil
-      unless rexml.attributes['startTime'] == ''
-        start_time = DateTime.parse(rexml.attributes['startTime'].to_s).to_time
+      unless xml.attributes['startTime'] == ''
+        start_time = DateTime.parse(xml.attributes['startTime'].to_s).to_time
       end
 
       # End time is often not present, since reporting on running scans.
       end_time = nil
-      if rexml.attributes['endTime']
-        end_time = DateTime.parse(rexml.attributes['endTime'].to_s).to_time
+      if xml.attributes['endTime']
+        end_time = DateTime.parse(xml.attributes['endTime'].to_s).to_time
       end
-      return ScanSummary.new(rexml.attributes['scan-id'].to_i,
-                             rexml.attributes['site-id'].to_i,
-                             rexml.attributes['engine-id'].to_i,
-                             rexml.attributes['status'],
+      return ScanSummary.new(xml.attributes['scan-id'].to_i,
+                             xml.attributes['site-id'].to_i,
+                             xml.attributes['engine-id'].to_i,
+                             xml.attributes['status'],
                              start_time,
                              end_time,
                              msg,

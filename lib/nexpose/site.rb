@@ -51,7 +51,7 @@ module Nexpose
       r = execute(make_xml('SiteListingRequest'))
       arr = []
       if (r.success)
-        r.res.elements.each("//SiteSummary") do |site|
+        r.res.elements.each("SiteListingResponse/SiteSummary") do |site|
           arr << SiteSummary.new(site.attributes['id'].to_i,
                                  site.attributes['name'],
                                  site.attributes['description'],
@@ -73,13 +73,13 @@ module Nexpose
     #
     def site_scan_history(site_id)
       r = execute(make_xml('SiteScanHistoryRequest', {'site-id' => site_id}))
-      res = []
+      scans = []
       if r.success
-        r.res.elements.each("//ScanSummary") do |scan_event|
-          res << ScanSummary.parse(scan_event)
+        r.res.elements.each('SiteScanHistoryResponse/ScanSummary') do |scan_event|
+          scans << ScanSummary.parse(scan_event)
         end
       end
-      res
+      scans
     end
 
     # Retrieve the scan summary statistics for the latest completed scan
