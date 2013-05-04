@@ -14,12 +14,12 @@ module Nexpose
     def site_device_listing(site_id = nil)
       r = execute(make_xml('SiteDeviceListingRequest', {'site-id' => site_id}))
 
-      arr = []
+      devices = []
       if r.success
-        r.res.elements.each('//SiteDevices') do |site|
+        r.res.elements.each('SiteDeviceListingResponse/SiteDevices') do |site|
           site_id = site.attributes['site-id'].to_i
-          site.elements.each("//SiteDevices[contains(@site-id,'#{site_id}')]/device") do |device|
-            arr << Device.new(device.attributes['id'].to_i,
+          site.elements.each('device') do |device|
+            devices << Device.new(device.attributes['id'].to_i,
                               device.attributes['address'],
                               site_id,
                               device.attributes['riskfactor'].to_f,
@@ -27,7 +27,7 @@ module Nexpose
           end
         end
       end
-      arr
+      devices
     end
 
     alias_method :assets, :site_device_listing
