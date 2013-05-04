@@ -2,6 +2,171 @@ module Nexpose
   module NexposeAPI
     include XMLUtils
 
+    # Retrieve summary details of all vulnerabilities.
+    #
+    # @param [Boolean] full Whether or not to gather the full summary.
+    #   Without the flag, only id, title, and severity are returned.
+    #   It can take twice a long to retrieve full summary information.
+    # @return [Array[Vulnerability|VulnerabilitySummary]] Collection of all known vulnerabilities.
+    #
+    def vuln_listing(full = false)
+      xml = make_xml('VulnerabilityListingRequest')
+      # TODO Add a flag to do stream parsing of the XML to improve performance.
+      response = execute(xml, '1.2')
+      vulns = []
+      if response.success
+        response.res.elements.each('VulnerabilityListingResponse/VulnerabilitySummary') do |vuln|
+          if full
+            vulns << VulnerabilitySummary::parse(vuln)
+          else
+            vulns << Vulnerability.new(vuln.attributes['id'],
+                                       vuln.attributes['title'],
+                                       vuln.attributes['severity'].to_i)
+          end
+        end
+      end
+      vulns
+    end
+
+    alias_method :vulns, :vuln_listing
+
+    # Retrieve details for a vulnerability.
+    #
+    # @param [String] vuln_id Nexpose vulnerability ID, such as 'windows-duqu-cve-2011-3402'.
+    # @return [VulnerabilityDetail] Details of the requested vulnerability.
+    #
+    def vuln_details(vuln_id)
+      xml = make_xml('VulnerabilityDetailsRequest', {'vuln-id' => vuln_id})
+      response = execute(xml, '1.2')
+      if response.success
+        response.res.elements.each('VulnerabilityDetailsResponse/Vulnerability') do |vuln|
+          return VulnerabilityDetail::parse(vuln)
+        end
+      end
+    end
+  end
+
+  # Basic vulnerability information. Only includes id, title, and severity.
+  #
+  class Vulnerability
+
+    # The unique ID string for this vulnerability
+    attr_reader :id
+
+    # The title of this vulnerability
+    attr_reader :title
+
+    # How critical the vulnerability is on a scale of 1 to 10.
+    attr_reader :severity
+
+    def initialize(id, title, severity)
+      @id, @title, @severity = id, title, severity
+    end
+  end
+
+  # Summary of a vulnerability.
+  #
+  class VulnerabilitySummary < Vulnerability
+
+    # PCI severity value for the vulnerability on a scale of 1 to 5. 
+    attr_accessor :pci_severity
+
+    # Whether all checks for the vulnerability are safe.
+    # Unsafe checks may cause denial of service or otherwise disrupt system performance.
+    attr_accessor :safe
+
+    # A vulnerability is considered “credentialed” when all of its checks
+    # require credentials or if the check depends on previous authentication
+    # during a scan.
+    attr_accessor :credentials
+
+    # When this vulnerability was first included in the application.
+    attr_accessor :added
+
+    # The last date the vulnerability was modified.
+    attr_accessor :modified
+
+    # The date when the information about the vulnerability was first released.
+    attr_accessor :published
+
+    # How the vulnerability is exploited according to PCI standards.
+    attr_accessor :cvss_vector
+
+    # The computation of the Common Vulnerability Scoring System indicating
+    # compliance with PCI standards on a scale from 0 to 10.0.
+    attr_accessor :cvss_score
+
+    def self.parse_attributes(xml)
+      vuln = new(xml.attributes['id'],
+                 xml.attributes['title'],
+                 xml.attributes['severity'].to_i)
+
+      vuln.pci_severity = xml.attributes['pciSeverity'].to_i
+      vuln.safe = xml.attributes['safe'] == 'true'  # or xml.attributes['safe'] == '1'
+      vuln.added = Date::parse(xml.attributes['added'])
+      vuln.modified = Date::parse(xml.attributes['modified'])
+      vuln.credentials = xml.attributes['requiresCredentials'] == 'true'
+
+      # These three fields are optional in the XSD.
+      vuln.published = Date::parse(xml.attributes['published']) if xml.attributes['published']
+      vuln.cvss_vector = xml.attributes['cvssVector'] if xml.attributes['cvssVector']
+      vuln.cvss_score = xml.attributes['cvssScore'].to_f if xml.attributes['cvssScore']
+      vuln
+    end
+
+    def self.parse(xml)
+      parse_attributes(xml)
+    end
+  end
+
+  # Details for a vulnerability.
+  #
+  class VulnerabilityDetail < VulnerabilitySummary
+
+    # The HTML Description of this vulnerability.
+    attr_accessor :description
+
+    # External References for this vulnerability.
+    # Array containing (Reference)
+    attr_accessor :references
+
+    # The HTML Solution for this vulnerability.
+    attr_accessor :solution
+
+    def initialize(id, title, severity)
+      @id, @title, @severity = id, title, severity
+      @references = []
+    end
+
+    def self.parse(xml)
+      vuln = parse_attributes(xml)
+
+      vuln.description = REXML::XPath.first(xml, 'description').text
+      vuln.solution = REXML::XPath.first(xml, 'solution').text
+
+      xml.elements.each('references/reference') do |ref|
+        vuln.references << Reference.new(ref.attributes['source'], ref.text)
+      end
+      vuln
+    end
+  end
+
+  # Reference information for a Vulnerability.
+  #
+  class Reference
+
+    attr_reader :source
+    attr_reader :reference
+
+    def initialize(source, reference)
+      @source = source
+      @reference = reference
+    end
+  end
+
+  module NexposeAPI
+    include XMLUtils
+
     ###################
     # VULN EXCEPTIONS #
     ###################
@@ -13,7 +178,7 @@ module Nexpose
     # @param status - (optional) The status of the vulnerability exception:
     # "Under Review", "Approved", "Rejected"
     #-----------------------------------------------------------------------
-    def vuln_listing(status = nil)
+    def vuln_exception_listing(status = nil)
       option = {}
 
       if status && !status.empty?
@@ -326,184 +491,6 @@ module Nexpose
       xml = make_xml('VulnerabilityExceptionDeleteRequest', {'exception-id' => exception_id})
       r = execute xml, '1.2'
       r.success
-    end
-  end
-
-  # === Description
-  # Object that represents a listing of all of the vulnerabilities in the vulnerability database
-  #
-  class VulnerabilityListing
-    # true if an error condition exists; false otherwise
-    attr_reader :error
-    # Error message string
-    attr_reader :error_msg
-    # The NSC Connection associated with this object
-    attr_reader :connection
-    # Array containing (VulnerabilitySummary*)
-    attr_reader :vulnerability_summaries
-    # The number of vulnerability definitions
-    attr_reader :vulnerability_count
-
-    # Constructor
-    # VulnerabilityListing(connection)
-    def initialize(connection)
-      @error = false
-      @vulnerability_summaries = []
-      @connection = connection
-
-      r = @connection.execute('<VulnerabilityListingRequest session-id="' + @connection.session_id + '"/>')
-
-      if r.success
-        r.res.elements.each('VulnerabilityListingResponse/VulnerabilitySummary') do |v|
-          @vulnerability_summaries.push(VulnerabilitySummary.new(v.attributes['id'], v.attributes['title'], v.attributes['severity']))
-        end
-      else
-        @error = true
-        @error_msg = 'VulnerabilitySummary Parse Error'
-      end
-      @vulnerability_count = @vulnerability_summaries.length
-    end
-  end
-
-  # === Description
-  # Object that represents the summary of an entry in the vulnerability database
-  #
-  class VulnerabilitySummary
-
-    # The unique ID string for this vulnerability
-    attr_reader :id
-    # The title of this vulnerability
-    attr_reader :title
-    # The severity of this vulnerability (1 – 10)
-    attr_reader :severity
-
-    # Constructor
-    # VulnerabilitySummary(id, title, severity)
-    def initialize(id, title, severity)
-      @id = id
-      @title = title
-      @severity = severity
-
-    end
-
-  end
-
-  # === Description
-  # Object that represents the details for an entry in the vulnerability database
-  #
-  class VulnerabilityDetail
-    # true if an error condition exists; false otherwise
-    attr_reader :error
-    # Error message string
-    attr_reader :error_msg
-    # The NSC Connection associated with this object
-    attr_reader :connection
-    # The unique ID string for this vulnerability
-    attr_reader :id
-    # The title of this vulnerability
-    attr_reader :title
-    # The severity of this vulnerability (1 – 10)
-    attr_reader :severity
-    # The pciSeverity of this vulnerability
-    attr_reader :pciSeverity
-    # The CVSS score of this vulnerability
-    attr_reader :cvssScore
-    # The CVSS vector of this vulnerability
-    attr_reader :cvssVector
-    # The date this vulnerability was published
-    attr_reader :published
-    # The date this vulnerability was added to Nexpose
-    attr_reader :added
-    # The last date this vulnerability was modified
-    attr_reader :modified
-    # The HTML Description of this vulnerability
-    attr_reader :description
-    # External References for this vulnerability
-    # Array containing (Reference)
-    attr_reader :references
-    # The HTML Solution for this vulnerability
-    attr_reader :solution
-
-    # Constructor
-    # VulnerabilityListing(connection,id)
-    def initialize(connection, id)
-
-      @error = false
-      @connection = connection
-      @id = id
-      @references = []
-
-      r = @connection.execute('<VulnerabilityDetailsRequest session-id="' + @connection.session_id + '" vuln-id="' + @id + '"/>')
-
-      if r.success
-        r.res.elements.each('VulnerabilityDetailsResponse/Vulnerability') do |v|
-          @id = v.attributes['id']
-          @title = v.attributes['title']
-          @severity = v.attributes['severity']
-          @pciSeverity = v.attributes['pciSeverity']
-          @cvssScore = v.attributes['cvssScore']
-          @cvssVector = v.attributes['cvssVector']
-          @published = v.attributes['published']
-          @added = v.attributes['added']
-          @modified = v.attributes['modified']
-
-          v.elements.each('description') do |desc|
-            @description = desc.to_s.gsub(/\<\/?description\>/i, '')
-          end
-
-          v.elements.each('solution') do |sol|
-            @solution = sol.to_s.gsub(/\<\/?solution\>/i, '')
-          end
-
-          v.elements.each('references/reference') do |ref|
-            @references.push(Reference.new(ref.attributes['source'], ref.text))
-          end
-        end
-      else
-        @error = true
-        @error_msg = 'VulnerabilitySummary Parse Error'
-      end
-
-    end
-  end
-
-  # === Description
-  #
-  class Reference
-
-    attr_reader :source
-    attr_reader :reference
-
-    def initialize(source, reference)
-      @source = source
-      @reference = reference
-    end
-  end
-
-  # TODO: review
-  # === Description
-  #
-  class VulnFilter
-
-    attr_reader :typeMask
-    attr_reader :maxAlerts
-    attr_reader :severityThreshold
-
-    def initialize(type_mask, severity_threshold, max_alerts = -1)
-      @typeMask = type_mask
-      @maxAlerts = max_alerts
-      @severityThreshold = severity_threshold
-    end
-
-    include Sanitize
-
-    def to_xml
-      xml = '<vuln_filter '
-      xml << %Q{ type_mask="#{replace_entities(typeMask)}"}
-      xml << %Q{ maxAlerts="#{replace_entities(maxAlerts)}"}
-      xml << %Q{ severity_threshold="#{replace_entities(severityThreshold)}"}
-      xml << '/>'
-      xml
     end
   end
 end
