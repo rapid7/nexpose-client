@@ -25,7 +25,7 @@ module Nexpose
 
       res = []
       if r.success
-        r.res.elements.each('//AssetGroupSummary') do |group|
+        r.res.elements.each('AssetGroupListingResponse/AssetGroupSummary') do |group|
           res << AssetGroupSummary.new(group.attributes['id'].to_i,
                                        group.attributes['name'].to_s,
                                        group.attributes['description'].to_s,
@@ -36,6 +36,7 @@ module Nexpose
     end
 
     alias_method :asset_groups_listing, :asset_groups
+    alias_method :groups, :asset_groups
   end
 
   # Summary value object for asset group information.
@@ -127,23 +128,23 @@ module Nexpose
 
     alias_method :get, :load
 
-    def self.parse(rexml)
-      return nil unless rexml
+    def self.parse(xml)
+      puts xml
+      return nil unless xml
 
-      rexml.elements.each('//AssetGroup') do |group|
-        asset_group = new(group.attributes['name'].to_s,
-                          group.attributes['description'].to_s,
-                          group.attributes['id'].to_i,
-                          group.attributes['riskscore'].to_f)
-        rexml.elements.each('//Devices/device') do |dev|
-          asset_group.devices << Device.new(dev.attributes['id'].to_i,
-                                            dev.attributes['address'].to_s,
-                                            dev.attributes['site-id'].to_i,
-                                            dev.attributes['riskfactor'].to_f,
-                                            dev.attributes['riskscore'].to_f)
-        end
-        return asset_group
+      group = REXML::XPath.first(xml, 'AssetGroupConfigResponse/AssetGroup')
+      asset_group = new(group.attributes['name'].to_s,
+                        group.attributes['description'].to_s,
+                        group.attributes['id'].to_i,
+                        group.attributes['riskscore'].to_f)
+      group.elements.each('Devices/device') do |dev|
+        asset_group.devices << Device.new(dev.attributes['id'].to_i,
+                                          dev.attributes['address'].to_s,
+                                          dev.attributes['site-id'].to_i,
+                                          dev.attributes['riskfactor'].to_f,
+                                          dev.attributes['riskscore'].to_f)
       end
+      asset_group
     end
   end
 end
