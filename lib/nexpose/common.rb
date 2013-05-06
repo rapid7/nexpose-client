@@ -1,5 +1,13 @@
 module Nexpose
 
+  # Constants
+
+  module Scope
+
+    GLOBAL = 'global'
+    SILO = 'silo'
+  end
+
   # Configuration structure for e-mail notification.
   #
   # The send_as and send_to_acl_as attributes are optional, but one of them is
