@@ -1,6 +1,71 @@
 module Nexpose
+
+  module Ticket
+
+    module State
+      OPEN = 'O'
+      ASSIGNED = 'A'
+      MODIFIED = 'M'
+      FIXED = 'X'
+      PARTIAL = 'P'
+      REJECTED_FIX = 'R'
+      PRIORITIZED = 'Z'
+      NOT_REPRODUCIBLE = 'F'
+      NOT_ISSUE = 'I'
+      CLOSED = 'C'
+      UNKNOWN = 'U'
+    end
+
+    module Priority
+      LOW = 'low'
+      MODERATE = 'moderate'
+      NORMAL = 'normal'
+      HIGH = 'high'
+      CRITICAL = 'critical'
+    end
+  end
+
   module NexposeAPI
     include XMLUtils
+
+    def ticket_listing
+      xml = make_xml('TicketListingRequest')
+      r = execute(xml, '1.2')
+      tickets = []
+      if r.success
+        r.res.elements.each('TicketListingResponse/TicketSummary') do |summary|
+          tickets << TicketSummary::parse(summary)
+        end
+      end
+      tickets
+    end
+
+    alias_method :tickets, :ticket_listing
+
+    # Deletes a Nexpose ticket.
+    #
+    # @param [Fixnum] ticket Unique ID of the ticket to delete.
+    # @return [Boolean] Whether or not the ticket deletion succeeded.
+    #
+    def delete_ticket(ticket)
+      delete_tickets([ticket])
+    end
+
+    # Deletes a Nexpose ticket.
+    #
+    # @param [Array[Fixnum]] tickets Array of unique IDs of tickets to delete.
+    # @return [Boolean] Whether or not the ticket deletions succeeded.
+    #
+    def delete_tickets(tickets)
+      xml = make_xml('TicketDeleteRequest')
+      tickets.each do |id|
+        xml.add_element('Ticket', {'id' => id})
+      end
+
+      (execute xml, '1.2').success
+    end
+
+    alias_method :ticket_delete, :delete_tickets
 
     #
     # Create a Nexpose ticket
@@ -84,25 +149,54 @@ module Nexpose
         false
       end
     end
+  end
 
-    #
-    # Deletes a Nexpose ticket.
-    #
-    # ticket_ids: An array of ticket IDs to be deleted.
-    #
-    # @returns {@code true} iff the call was successfull. {@code false} otherwise.
-    #
-    def delete_ticket ticket_ids
-      if not ticket_ids or ticket_ids.count < 1
-        raise ArgumentError.new 'The tickets to delete should not be null or empty'
-      end
+  # Summary of ticket information returned from a ticket listing request.
+  # For more details, issue a ticket detail request.
+  #
+  class TicketSummary
 
-      base_xml = make_xml 'TicketDeleteRequest'
-      ticket_ids.each do |id|
-        base_xml.add_element 'Ticket', {'id' => id}
-      end
+    # The ID number of the ticket.
+    attr_accessor :id
 
-      (execute base_xml, '1.2').success
+    # Ticket name.
+    attr_accessor :name
+
+    # The asset the ticket is created for.
+    attr_accessor :device_id
+
+    # The login name of person to whom the ticket is assigned.
+    # The user must have view asset privilege on the asset specified in the device-id attribute.
+    attr_accessor :assigned_to
+
+    # The relative priority of the ticket, assigned by the creator of the ticket.
+    # @see Nexpose::Ticket::Priority
+    attr_accessor :priority
+
+    # The login name of the person who created the ticket.
+    attr_accessor :author
+
+    # Date and time of ticket creation.
+    attr_accessor :created_on
+
+    # The current status of the ticket.
+    attr_accessor :state
+
+    def initialize(id, name)
+      @id, @name = id, name
+    end
+
+    def self.parse(xml)
+      ticket = new(xml.attributes['id'].to_i,
+                   xml.attributes['name'])
+      ticket.device_id = xml.attributes['device-id'].to_i
+      ticket.assigned_to = xml.attributes['assigned-to']
+      ticket.priority = xml.attributes['priority']
+      ticket.author = xml.attributes['author']
+      ticket.created_on = DateTime::parse(xml.attributes['created-on'])
+      lookup = Ticket::State.constants.reduce({}) { |a, e| a[Ticket::State.const_get(e)] = e; a }
+      ticket.state = lookup[xml.attributes['state']]
+      ticket
     end
   end
 end
