@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name                  = 'nexpose'
-  s.version               = '0.1.14'
+  s.version               = '0.2.0'
   s.homepage              = 'https://github.com/rapid7/nexpose-client'
   s.summary               = 'Ruby API for Rapid7 Nexpose'
   s.description           = 'This gem provides a Ruby API to the Nexpose vulnerability management product by Rapid7.'
@@ -15,6 +15,6 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.8.7'
   s.platform              = 'ruby'
 
-  s.add_dependency('librex', '>= 0.0.32')
+  s.add_dependency('librex', '>= 0.0.68')
   s.add_dependency('rex', '>= 1.0.2')
 end
