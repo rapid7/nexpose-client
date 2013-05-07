@@ -9,33 +9,33 @@ module Nexpose
     include XMLUtils
 
     # Security blob for an existing set of credentials
-    attr_reader :securityblob
+    attr_accessor :securityblob
     # Designates if this object contains user defined credentials or a security blob
-    attr_reader :isblob
+    attr_accessor :isblob
     # The service for these credentials. Can be All.
-    attr_reader :service
+    attr_accessor :service
     # The host for these credentials. Can be Any.
-    attr_reader :host
+    attr_accessor :host
     # The port on which to use these credentials.
-    attr_reader :port
+    attr_accessor :port
     # The user id or username
-    attr_reader :userid
+    attr_accessor :userid
     # The password
-    attr_reader :password
+    attr_accessor :password
     # The realm for these credentials
-    attr_reader :realm
+    attr_accessor :realm
     # When using httpheaders, this represents the set of headers to pass
     # with the authentication request.
-    attr_reader :headers
+    attr_accessor :headers
     # When using htmlforms, this represents the tho form to pass the
     # authentication request to.
-    attr_reader :html_forms
-	# The type of privilege escalation to use (sudo/su)
-	attr_reader :priv_type
-	# The userid to use when escalating privileges (optional)
-	attr_reader :priv_username
-	# The password to use when escalating privileges (optional)
-	attr_reader :priv_password
+    attr_accessor :html_forms
+    # The type of privilege escalation to use (sudo/su)
+    attr_accessor :priv_type
+    # The userid to use when escalating privileges (optional)
+    attr_accessor :priv_username
+    # The password to use when escalating privileges (optional)
+    attr_accessor :priv_password
 
     def initialize(isblob = false)
       @isblob = isblob
@@ -53,12 +53,23 @@ module Nexpose
       @realm = realm
     end
 
-	# Sets privilege escalation credentials.  Type should be either
-	# sudo/su.
+    def self.for_service(service, user, password, realm = nil, host = nil, port = nil)
+      cred = new
+      cred.service = service
+      cred.userid = user
+      cred.password = password
+      cred.realm = realm
+      cred.host = host
+      cred.port = port
+      cred
+    end
+
+    # Sets privilege escalation credentials.  Type should be either
+    # sudo/su.
     def set_privilege_credentials(type, username, password)
-	  @priv_type = type
-	  @priv_username = username
-	  @priv_password = password
+      @priv_type = type
+      @priv_username = username
+      @priv_password = password
     end
 
     # The name of the service.  Possible values are outlined in the
