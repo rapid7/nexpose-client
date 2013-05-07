@@ -293,7 +293,7 @@ module Nexpose
     def save(connection)
       r = connection.execute('<SiteSaveRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiteSaveRequest>')
       if r.success
-        @id = r.attributes['site-id']
+        @id = r.attributes['site-id'].to_i
       end
     end
 
@@ -314,7 +314,7 @@ module Nexpose
     def scan(connection, sync_id = nil)
       xml = REXML::Element.new('SiteScanRequest')
       xml.add_attributes({'session-id' => connection.session_id,
-                          'site-id' => id,
+                          'site-id' => @id,
                           'sync-id' => sync_id})
 
       response = connection.execute(xml)
