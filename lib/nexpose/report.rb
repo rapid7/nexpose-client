@@ -320,7 +320,7 @@ module Nexpose
       xml << '</ReportSaveRequest>'
       response = connection.execute(xml)
       if response.success
-        @id = response.attributes['reportcfg-id']
+        @id = response.attributes['reportcfg-id'].to_i
       end
     end
 
@@ -676,7 +676,7 @@ module Nexpose
       xml << '</ReportTemplateSaveRequest>'
       response = connection.execute(xml)
       if response.success
-        @id = response.attributes['template-id']
+        @id = response.attributes['template-id'].to_i
       end
     end
 
