@@ -676,7 +676,7 @@ module Nexpose
       xml << '</ReportTemplateSaveRequest>'
       response = connection.execute(xml)
       if response.success
-        @id = response.attributes['template-id'].to_i
+        @id = response.attributes['template-id']
       end
     end
 
