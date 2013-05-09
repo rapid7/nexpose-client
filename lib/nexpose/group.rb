@@ -76,7 +76,7 @@ module Nexpose
       xml << '</AssetGroupSaveRequest>'
       response = connection.execute(xml)
       if response.success
-        @id = response.attributes['group-id'] if @id < 0
+        @id = response.attributes['group-id'].to_i if @id < 0
       end
     end
 
