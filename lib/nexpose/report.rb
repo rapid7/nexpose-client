@@ -65,6 +65,8 @@ module Nexpose
       templates
     end
 
+    alias_method :report_templates, :report_template_listing
+
     # Retrieve the configuration for a report template.
     def get_report_template(template_id)
       xml = make_xml('ReportTemplateConfigRequest', {'template-id' => template_id})
@@ -83,6 +85,8 @@ module Nexpose
       end
       reports
     end
+
+    alias_method :reports, :report_listing
 
     # Retrieve the configuration for a report definition.
     def get_report_config(report_config_id)
@@ -296,9 +300,11 @@ module Nexpose
     end
 
     # Retrieve the configuration for an existing report definition.
-    def self.get(connection, report_config_id)
+    def self.load(connection, report_config_id)
       connection.get_report_config(report_config_id)
     end
+
+    alias_method :get, :load
 
     # Build and save a report configuration against the specified site using
     # the supplied type and format.
@@ -690,9 +696,11 @@ module Nexpose
     end
 
     # Retrieve the configuration for a report template.
-    def self.get(connection, template_id)
+    def self.load(connection, template_id)
       connection.get_report_template(template_id)
     end
+
+    alias_method :get, :load
 
     include Sanitize
 
