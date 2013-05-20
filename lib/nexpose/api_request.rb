@@ -111,8 +111,8 @@ module Nexpose
         @error = 'Received a user interrupt.'
       rescue ::Errno::ECONNRESET, ::Errno::ECONNREFUSED, ::Errno::ENOTCONN, ::Errno::ECONNABORTED
         @error = 'Nexpose service is not available.'
-      rescue ::REXML::ParseException
-        @error = 'Nexpose has not been properly licensed.'
+      rescue ::REXML::ParseException => exc
+        @error = "Error parsing response: #{exc.message}"
       end
 
       if !(@success or @error)
