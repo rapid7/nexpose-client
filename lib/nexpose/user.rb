@@ -68,7 +68,7 @@ module Nexpose
     end
   end
 
-  class UserConfig
+  class User
     include Sanitize
 
     # user id, set to -1 to create a new user
@@ -172,7 +172,7 @@ module Nexpose
           all_groups = config.attributes['allGroups'] == 'true' ? true : false
           # Not trying to load sites and groups.
           # Looks like API currently doesn't return that info to load.
-          return UserConfig.new(name, fullname, password, role_name, id, enabled, email, all_sites, all_groups)
+          return User.new(name, fullname, password, role_name, id, enabled, email, all_sites, all_groups)
         end
       end
     end
@@ -192,7 +192,7 @@ module Nexpose
 
     # Delete the user account associated with this object.
     def delete(connection)
-      UserConfig.delete(connection, @id)
+      User.delete(connection, @id)
     end
   end
 
