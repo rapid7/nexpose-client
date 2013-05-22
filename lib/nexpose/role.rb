@@ -113,6 +113,14 @@ module Nexpose
 
   class Role < RoleSummary
 
+    # Constants, mapping UI terms to role names expected by API.
+
+    GLOBAL_ADMINISTRATOR = 'global-admin'
+    ASSET_OWNER = 'system-admin'
+    SECURITY_MANAGER = 'security-manager'
+    SITE_ADMINISTRATOR = 'site-admin'
+    USER = 'user'
+
     # Array of all privileges which are enabled for this role.
     # Note: Although the underlying XML has different requirements, this only checks for presence.
     # @see Nexpose::Privilege
