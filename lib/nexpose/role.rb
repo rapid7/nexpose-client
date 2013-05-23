@@ -118,7 +118,7 @@ module Nexpose
     GLOBAL_ADMINISTRATOR = 'global-admin'
     ASSET_OWNER = 'system-admin'
     SECURITY_MANAGER = 'security-manager'
-    SITE_ADMINISTRATOR = 'site-admin'
+    SITE_OWNER = 'site-admin'
     USER = 'user'
 
     # Array of all privileges which are enabled for this role.
