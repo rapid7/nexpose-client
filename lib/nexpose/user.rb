@@ -1,15 +1,49 @@
 module Nexpose
 
+  module NexposeAPI
+    include XMLUtils
+
+    # Retrieve a list of all users configured on this console.
+    #
+    # @return [Array[UserSummary]] Array of users.
+    #
+    def users
+      r = execute(make_xml('UserListingRequest'))
+      arr = []
+      if r.success
+        r.res.elements.each('UserListingResponse/UserSummary') do |summary|
+          arr << UserSummary.parse(summary)
+        end
+      end
+      arr
+    end
+
+    # Retrieve the User ID based upon the user's login name.
+    def get_user_id(user_name)
+      users.find { |user| user.name.eql? user_name }
+    end
+
+    # Delete a user from the Nexpose console.
+    #
+    # @param [Fixnum] user_id Unique ID for the user to delete.
+    # @return [Boolean] Whether or not the user deletion succeeded.
+    #
+    def delete_user(user_id)
+      response = execute(make_xml('UserDeleteRequest', { 'id' => user_id }))
+      response.success
+    end
+  end
+
   # Summary only returned by API when issuing a listing request.
   class UserSummary
-    attr_reader :id, :auth_source, :auth_module, :user_name, :full_name, :email
+    attr_reader :id, :auth_source, :auth_module, :name, :full_name, :email
     attr_reader :is_admin, :is_disabled, :is_locked, :site_count, :group_count
 
-    def initialize(id, auth_source, auth_module, user_name, full_name, email, is_admin, is_disabled, is_locked, site_count, group_count)
+    def initialize(id, auth_source, auth_module, name, full_name, email, is_admin, is_disabled, is_locked, site_count, group_count)
       @id = id
       @auth_source = auth_source
       @auth_module = auth_module
-      @user_name = user_name
+      @name = name
       @full_name = full_name
       @email = email
       @is_admin = is_admin
@@ -19,52 +53,19 @@ module Nexpose
       @group_count = group_count
     end
 
-    def to_s
-      out = "#{@user_name} (#{@full_name}) [ID: #{@id}]"
-      out << " e-mail: #{@email}" unless @email.empty?
-      out << ' Administrator' if @is_admin
-      out << ' Disabled' if @is_disabled
-      out << ' Locked' if @is_locked
-      out << ", sites: #{@site_count}"
-      out << ", groups: #{@group_count}"
-    end
-
     # Provide a list of user accounts and information about those accounts.
-    def self.listing(connection)
-      xml = '<UserListingRequest session-id="' + connection.session_id + '" />'
-      r = connection.execute(xml, '1.1')
-      if r.success
-        res = []
-        r.res.elements.each('UserListingResponse/UserSummary') do |summary|
-          res << UserSummary.new(
-            summary.attributes['id'].to_i,
-            summary.attributes['authSource'],
-            summary.attributes['authModule'],
-            summary.attributes['userName'],
-            summary.attributes['fullName'],
-            summary.attributes['email'],
-            summary.attributes['administrator'].to_s.chomp.eql?('1'),
-            summary.attributes['disabled'].to_s.chomp.eql?('1'),
-            summary.attributes['locked'].to_s.chomp.eql?('1'),
-            summary.attributes['siteCount'].to_i,
-            summary.attributes['groupCount'].to_i)
-        end
-        res
-      else
-        false
-      end
-    end
-
-    # Retrieve the User ID based upon the user's login name.
-    def self.get_user_id(connection, user_name)
-      xml = '<UserListingRequest session-id="' + connection.session_id + '" />'
-      r = connection.execute(xml, '1.1')
-      if r.success
-        r.res.elements.each('UserListingResponse/UserSummary') do |user|
-          return user.attributes['id'] if user_name.eql? user.attributes['userName']
-        end
-      end
-      return -1
+    def self.parse(summary)
+      new(summary.attributes['id'].to_i,
+          summary.attributes['authSource'],
+          summary.attributes['authModule'],
+          summary.attributes['userName'],
+          summary.attributes['fullName'],
+          summary.attributes['email'],
+          summary.attributes['administrator'].to_s.chomp.eql?('1'),
+          summary.attributes['disabled'].to_s.chomp.eql?('1'),
+          summary.attributes['locked'].to_s.chomp.eql?('1'),
+          summary.attributes['siteCount'].to_i,
+          summary.attributes['groupCount'].to_i)
     end
   end
 
@@ -101,15 +102,6 @@ module Nexpose
       @all_groups = all_groups || role_name == 'global-admin'
       @sites = []
       @groups = []
-    end
-
-    def to_s
-      out = "#{@name} (#{@full_name}) [ID: #{@id}, Role: #{@role_name}]"
-      out << ' Disabled' unless @enabled
-      out << ' All-Sites' if @all_sites
-      out << ' All-Groups' if @all_groups
-      out << " e-mail: #{@email}" unless @email.nil? || @email.empty?
-      out
     end
 
     def to_xml
@@ -177,22 +169,9 @@ module Nexpose
       end
     end
 
-    # Delete a user account.
-    def self.delete(connection, user_id)
-      xml = '<UserDeleteRequest session-id="' + connection.session_id + '"'
-      xml << %Q{ id="#{user_id}"}
-      xml << ' />'
-      r = connection.execute(xml, '1.1')
-      if r.success
-        r.res.elements.each('UserConfigResponse/UserConfig') do |config|
-          '1'.eql? config.attributes['id']
-        end
-      end
-    end
-
     # Delete the user account associated with this object.
     def delete(connection)
-      User.delete(connection, @id)
+      connection.delete_user(@id)
     end
   end
 

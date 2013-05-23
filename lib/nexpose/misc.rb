@@ -31,7 +31,5 @@ module Nexpose
         false
       end
     end
-
-    alias_method :users, :list_users
   end
 end
