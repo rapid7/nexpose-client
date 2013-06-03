@@ -129,7 +129,6 @@ module Nexpose
     alias_method :get, :load
 
     def self.parse(xml)
-      puts xml
       return nil unless xml
 
       group = REXML::XPath.first(xml, 'AssetGroupConfigResponse/AssetGroup')
