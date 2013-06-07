@@ -523,11 +523,11 @@ module Nexpose
     attr_reader :site_id
 
     def initialize(id, address, site_id, risk_factor = 1.0, risk_score = 0.0)
-      @id = id
+      @id = id.to_i
       @address = address
-      @site_id = site_id
-      @risk_factor = risk_factor
-      @risk_score = risk_score
+      @site_id = site_id.to_i
+      @risk_factor = risk_factor.to_f
+      @risk_score = risk_score.to_f
     end
   end
 
