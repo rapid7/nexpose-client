@@ -18,4 +18,11 @@ module Nexpose
       @reason = "Login Failed"
     end
   end
+
+  class PermissionError < APIError
+    def initialize(req)
+      @req = req
+      @reason = 'User does not have permission to perform this action.'
+    end
+  end
 end
