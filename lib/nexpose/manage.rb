@@ -56,27 +56,23 @@ module Nexpose
       execute(make_xml('RestartRequest', {})).success
     end
 
-    # --
-    # TODO This is not yet implemented correctly.
-    #
     # Output diagnostic information into log files, zip the files, and encrypt
     # the archive with a PGP public key that is provided as a parameter for the
-    # API call. Then, either e-mail this archive to an address that is
-    # specified as an API parameter, or upload the archive using HTTP or HTTPS
-    # to a URL that is specified as an API parameter.
+    # API call. Then upload the archive using HTTPS to a URL that is specified
+    # as an API parameter.
     #
-    # If you do not specify a key, the SendLogRequest uses a default key.
+    # @param url Upload server to send the support log package to.
     #
-    # @param protocol should be one of: smtp, http, https.
-    # ++
-    def send_log(key_id, protocol, transport)
-      xml = make_xml('ConsoleCommandRequest', {'keyid' => key_id})
+    def send_log(uri = 'https://support.rapid7.com')
+      url = REXML::Element.new('URL')
+      url.text = uri
       tpt = REXML::Element.new('Transport')
-      tpt.add_attribute('protocol', protocol)
-      tpt.text = transport
+      tpt.add_attribute('protocol', 'https')
+      tpt << url
+      xml = make_xml('SendLogRequest')
       xml << tpt
 
-      # execute(xml)
+      execute(xml).success
     end
   end
 end
