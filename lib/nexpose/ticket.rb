@@ -123,7 +123,7 @@ module Nexpose
       # Add vulnerabilities
       vulnerabilities_xml = REXML::Element.new 'Vulnerabilities'
       vulnerabilities.each do |vuln_id|
-        vulnerabilities_xml.add_element 'Vulnerability', {'id' => vuln_id}
+        vulnerabilities_xml.add_element 'Vulnerability', {'id' => vuln_id.downcase}
       end
       create_request_xml.add_element vulnerabilities_xml
 
