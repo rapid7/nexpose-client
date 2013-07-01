@@ -458,14 +458,13 @@ module Nexpose
       end
 
       expiration_date = input[:expiration_date]
-      if expiration_date && !expiration_date.empty? && expiration_date =~ /\A\desc{4}-(\desc{2})-(\desc{2})\z/
+      if expiration_date && !expiration_date.empty? && expiration_date =~ /\A\d{4}-(\d{2})-(\d{2})\z/
         if $1.to_i > 12
           raise ArgumentError.new 'The expiration date month value is invalid'
         end
-
-      if $2.to_i > 31
-        raise ArgumentError.new 'The expiration date day value is invalid'
-      end
+        if $2.to_i > 31
+          raise ArgumentError.new 'The expiration date day value is invalid'
+        end
       else
         raise ArgumentError.new 'Expiration date is invalid'
       end
