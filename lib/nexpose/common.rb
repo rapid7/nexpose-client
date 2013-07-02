@@ -110,9 +110,6 @@ module Nexpose
     # The date after which the schedule is disabled, in ISO 8601 format.
     attr_accessor :not_valid_after
 
-    # --
-    # TODO These are not captured or put to XML.
-    # ++
     attr_accessor :incremental
     attr_accessor :repeater_type
 
@@ -127,20 +124,23 @@ module Nexpose
       xml = %Q{<Schedule enabled='#{@enabled ? 1 : 0}' type='#{@type}' interval='#{@interval}' start='#{@start}'}
       xml << %Q{ maxDuration='#@max_duration'} if @max_duration
       xml << %Q{ notValidAfter='#@not_valid_after'} if @not_valid_after
+      xml << %Q{ incremental='#{@incremental ? 1 : 0}'} if @incremental
+      xml << %Q{ repeaterType='#@repeater_type'} if @repeater_type
       xml << '/>'
     end
 
     def self.parse(xml)
-      xml.elements.each('//Schedule') do |sched|
-        schedule = Schedule.new(sched.attributes['type'],
-                                sched.attributes['interval'].to_i,
-                                sched.attributes['start'],
-                                sched.attributes['enabled'] || true)
-        # Optional parameters.
-        schedule.max_duration = sched.attributes['maxDuration'].to_i if sched.attributes['maxDuration']
-        schedule.not_valid_after = sched.attributes['notValidAfter'] if sched.attributes['notValidAfter']
-        return schedule
-      end
+      schedule = Schedule.new(xml.attributes['type'],
+                              xml.attributes['interval'].to_i,
+                              xml.attributes['start'],
+                              xml.attributes['enabled'] == '1')
+
+      # Optional parameters.
+      schedule.max_duration = xml.attributes['maxDuration'].to_i if xml.attributes['maxDuration']
+      schedule.not_valid_after = xml.attributes['notValidAfter'] if xml.attributes['notValidAfter']
+      schedule.incremental = (xml.attributes['incremental'] && xml.attributes['incremental'] == '1')
+      schedule.repeater_type = xml.attributes['repeaterType'] if xml.attributes['repeaterType']
+      schedule
     end
   end
 end

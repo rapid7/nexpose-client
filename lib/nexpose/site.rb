@@ -358,8 +358,8 @@ module Nexpose
       xml << %Q(<ScanConfig configID="#{@id}" name="#{@scan_template_name || @scan_template}" templateID="#{@scan_template}" configVersion="#{@config_version || 3}" engineID="#{@engine}">)
 
       xml << '<Schedules>'
-      @schedules.each do |sched|
-        xml << %Q{<Schedule enabled="#{sched.enabled ? 1 : 0}" type="#{sched.type}" interval="#{sched.interval}" start="#{sched.start}" />}
+      @schedules.each do |schedule|
+        xml << schedule.to_xml
       end
       xml << '</Schedules>'
       xml << '</ScanConfig>'
@@ -405,12 +405,8 @@ module Nexpose
           site.scan_template = scan_config.attributes['templateID']
           site.config_version = scan_config.attributes['configVersion'].to_i
           site.engine = scan_config.attributes['engineID'].to_i
-          scan_config.elements.each('Schedules/Schedule') do |sched|
-            schedule = Schedule.new(sched.attributes['type'],
-                                    sched.attributes['interval'],
-                                    sched.attributes['start'],
-                                    sched.attributes['enabled'])
-            site.schedules << schedule
+          scan_config.elements.each('Schedules/Schedule') do |schedule|
+            site.schedules << Schedule.parse(schedule)
           end
         end
 
