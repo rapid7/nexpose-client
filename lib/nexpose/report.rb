@@ -1,16 +1,20 @@
 module Nexpose
+
+  # NexposeAPI module is mixed into the Connection object, and all methods are
+  # expected to be called from there.
+  #
   module NexposeAPI
     include XMLUtils
 
     # Generate a new report using the specified report definition.
     def generate_report(report_id, wait = false)
-      xml = make_xml('ReportGenerateRequest', {'report-id' => report_id})
+      xml = make_xml('ReportGenerateRequest', { 'report-id' => report_id })
       response = execute(xml)
       if response.success
         response.res.elements.each('//ReportSummary') do |summary|
           summary = ReportSummary.parse(summary)
           # If not waiting or the report is finished, return now.
-          return summary unless wait and summary.status == 'Started'
+          return summary unless wait && summary.status == 'Started'
         end
       end
       so_far = 0
@@ -29,11 +33,11 @@ module Nexpose
     # Provide a history of all reports generated with the specified report
     # definition.
     def report_history(report_config_id)
-      xml = make_xml('ReportHistoryRequest', {'reportcfg-id' => report_config_id})
+      xml = make_xml('ReportHistoryRequest', { 'reportcfg-id' => report_config_id })
       ReportSummary.parse_all(execute(xml))
     end
 
-    # Get the details of the last report generated with the specified report id.
+    # Get details of the last report generated with the specified report id.
     def last_report(report_config_id)
       history = report_history(report_config_id)
       history.sort { |a, b| b.generated_on <=> a.generated_on }.first
@@ -42,13 +46,13 @@ module Nexpose
     # Delete a previously generated report definition.
     # Also deletes any reports generated from that configuration.
     def delete_report_config(report_config_id)
-      xml = make_xml('ReportDeleteRequest', {'reportcfg-id' => report_config_id})
+      xml = make_xml('ReportDeleteRequest', { 'reportcfg-id' => report_config_id })
       execute(xml).success
     end
 
     # Delete a previously generated report.
     def delete_report(report_id)
-      xml = make_xml('ReportDeleteRequest', {'report-id' => report_id})
+      xml = make_xml('ReportDeleteRequest', { 'report-id' => report_id })
       execute(xml).success
     end
 
@@ -69,14 +73,14 @@ module Nexpose
 
     # Retrieve the configuration for a report template.
     def get_report_template(template_id)
-      xml = make_xml('ReportTemplateConfigRequest', {'template-id' => template_id})
+      xml = make_xml('ReportTemplateConfigRequest', { 'template-id' => template_id })
       ReportTemplate.parse(execute(xml))
     end
 
     # Provide a listing of all report definitions the user can access on the
     # Security Console.
     def report_listing
-      r = execute(make_xml('ReportListingRequest', {}))
+      r = execute(make_xml('ReportListingRequest'))
       reports = []
       if r.success
         r.res.elements.each('//ReportConfigSummary') do |report|
@@ -90,7 +94,7 @@ module Nexpose
 
     # Retrieve the configuration for a report definition.
     def get_report_config(report_config_id)
-      xml = make_xml('ReportConfigRequest', {'reportcfg-id' => report_config_id})
+      xml = make_xml('ReportConfigRequest', { 'reportcfg-id' => report_config_id })
       ReportConfig.parse(execute(xml))
     end
   end
@@ -160,7 +164,11 @@ module Nexpose
     end
 
     def self.parse(xml)
-      ReportSummary.new(xml.attributes['id'], xml.attributes['cfg-id'], xml.attributes['status'], xml.attributes['generated-on'], xml.attributes['report-URI'])
+      ReportSummary.new(xml.attributes['id'],
+                        xml.attributes['cfg-id'],
+                        xml.attributes['status'],
+                        xml.attributes['generated-on'],
+                        xml.attributes['report-URI'])
     end
 
     def self.parse_all(response)
@@ -229,7 +237,7 @@ module Nexpose
     include XMLUtils
 
     # Generate a report once using a simple configuration.
-    # 
+    #
     # For XML-based reports, only the raw report is returned and not any images.
     #
     # @param [Connection] connection Nexpose connection.
@@ -255,7 +263,7 @@ module Nexpose
             if /.*base64.*/ =~ part.header.to_s
               if @format =~ /(?:ht|x)ml/
                 if part.header.to_s =~ %r(text/(?:ht|x)ml)
-                  return parse_xml(part.content.unpack("m*")[0]).to_s
+                  return parse_xml(part.content.unpack('m*')[0]).to_s
                 end
               else # text|pdf|csv|rtf
                 return part.content.unpack('m*')[0]

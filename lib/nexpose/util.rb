@@ -11,7 +11,7 @@ module Nexpose
       ::REXML::Document.new(xml.to_s)
     end
 
-    def make_xml(name, opts={}, data='', append_session_id=true)
+    def make_xml(name, opts = {}, data = '', append_session_id = true)
       xml = REXML::Element.new(name)
       if @session_id and append_session_id
         xml.attributes['session-id'] = @session_id
