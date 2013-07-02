@@ -133,7 +133,7 @@ module Nexpose
       schedule = Schedule.new(xml.attributes['type'],
                               xml.attributes['interval'].to_i,
                               xml.attributes['start'],
-                              xml.attributes['enabled'] == '1')
+                              xml.attributes['enabled'] != '0')
 
       # Optional parameters.
       schedule.max_duration = xml.attributes['maxDuration'].to_i if xml.attributes['maxDuration']

@@ -280,7 +280,7 @@ module Nexpose
     # Array of user IDs which have access to resulting reports.
     attr_accessor :users
     # Configuration of when a report is generated.
-    attr_accessor :generate
+    attr_accessor :frequency
     # Report delivery configuration.
     attr_accessor :delivery
     # Database export configuration.
@@ -313,7 +313,7 @@ module Nexpose
     def self.build(connection, site_id, site_name, type, format, generate_now = false)
       name = %Q{#{site_name} #{type} report in #{format}}
       config = ReportConfig.new(name, type, format)
-      config.generate = Generate.new(true, false)
+      config.frequency = Frequency.new(true, false)
       config.filters << Filter.new('site', site_id)
       config.save(connection, generate_now)
       config
@@ -355,7 +355,7 @@ module Nexpose
       xml << '</Users>'
 
       xml << %Q{<Baseline compareTo='#{@baseline}' />} if @baseline
-      xml << @generate.to_xml if @generate
+      xml << @frequency.to_xml if @frequency
       xml << @delivery.to_xml if @delivery
       xml << @db_export.to_xml if @db_export
 
@@ -385,7 +385,7 @@ module Nexpose
           config.baseline = baseline.attributes['compareTo']
         end
 
-        config.generate = Generate.parse(cfg)
+        config.frequency = Frequency.parse(cfg)
         config.delivery = Delivery.parse(cfg)
         config.db_export = DBExport.parse(cfg)
 
@@ -435,9 +435,9 @@ module Nexpose
   end
 
   # Data object associated with when a report is generated.
-  class Generate
+  class Frequency
     # Will the report be generated after a scan completes (true),
-    # or is it ad-hoc/scheduled (false).
+    # or is it ad hoc/scheduled (false).
     attr_accessor :after_scan
     # Whether or not a scan is scheduled.
     attr_accessor :scheduled
@@ -459,13 +459,15 @@ module Nexpose
     def self.parse(xml)
       xml.elements.each('//Generate') do |generate|
         if generate.attributes['after-scan'] == '1'
-          return Generate.new(true, false)
+          return Frequency.new(true, false)
         else
           if generate.attributes['schedule'] == '1'
-            schedule = Schedule.parse(xml)
-            return Generate.new(false, true, schedule)
+            generate.elements.each('Schedule') do |sched|
+              schedule = Schedule.parse(sched)
+              return Frequency.new(false, true, schedule)
+            end
           end
-          return Generate.new(false, false)
+          return Frequency.new(false, false)
         end
       end
       nil
