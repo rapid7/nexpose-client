@@ -34,12 +34,35 @@ module Nexpose
     alias_method :devices, :site_device_listing
     alias_method :list_devices, :site_device_listing
 
+    # Find a Device by its address.
+    #
+    # This is a convenience method for finding a single device from a SiteDeviceListing.
+    # If no site_id is provided, the first matching device will be returned when a device
+    # occurs across multiple sites.
+    #
+    # @param [String] address Address of the device to find. Usually the IP address.
+    # @param [FixNum] site_id Site ID to request scan history for.
+    # @return [Device] The first matching Device with the provided address, if found.
+    #
+    def find_device_by_address(address, site_id = nil)
+      r = execute(make_xml('SiteDeviceListingRequest', {'site-id' => site_id}))
+      if r.success
+        device = REXML::XPath.first(r.res, "SiteDeviceListingResponse/SiteDevices/device[@address='#{address}']")
+        return Device.new(device.attributes['id'].to_i,
+                          device.attributes['address'],
+                          device.parent.attributes['site-id'],
+                          device.attributes['riskfactor'].to_f,
+                          device.attributes['riskscore'].to_f) if device
+      end
+      nil
+    end
+
     # Delete the specified site and all associated scan data.
     #
     # @return Whether or not the delete request succeeded.
     #
-    def site_delete(param)
-      r = execute(make_xml('SiteDeleteRequest', {'site-id' => param}))
+    def site_delete(site_id)
+      r = execute(make_xml('SiteDeleteRequest', {'site-id' => site_id}))
       r.success
     end
 
