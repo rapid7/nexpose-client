@@ -11,7 +11,7 @@ module Nexpose
     # @return [Array[Device]] Array of devices associated with the site, or
     #   all devices on the console if no site is provided.
     #
-    def site_device_listing(site_id = nil)
+    def list_site_devices(site_id = nil)
       r = execute(make_xml('SiteDeviceListingRequest', {'site-id' => site_id}))
 
       devices = []
@@ -20,19 +20,20 @@ module Nexpose
           site_id = site.attributes['site-id'].to_i
           site.elements.each('device') do |device|
             devices << Device.new(device.attributes['id'].to_i,
-                              device.attributes['address'],
-                              site_id,
-                              device.attributes['riskfactor'].to_f,
-                              device.attributes['riskscore'].to_f)
+                                  device.attributes['address'],
+                                  site_id,
+                                  device.attributes['riskfactor'].to_f,
+                                  device.attributes['riskscore'].to_f)
           end
         end
       end
       devices
     end
 
-    alias_method :assets, :site_device_listing
-    alias_method :devices, :site_device_listing
-    alias_method :list_devices, :site_device_listing
+    alias_method :devices, :list_site_devices
+    alias_method :list_devices, :list_site_devices
+    alias_method :assets, :list_site_devices
+    alias_method :list_assets, :list_site_devices
 
     # Find a Device by its address.
     #
@@ -61,7 +62,7 @@ module Nexpose
     #
     # @return Whether or not the delete request succeeded.
     #
-    def site_delete(site_id)
+    def delete_site(site_id)
       r = execute(make_xml('SiteDeleteRequest', {'site-id' => site_id}))
       r.success
     end
@@ -70,7 +71,7 @@ module Nexpose
     #
     # @return [Array[SiteSummary]] Array of SiteSummary objects.
     # 
-    def site_listing
+    def list_sites
       r = execute(make_xml('SiteListingRequest'))
       arr = []
       if (r.success)
@@ -85,8 +86,7 @@ module Nexpose
       arr
     end
 
-    alias_method :list_sites, :site_listing
-    alias_method :sites, :site_listing
+    alias_method :sites, :list_sites
 
     # Retrieve a list of all previous scans of the site.
     #
@@ -292,16 +292,20 @@ module Nexpose
     # @param [Connection] connection Connection to console where site exists.
     # @param [Fixnum] id Site ID of an existing site.
     # @return [Site] Site configuration loaded from a Nexpose console.
+    #
     def self.load(connection, id)
       r = APIRequest.execute(connection.url, %Q(<SiteConfigRequest session-id="#{connection.session_id}" site-id="#{id}"/>))
       parse(r.res)
     end
 
     # Copy an existing configuration from a Nexpose instance.
+    # Returned object will reset the site ID and append "Copy" to the existing
+    # name.
     #
     # @param [Connection] connection Connection to console where scan will be launched.
     # @param [Fixnum] id Site ID of an existing site.
     # @return [Site] Site configuration loaded from a Nexpose console.
+    #
     def self.copy(connection, id)
       site = self.load(connection, id)
       site.id = -1
@@ -313,6 +317,7 @@ module Nexpose
     #
     # @param [Connection] connection Connection to console where this site will be saved.
     # @return [Fixnum] Site ID assigned to this configuration, if successful.
+    #
     def save(connection)
       r = connection.execute('<SiteSaveRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiteSaveRequest>')
       if r.success
@@ -324,6 +329,7 @@ module Nexpose
     #
     # @param [Connection] connection Connection to console where this site will be saved.
     # @return [Boolean] Whether or not the site was successfully deleted.
+    #
     def delete(connection)
       r = connection.execute(%Q{<SiteDeleteRequest session-id="#{connection.session_id}" site-id="#{@id}"/>})
       r.success
@@ -334,6 +340,7 @@ module Nexpose
     # @param [Connection] connection Connection to console where scan will be launched.
     # @param [String] sync_id Optional synchronization token.
     # @return [Fixnum, Fixnum] Scan ID and engine ID where the scan was launched.
+    #
     def scan(connection, sync_id = nil)
       xml = REXML::Element.new('SiteScanRequest')
       xml.add_attributes({'session-id' => connection.session_id,
@@ -348,7 +355,9 @@ module Nexpose
     end
 
     # Generate an XML representation of this site configuration
+    #
     # @return [String] XML valid for submission as part of other requests.
+    #
     def to_xml
       xml = %Q(<Site id='#{id}' name='#{name}' description='#{description}' riskfactor='#{risk_factor}'>)
 
@@ -394,6 +403,7 @@ module Nexpose
     # @param [REXML::Document] rexml XML document to parse.
     # @return [Site] Site object represented by the XML.
     #  ## TODO What is returned on failure?
+    #
     def self.parse(rexml)
       rexml.elements.each('SiteConfigResponse/Site') do |s|
         site = Site.new(s.attributes['name'])
@@ -443,62 +453,6 @@ module Nexpose
     end
   end
 
-  # === Description
-  # Object that represents a listing of all of the sites available on an NSC.
-  #
-  # === Example
-  #   # Create a new Nexpose Connection on the default port and Login
-  #   nsc = Connection.new("10.1.40.10","nxadmin","password")
-  #   nsc->login;
-  #
-  #   # Get Site Listing
-  #   sitelisting = SiteListing.new(nsc)
-  #
-  #   # Enumerate through all of the SiteSummaries
-  #   sitelisting.sites.each do |sitesummary|
-  #       # Do some operation on each site
-  #   end
-  #
-  class SiteListing
-
-    # The NSC Connection associated with this object
-    attr_reader :connection
-    # Array containing SiteSummary objects for each site in the connection
-    attr_reader :sites
-    # The number of sites
-    attr_reader :site_count
-
-    # Constructor
-    # SiteListing (connection)
-    def initialize(connection)
-      @sites = []
-
-      @connection = connection
-
-      r = @connection.execute('<SiteListingRequest session-id="' + @connection.session_id.to_s + '"/>')
-
-      if r.success
-        parse(r.res)
-      else
-        raise APIError.new(r, 'Failed to get site listing.')
-      end
-    end
-
-    def parse(r)
-      r.elements.each('SiteListingResponse/SiteSummary') do |s|
-        site_summary = SiteSummary.new(
-          s.attributes['id'].to_s,
-          s.attributes['name'],
-          s.attributes['description'],
-          s.attributes['riskfactor'].to_s
-        )
-        @sites.push(site_summary)
-      end
-      @site_count = @sites.length
-    end
-  end
-
-  # === Description
   # Object that represents the summary of a Nexpose Site.
   #
   class SiteSummary
@@ -525,7 +479,6 @@ module Nexpose
     end
   end
 
-  # === Description
   # Object that represents a single device in a Nexpose security console.
   #
   class Device
@@ -551,7 +504,9 @@ module Nexpose
   end
 
   # Object that represents a hostname to be added to a site.
+  #
   class HostName
+
     # Named host (usually DNS or Netbios name).
     attr_accessor :host
 
@@ -584,9 +539,9 @@ module Nexpose
     end
   end
 
-  # === Description
   # Object that represents a single IP address or an inclusive range of IP addresses.
   # If to is nil then the from field will be used to specify a single IP Address only.
+  #
   class IPRange
 
     # Start of range *Required
