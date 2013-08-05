@@ -28,7 +28,7 @@ module Nexpose
   module NexposeAPI
     include XMLUtils
 
-    def ticket_listing
+    def list_tickets
       xml = make_xml('TicketListingRequest')
       r = execute(xml, '1.2')
       tickets = []
@@ -40,7 +40,7 @@ module Nexpose
       tickets
     end
 
-    alias_method :tickets, :ticket_listing
+    alias_method :tickets, :list_tickets
 
     # Deletes a Nexpose ticket.
     #
@@ -65,9 +65,6 @@ module Nexpose
       (execute xml, '1.2').success
     end
 
-    alias_method :ticket_delete, :delete_tickets
-
-    #
     # Create a Nexpose ticket
     #
     # ticket_info: A hash of the data to be used to create a ticket in Nexpose:
