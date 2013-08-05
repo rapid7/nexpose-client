@@ -470,7 +470,7 @@ module Nexpose
 
     # Constructor
     # SiteSummary(id, name, description, riskfactor = 1)
-    def initialize(id, name, description, risk_factor = 1.0, risk_score = 0.0)
+    def initialize(id, name, description = nil, risk_factor = 1.0, risk_score = 0.0)
       @id = id
       @name = name
       @description = description
