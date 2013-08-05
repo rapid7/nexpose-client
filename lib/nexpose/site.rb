@@ -70,12 +70,12 @@ module Nexpose
     # Retrieve a list of all sites the user is authorized to view or manage.
     #
     # @return [Array[SiteSummary]] Array of SiteSummary objects.
-    # 
+    #
     def list_sites
       r = execute(make_xml('SiteListingRequest'))
       arr = []
-      if (r.success)
-        r.res.elements.each("SiteListingResponse/SiteSummary") do |site|
+      if r.success
+        r.res.elements.each('SiteListingResponse/SiteSummary') do |site|
           arr << SiteSummary.new(site.attributes['id'].to_i,
                                  site.attributes['name'],
                                  site.attributes['description'],
@@ -123,6 +123,7 @@ module Nexpose
     # hosts - An Array of Hashes [o]=>{:range=>"from,to"} [1]=>{:host=>host}
     #-----------------------------------------------------------------------
     def site_device_scan_start(site_id, devices, hosts = nil)
+      # TODO Refactor to design principles ... probably two methods.
 
       if hosts == nil and devices == nil
         raise ArgumentError.new('Both the device and host list is nil.')
@@ -131,7 +132,7 @@ module Nexpose
       xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
 
       if devices != nil
-        inner_xml = REXML::Element.new 'Devices'
+        inner_xml = REXML::Element.new('Devices')
         for device_id in devices
           inner_xml.add_element 'device', {'id' => "#{device_id}"}
         end
@@ -294,7 +295,8 @@ module Nexpose
     # @return [Site] Site configuration loaded from a Nexpose console.
     #
     def self.load(connection, id)
-      r = APIRequest.execute(connection.url, %Q(<SiteConfigRequest session-id="#{connection.session_id}" site-id="#{id}"/>))
+      r = APIRequest.execute(connection.url,
+                             %(<SiteConfigRequest session-id="#{connection.session_id}" site-id="#{id}"/>))
       parse(r.res)
     end
 
@@ -320,9 +322,7 @@ module Nexpose
     #
     def save(connection)
       r = connection.execute('<SiteSaveRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiteSaveRequest>')
-      if r.success
-        @id = r.attributes['site-id'].to_i
-      end
+      @id = r.attributes['site-id'].to_i if r.success
     end
 
     # Delete this site from a Nexpose console.
@@ -331,7 +331,7 @@ module Nexpose
     # @return [Boolean] Whether or not the site was successfully deleted.
     #
     def delete(connection)
-      r = connection.execute(%Q{<SiteDeleteRequest session-id="#{connection.session_id}" site-id="#{@id}"/>})
+      r = connection.execute(%(<SiteDeleteRequest session-id="#{connection.session_id}" site-id="#{@id}"/>))
       r.success
     end
 
@@ -359,15 +359,15 @@ module Nexpose
     # @return [String] XML valid for submission as part of other requests.
     #
     def to_xml
-      xml = %Q(<Site id='#{id}' name='#{name}' description='#{description}' riskfactor='#{risk_factor}'>)
+      xml = %(<Site id='#{id}' name='#{name}' description='#{description}' riskfactor='#{risk_factor}'>)
 
       xml << '<Hosts>'
-      xml << assets.reduce('') { |acc, host| acc << host.to_xml }
+      xml << assets.reduce('') { |a, e| a << e.to_xml }
       xml << '</Hosts>'
 
       unless exclude.empty?
         xml << '<ExcludedHosts>'
-        xml << exclude.reduce('') { |acc, host| acc << host.to_xml }
+        xml << exclude.reduce('') { |a, e| a << e.to_xml }
         xml << '</ExcludedHosts>'
       end
 
@@ -387,7 +387,7 @@ module Nexpose
         xml << '</Alerting>'
       end
 
-      xml << %Q(<ScanConfig configID="#{@id}" name="#{@scan_template_name || @scan_template}" templateID="#{@scan_template}" configVersion="#{@config_version || 3}" engineID="#{@engine}">)
+      xml << %(<ScanConfig configID="#{@id}" name="#{@scan_template_name || @scan_template}" templateID="#{@scan_template}" configVersion="#{@config_version || 3}" engineID="#{@engine}">)
 
       xml << '<Schedules>'
       @schedules.each do |schedule|
