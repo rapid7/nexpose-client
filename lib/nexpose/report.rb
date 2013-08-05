@@ -58,7 +58,7 @@ module Nexpose
 
     # Provide a list of all report templates the user can access on the
     # Security Console.
-    def report_template_listing
+    def list_report_templates
       r = execute(make_xml('ReportTemplateListingRequest', {}))
       templates = []
       if r.success
@@ -69,17 +69,11 @@ module Nexpose
       templates
     end
 
-    alias_method :report_templates, :report_template_listing
-
-    # Retrieve the configuration for a report template.
-    def get_report_template(template_id)
-      xml = make_xml('ReportTemplateConfigRequest', { 'template-id' => template_id })
-      ReportTemplate.parse(execute(xml))
-    end
+    alias_method :report_templates, :list_report_templates
 
     # Provide a listing of all report definitions the user can access on the
     # Security Console.
-    def report_listing
+    def list_reports
       r = execute(make_xml('ReportListingRequest'))
       reports = []
       if r.success
@@ -90,18 +84,14 @@ module Nexpose
       reports
     end
 
-    alias_method :reports, :report_listing
-
-    # Retrieve the configuration for a report definition.
-    def get_report_config(report_config_id)
-      xml = make_xml('ReportConfigRequest', { 'reportcfg-id' => report_config_id })
-      ReportConfig.parse(execute(xml))
-    end
+    alias_method :reports, :list_reports
   end
 
   # Data object for report configuration information.
   # Not meant for use in creating new configurations.
+  #
   class ReportConfigSummary
+
     # The report definition (config) ID.
     attr_reader :config_id
     # The ID of the report template.
@@ -137,8 +127,10 @@ module Nexpose
   end
 
   # Summary of a single report.
+  #
   class ReportSummary
-    # The id of the generated report.
+
+    # The ID of the generated report.
     attr_reader :id
     # The report definition (configuration) ID.
     attr_reader :config_id
@@ -220,16 +212,16 @@ module Nexpose
     end
 
     def to_xml
-      xml = %Q(<AdhocReportConfig format='#{@format}' template-id='#{@template_id}')
-      xml << %Q( owner='#{@owner}') if @owner
-      xml << %Q( timezone='#{@time_zone}') if @time_zone
+      xml = %(<AdhocReportConfig format='#{@format}' template-id='#{@template_id}')
+      xml << %( owner='#{@owner}') if @owner
+      xml << %( timezone='#{@time_zone}') if @time_zone
       xml << '>'
 
       xml << '<Filters>'
       @filters.each { |filter| xml << filter.to_xml }
       xml << '</Filters>'
 
-      xml << %Q(<Baseline compareTo='#{@baseline}' />) if @baseline
+      xml << %(<Baseline compareTo='#{@baseline}' />) if @baseline
 
       xml << '</AdhocReportConfig>'
     end
@@ -244,7 +236,7 @@ module Nexpose
     # @return Report in text format except for PDF, which returns binary data.
     #
     def generate(connection)
-      xml = %Q{<ReportAdhocGenerateRequest session-id='#{connection.session_id}'>}
+      xml = %(<ReportAdhocGenerateRequest session-id='#{connection.session_id}'>)
       xml << to_xml
       xml << '</ReportAdhocGenerateRequest>'
       response = connection.execute(xml)
@@ -309,7 +301,8 @@ module Nexpose
 
     # Retrieve the configuration for an existing report definition.
     def self.load(connection, report_config_id)
-      connection.get_report_config(report_config_id)
+      xml = make_xml('ReportConfigRequest', { 'reportcfg-id' => report_config_id })
+      ReportConfig.parse(connection.execute(xml))
     end
 
     alias_method :get, :load
@@ -319,7 +312,7 @@ module Nexpose
     #
     # Returns the new configuration.
     def self.build(connection, site_id, site_name, type, format, generate_now = false)
-      name = %Q{#{site_name} #{type} report in #{format}}
+      name = %(#{site_name} #{type} report in #{format})
       config = ReportConfig.new(name, type, format)
       config.frequency = Frequency.new(true, false)
       config.filters << Filter.new('site', site_id)
@@ -329,7 +322,7 @@ module Nexpose
 
     # Save the configuration of this report definition.
     def save(connection, generate_now = false)
-      xml = %Q{<ReportSaveRequest session-id='#{connection.session_id}' generate-now='#{generate_now ? 1 : 0}'>}
+      xml = %(<ReportSaveRequest session-id='#{connection.session_id}' generate-now='#{generate_now ? 1 : 0}'>)
       xml << to_xml
       xml << '</ReportSaveRequest>'
       response = connection.execute(xml)
@@ -351,18 +344,18 @@ module Nexpose
     end
 
     def to_xml
-      xml = %Q{<ReportConfig format='#{@format}' id='#{@id}' name='#{@name}' owner='#{@owner}' template-id='#{@template_id}' timezone='#{@time_zone}'>}
-      xml << %Q{<description>#{@description}</description>} if @description
+      xml = %(<ReportConfig format='#{@format}' id='#{@id}' name='#{@name}' owner='#{@owner}' template-id='#{@template_id}' timezone='#{@time_zone}'>)
+      xml << %(<description>#{@description}</description>) if @description
 
       xml << '<Filters>'
       @filters.each { |filter| xml << filter.to_xml }
       xml << '</Filters>'
 
       xml << '<Users>'
-      @users.each { |user| xml << %Q{<user id='#{user}' />} }
+      @users.each { |user| xml << %(<user id='#{user}' />) }
       xml << '</Users>'
 
-      xml << %Q{<Baseline compareTo='#{@baseline}' />} if @baseline
+      xml << %(<Baseline compareTo='#{@baseline}' />) if @baseline
       xml << @frequency.to_xml if @frequency
       xml << @delivery.to_xml if @delivery
       xml << @db_export.to_xml if @db_export
@@ -412,7 +405,9 @@ module Nexpose
   # or raw_xml. If the vuln-status filter is not included in the configuration,
   # all the vulnerability test results (including invulnerable instances) are
   # exported by default in csv and raw_xml reports.
+  #
   class Filter
+
     # The ID of the specific site, group, device, or scan.
     # For scan, this can also be "last" for the most recently run scan.
     # For vuln-status, the ID can have one of the following values:
@@ -430,7 +425,7 @@ module Nexpose
     end
 
     def to_xml
-      %Q{<filter id='#{@id}' type='#{@type}' />}
+      %(<filter id='#{@id}' type='#{@type}' />)
     end
 
     def self.parse(xml)
@@ -443,7 +438,9 @@ module Nexpose
   end
 
   # Data object associated with when a report is generated.
+  #
   class Frequency
+
     # Will the report be generated after a scan completes (true),
     # or is it ad hoc/scheduled (false).
     attr_accessor :after_scan
@@ -459,7 +456,7 @@ module Nexpose
     end
 
     def to_xml
-      xml = %Q{<Generate after-scan='#{@after_scan ? 1 : 0}' schedule='#{@scheduled ? 1 : 0}'>}
+      xml = %(<Generate after-scan='#{@after_scan ? 1 : 0}' schedule='#{@scheduled ? 1 : 0}'>)
       xml << @schedule.to_xml if @schedule
       xml << '</Generate>'
     end
@@ -483,7 +480,9 @@ module Nexpose
   end
 
   # Data object for configuration of where a report is stored or delivered.
+  #
   class Delivery
+
     # Whether to store report on server.
     attr_accessor :store_on_server
     # Directory location to store report in (for non-default storage).
@@ -499,8 +498,8 @@ module Nexpose
 
     def to_xml
       xml = '<Delivery>'
-      xml << %Q{<Storage storeOnServer='#{@store_on_server ? 1 : 0}'>}
-      xml << %Q{<location>#{@location}</location>} if @location
+      xml << %(<Storage storeOnServer='#{@store_on_server ? 1 : 0}'>)
+      xml << %(<location>#{@location}</location>) if @location
       xml << '</Storage>'
       xml << @email.to_xml if @email
       xml << '</Delivery>'
@@ -526,7 +525,9 @@ module Nexpose
   end
 
   # Configuration structure for database exporting of reports.
+  #
   class DBExport
+
     # The DB type to export to.
     attr_accessor :type
     # Credentials needed to export to the specified database.
@@ -540,10 +541,10 @@ module Nexpose
     end
 
     def to_xml
-      xml = %Q{<DBExport type='#{@type}'>}
+      xml = %(<DBExport type='#{@type}'>)
       xml << @credentials.to_xml if @credentials
       @parameters.each_pair do |name, value|
-        xml << %Q{<param name='#{name}'>#{value}</param>}
+        xml << %(<param name='#{name}'>#{value}</param>)
       end
       xml << '</DBExport>'
     end
@@ -566,7 +567,9 @@ module Nexpose
   # The user_id, password and realm attributes should ONLY be used
   # if a security blob cannot be generated and the data is being
   # transmitted/stored using external encryption (e.g., HTTPS).
+  #
   class ExportCredential
+
     # Security blob for exporting to a database.
     attr_accessor :credential
     attr_accessor :user_id
@@ -580,9 +583,9 @@ module Nexpose
 
     def to_xml
       xml = '<credentials'
-      xml << %Q{ userid='#{@user_id}'} if @user_id
-      xml << %Q{ password='#{@password}'} if @password
-      xml << %Q{ realm='#{@realm}'} if @realm
+      xml << %( userid='#{@user_id}') if @user_id
+      xml << %( password='#{@password}') if @password
+      xml << %( realm='#{@realm}') if @realm
       xml << '>'
       xml << @credential if @credential
       xml << '</credentials>'
@@ -603,7 +606,9 @@ module Nexpose
 
   # Data object for report template summary information.
   # Not meant for use in creating new templates.
+  #
   class ReportTemplateSummary
+
     # The ID of the report template.
     attr_reader :id
     # The name of the report template.
@@ -642,7 +647,9 @@ module Nexpose
   end
 
   # Definition object for a report template.
+  #
   class ReportTemplate
+
     # The ID of the report template.
     attr_accessor :id
     # The name of the report template.
@@ -687,7 +694,7 @@ module Nexpose
 
     # Save the configuration for a report template.
     def save(connection)
-      xml = %Q{<ReportTemplateSaveRequest session-id='#{connection.session_id}' scope='#{@scope}'>}
+      xml = %(<ReportTemplateSaveRequest session-id='#{connection.session_id}' scope='#{@scope}'>)
       xml << to_xml
       xml << '</ReportTemplateSaveRequest>'
       response = connection.execute(xml)
@@ -698,7 +705,8 @@ module Nexpose
 
     # Retrieve the configuration for a report template.
     def self.load(connection, template_id)
-      connection.get_report_template(template_id)
+      xml = make_xml('ReportTemplateConfigRequest', { 'template-id' => template_id })
+      ReportTemplate.parse(connection.execute(xml))
     end
 
     alias_method :get, :load
@@ -706,16 +714,16 @@ module Nexpose
     include Sanitize
 
     def to_xml
-      xml = %Q{<ReportTemplate id='#{@id}' name='#{@name}' type='#{@type}'}
-      xml << %Q{ scope='#{@scope}'} if @scope
-      xml << %Q{ builtin='#{@built_in}'} if @built_in
+      xml = %(<ReportTemplate id='#{@id}' name='#{@name}' type='#{@type}')
+      xml << %( scope='#{@scope}') if @scope
+      xml << %( builtin='#{@built_in}') if @built_in
       xml << '>'
-      xml << %Q{<description>#{@description}</description>} if @description
+      xml << %(<description>#{@description}</description>) if @description
 
       unless @attributes.empty?
         xml << '<ReportAttributes>'
         @attributes.each do |attr|
-          xml << %Q(<ReportAttribute name='#{attr}'/>)
+          xml << %(<ReportAttribute name='#{attr}'/>)
         end
         xml << '</ReportAttributes>'
       end
@@ -723,13 +731,13 @@ module Nexpose
       unless @sections.empty?
         xml << '<ReportSections>'
         properties.each_pair do |name, value|
-          xml << %Q{<property name='#{name}'>#{replace_entities(value)}</property>}
+          xml << %(<property name='#{name}'>#{replace_entities(value)}</property>)
         end
         @sections.each { |section| xml << section.to_xml }
         xml << '</ReportSections>'
       end
 
-      xml << %Q{<Settings><showDeviceNames enabled='#{@show_device_names ? 1 : 0}' /></Settings>}
+      xml << %(<Settings><showDeviceNames enabled='#{@show_device_names ? 1 : 0}' /></Settings>)
       xml << '</ReportTemplate>'
     end
 
@@ -767,7 +775,9 @@ module Nexpose
   end
 
   # Section specific content to include in a report template.
+  #
   class Section
+
     # Name of the report section.
     attr_accessor :name
     # Map of properties specific to the report section.
@@ -781,9 +791,9 @@ module Nexpose
     include Sanitize
 
     def to_xml
-      xml = %Q{<ReportSection name='#{@name}'>}
+      xml = %(<ReportSection name='#{@name}'>)
       properties.each_pair do |name, value|
-        xml << %Q{<property name='#{name}'>#{replace_entities(value)}</property>}
+        xml << %(<property name='#{name}'>#{replace_entities(value)}</property>)
       end
       xml << '</ReportSection>'
     end
