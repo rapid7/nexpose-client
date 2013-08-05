@@ -34,8 +34,8 @@ module Nexpose
 
     # Retrieve a list of all Scan Engines managed by the Security Console.
     #
-    # @return [Array[EngineSummary]] Array of EngineSummary objects associated with
-    #   each engine associated with this security console.
+    # @return [Array[EngineSummary]] Array of EngineSummary objects associated
+    #   with each engine associated with this security console.
     #
     def list_engines
       response = execute(make_xml('EngineListingRequest'))
@@ -55,7 +55,8 @@ module Nexpose
     alias_method :engines, :list_engines
   end
 
-  # Object representing the current details of a scan engine attached to the security console.
+  # Object representing the current details of a scan engine attached to the
+  # security console.
   #
   class EngineSummary
 
@@ -67,7 +68,8 @@ module Nexpose
     attr_reader :address
     # The port there the engine is listening.
     attr_reader :port
-    # The engine status. One of: active|pending-auth|incompatible|not-responding|unknown
+    # The engine status. One of: active, pending-auth, incompatible,
+    # not-responding, unknown
     attr_reader :status
     # A parameter that specifies whether the engine has a global
     # or silo-specific scope.
@@ -118,7 +120,7 @@ module Nexpose
 
     def self.load(connection, id)
       xml = '<EngineConfigRequest session-id="' + connection.session_id + '"'
-      xml << %Q{ engine-id="#{id}"}
+      xml << %( engine-id="#{id}")
       xml << ' />'
       r = connection.execute(xml, '1.2')
 
@@ -149,15 +151,15 @@ module Nexpose
 
     def to_xml
       xml = '<EngineConfig'
-      xml << %Q{ id="#{id}"}
-      xml << %Q{ address="#{address}"}
-      xml << %Q{ name="#{name}"}
-      xml << %Q{ port="#{port}"}
-      xml << %Q{ scope="#{scope}"} if scope
-      xml << %Q{ priority="#{priority}"} if priority
+      xml << %( id="#{id}")
+      xml << %( address="#{address}")
+      xml << %( name="#{name}")
+      xml << %( port="#{port}")
+      xml << %( scope="#{scope}") if scope
+      xml << %( priority="#{priority}") if priority
       xml << '>'
       sites.each do |site|
-        xml << %Q{<Site id="#{site.id}" />}
+        xml << %(<Site id="#{site.id}" />)
       end
       xml << '</EngineConfig>'
       xml
