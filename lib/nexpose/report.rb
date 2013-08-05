@@ -696,15 +696,6 @@ module Nexpose
       end
     end
 
-    def delete(connection)
-      xml = %Q{<ReportTemplateDeleteRequest session-id='#{connection.session_id}' template-id='#{@id}'>}
-      xml << '</ReportTemplateDeleteRequest>'
-      response = connection.execute(xml)
-      if response.success
-        @id = response.attributes['template-id']
-      end
-    end
-
     # Retrieve the configuration for a report template.
     def self.load(connection, template_id)
       connection.get_report_template(template_id)
