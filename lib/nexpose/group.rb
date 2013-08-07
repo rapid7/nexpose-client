@@ -8,35 +8,32 @@ module Nexpose
     #
     # @return [Boolean] Whether group deletion succeeded.
     #
-    def asset_group_delete(id)
+    def delete_asset_group(id)
       r = execute(make_xml('AssetGroupDeleteRequest', {'group-id' => id}))
       r.success
     end
 
-    alias_method :delete_asset_group, :asset_group_delete
-
-    # Retrieve a list of all asset groups the user is authorized to view or
+    # Retrieve an array of all asset groups the user is authorized to view or
     # manage.
     #
     # @return [Array[AssetGroupSummary]] Array of AssetGroupSummary objects.
     #
-    def asset_groups
+    def list_asset_groups
       r = execute(make_xml('AssetGroupListingRequest'))
 
-      res = []
+      groups = []
       if r.success
         r.res.elements.each('AssetGroupListingResponse/AssetGroupSummary') do |group|
-          res << AssetGroupSummary.new(group.attributes['id'].to_i,
-                                       group.attributes['name'].to_s,
-                                       group.attributes['description'].to_s,
+          groups << AssetGroupSummary.new(group.attributes['id'].to_i,
+                                       group.attributes['name'],
+                                       group.attributes['description'],
                                        group.attributes['riskscore'].to_f)
         end
       end
-      res
+      groups
     end
 
-    alias_method :asset_groups_listing, :asset_groups
-    alias_method :groups, :asset_groups
+    alias_method :groups, :list_asset_groups
   end
 
   # Summary value object for asset group information.
@@ -53,7 +50,7 @@ module Nexpose
     # @param [Connection] connection Connection to security console.
     #
     def delete(connection)
-      connection.asset_group_delete(@id)
+      connection.delete_asset_group(@id)
     end
   end
 
@@ -71,13 +68,11 @@ module Nexpose
     end
 
     def save(connection)
-      xml = %Q(<AssetGroupSaveRequest session-id='#{connection.session_id}'>)
+      xml = "<AssetGroupSaveRequest session-id='#{connection.session_id}'>"
       xml << to_xml
       xml << '</AssetGroupSaveRequest>'
-      response = connection.execute(xml)
-      if response.success
-        @id = response.attributes['group-id'].to_i if @id < 0
-      end
+      res = connection.execute(xml)
+      @id = res.attributes['group-id'].to_i if res.success and @id < 1
     end
 
     # Get an XML representation of the group that is valid for a save request.
@@ -87,12 +82,12 @@ module Nexpose
     # @return [String] XML representation of the asset group.
     #
     def to_xml
-      xml = %Q(<AssetGroup id="#{@id}" name="#{@name}")
-      xml << %Q( description="#{@description}") if @description
+      xml = %(<AssetGroup id="#{@id}" name="#{@name}")
+      xml << %( description="#{@description}") if @description
       xml << '>'
       xml << '<Devices>'
       @devices.each do |device|
-        xml << %Q(<device id="#{device.id}"/>)
+        xml << %(<device id="#{device.id}"/>)
       end
       xml << '</Devices>'
       xml << '</AssetGroup>'
@@ -100,29 +95,32 @@ module Nexpose
 
     # Launch ad hoc scans against each group of assets per site.
     #
-    # @param [Connection] connection Connection to console where asset group is configured.
+    # @param [Connection] connection Connection to console where asset group
+    #   is configured.
     # @return [Array[Hash[Fixnum, Fixnum]]] Array of scan ID and engine ID
     #   pairs for each scan launched.
     #
     def rescan_assets(connection)
-      sites_ids = @devices.collect { |d| d.site_id }.uniq
+      sites_ids = @devices.map { |d| d.site_id }.uniq
       scans = []
       sites_ids.each do |id|
         dev_ids = @devices.select { |d| d.site_id == id }.map { |d| d.id }
-        scans << connection.site_device_scan_start(id, dev_ids).merge(:site_id => id)
+        scans << connection.site_device_scan(id, dev_ids).merge(:site_id => id)
       end
       scans
     end
 
     # Load an existing configuration from a Nexpose instance.
     #
-    # @param [Connection] connection Connection to console where asset group is configured.
+    # @param [Connection] connection Connection to console where asset group
+    #   is configured.
     # @param [Fixnum] id Asset group ID of an existing group.
-    # @return [AssetGroup] Asset group configuration loaded from a Nexpose console.
+    # @return [AssetGroup] Asset group configuration loaded from a Nexpose
+    #   console.
     #
     def self.load(connection, id)
-      r = APIRequest.execute(connection.url,
-                             %Q(<AssetGroupConfigRequest session-id="#{connection.session_id}" group-id="#{id}"/>))
+      xml = %(<AssetGroupConfigRequest session-id="#{connection.session_id}" group-id="#{id}"/>)
+      r = APIRequest.execute(connection.url, xml)
       parse(r.res)
     end
 
@@ -132,13 +130,13 @@ module Nexpose
       return nil unless xml
 
       group = REXML::XPath.first(xml, 'AssetGroupConfigResponse/AssetGroup')
-      asset_group = new(group.attributes['name'].to_s,
-                        group.attributes['description'].to_s,
+      asset_group = new(group.attributes['name'],
+                        group.attributes['description'],
                         group.attributes['id'].to_i,
                         group.attributes['riskscore'].to_f)
       group.elements.each('Devices/device') do |dev|
         asset_group.devices << Device.new(dev.attributes['id'].to_i,
-                                          dev.attributes['address'].to_s,
+                                          dev.attributes['address'],
                                           dev.attributes['site-id'].to_i,
                                           dev.attributes['riskfactor'].to_f,
                                           dev.attributes['riskscore'].to_f)

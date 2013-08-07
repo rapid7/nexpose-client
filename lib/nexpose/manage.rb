@@ -7,6 +7,7 @@ module Nexpose
     # supplied parameter. Console commands are documented in the
     # administrator's guide. If you use a command that is not listed in the
     # administrator's guide, the application will return the XMLResponse.
+    #
     def console_command(cmd_string)
       xml = make_xml('ConsoleCommandRequest', {})
       cmd = REXML::Element.new('Command')
@@ -26,6 +27,7 @@ module Nexpose
     # Obtain system data, such as total RAM, free RAM, total disk space,
     # free disk space, CPU speed, number of CPU cores, and other vital
     # information.
+    #
     def system_information
       r = execute(make_xml('SystemInformationRequest', {}))
 
@@ -42,6 +44,7 @@ module Nexpose
 
     # Induce the application to retrieve required updates and restart
     # if necessary.
+    #
     def start_update
       execute(make_xml('StartUpdateRequest', {})).success
     end
@@ -52,6 +55,7 @@ module Nexpose
     # shuts down as part of the restart process, it terminates any active
     # connections. Therefore, the application cannot issue a response when it
     # restarts.
+    #
     def restart
       execute(make_xml('RestartRequest', {})).success
     end

@@ -6,7 +6,8 @@ module Nexpose
     #
     # @param [Fixnum] scan_id ID of the scan to stop.
     # @param [Fixnum] wait_sec Number of seconds to wait for status to be updated. Default: 0
-    def scan_stop(scan_id, wait_sec = 0)
+    #
+    def stop_scan(scan_id, wait_sec = 0)
       r = execute(make_xml('ScanStopRequest', {'scan-id' => scan_id}))
       if r.success
         so_far = 0
@@ -25,25 +26,21 @@ module Nexpose
       r.success ? r.attributes['status'] : nil
     end
 
-    #----------------------------------------------------------------
     # Resumes a scan.
     #
-    # @param scan_id The scan ID.
-    # @return Success(0|1) if it exists or null.
-    #----------------------------------------------------------------
-    def scan_resume(scan_id)
+    # @param [Fixnum] scan_id The scan ID.
+    #
+    def resume_scan(scan_id)
       r = execute(make_xml('ScanResumeRequest', {'scan-id' => scan_id}))
       r.success ? r.attributes['success'] : nil
     end
 
 
-    #----------------------------------------------------------------
     # Pauses a scan.
     #
-    # @param scan_id The scan ID.
-    # @return Success(0|1) if it exists or null.
-    #----------------------------------------------------------------
-    def scan_pause(scan_id)
+    # @param [Fixnum] scan_id The scan ID.
+    #
+    def pause_scan(scan_id)
       r = execute(make_xml('ScanPauseRequest',{ 'scan-id' => scan_id}))
       r.success ? r.attributes['success'] : nil
     end
@@ -67,6 +64,7 @@ module Nexpose
 
     # Get scan statistics, including node and vulnerability breakdowns.
     #
+    # @param [Fixnum] scan_id Scan ID to retrieve statistics for.
     # @return [ScanSummary] ScanSummary object providing statistics for the scan.
     #
     def scan_statistics(scan_id)
@@ -79,7 +77,6 @@ module Nexpose
     end
   end
 
-  # === Description
   # Object that represents a summary of a scan.
   #
   class ScanSummary
@@ -151,6 +148,7 @@ module Nexpose
     # Value class to tracking task counts.
     #
     class Tasks
+
       attr_reader :pending, :active, :completed
 
       def initialize(pending, active, completed)
@@ -173,6 +171,7 @@ module Nexpose
     # Value class for tracking node counts.
     #
     class Nodes
+
       attr_reader :live, :dead, :filtered, :unresolved, :other
 
       def initialize(live, dead, filtered, unresolved, other)
@@ -197,6 +196,7 @@ module Nexpose
     # Value class for tracking vulnerability counts.
     #
     class Vulnerabilities
+
       attr_reader :vuln_exploit, :vuln_version, :vuln_potential,
         :not_vuln_exploit, :not_vuln_version,
         :error, :disabled, :other
@@ -246,6 +246,7 @@ module Nexpose
       # and vuln-potential.
       #
       class Status
+
         attr_reader :severities, :count
 
         def initialize(severity = nil, count = 0)
@@ -266,22 +267,6 @@ module Nexpose
           @severities[severity] = count
         end
       end
-    end
-  end
-
-  # TODO: review
-  # <scanFilter scanStop='0' scanFailed='0' scanStart='1'/>
-  # === Description
-  #
-  class ScanFilter
-    attr_reader :scan_stop
-    attr_reader :scan_failed
-    attr_reader :scan_start
-
-    def initialize(scan_stop, scan_failed, scan_start)
-      @scan_stop = scan_stop
-      @scan_failed = scan_failed
-      @scan_start = scan_start
     end
   end
 end

@@ -301,7 +301,7 @@ module Nexpose
 
     # Retrieve the configuration for an existing report definition.
     def self.load(connection, report_config_id)
-      xml = make_xml('ReportConfigRequest', { 'reportcfg-id' => report_config_id })
+      xml = %(<ReportConfigRequest session-id='#{connection.session_id}' reportcfg-id='#{report_config_id}'/>)
       ReportConfig.parse(connection.execute(xml))
     end
 
@@ -705,7 +705,7 @@ module Nexpose
 
     # Retrieve the configuration for a report template.
     def self.load(connection, template_id)
-      xml = make_xml('ReportTemplateConfigRequest', { 'template-id' => template_id })
+      xml = %(<ReportTemplateConfigRequest session-id='#{connection.session_id}' template-id='#{template_id}'/>)
       ReportTemplate.parse(connection.execute(xml))
     end
 

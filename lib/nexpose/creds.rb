@@ -5,6 +5,7 @@ module Nexpose
   # the credentials will be returned as a security blob and can only
   # be passed back as is during a Site Save operation. This object
   # can only be used to create a new set of credentials.
+  #
   class AdminCredentials
     include XMLUtils
 
@@ -140,8 +141,10 @@ module Nexpose
   end
 
   # Object that represents Header name-value pairs, associated with Web Session Authentication.
+  #
   class Header
     include XMLUtils
+
     # Name, one per Header
     attr_reader :name
     # Value, one per Header
@@ -163,8 +166,10 @@ module Nexpose
   end
 
   # Object that represents Headers, associated with Web Session Authentication.
+  #
   class Headers
     include XMLUtils
+
     # A regular expression used to match against the response to identify authentication failures.
     attr_reader :soft403
     # Base URL of the application for which the form authentication applies.
@@ -197,8 +202,10 @@ module Nexpose
   end
 
   # When using htmlform, this represents the login form information.
+  #
   class Field
     include XMLUtils
+
     # The name of the HTML field (form parameter).
     attr_reader :name
     # The value of the HTML field (form parameter).
@@ -234,8 +241,10 @@ module Nexpose
   end
 
   # When using htmlform, this represents the login form information.
+  #
   class HTMLForm
     include XMLUtils
+
     # The name of the form being submitted.
     attr_reader :name
     # The HTTP action (URL) through which to submit the login form.
@@ -271,15 +280,15 @@ module Nexpose
       fields.each() do |field|
         xml.add_element(field.to_xml_elem)
       end
-
       xml
     end
-
   end
 
   # When using htmlform, this represents the login form information.
+  #
   class HTMLForms
     include XMLUtils
+
     # The URL of the login page containing the login form.
     attr_reader :parentpage
     # A regular expression used to match against the response to identify
@@ -314,7 +323,6 @@ module Nexpose
       end
       xml
     end
-
   end
 
   # When using ssh-key, this represents the PEM-format keypair information.

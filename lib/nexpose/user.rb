@@ -7,7 +7,7 @@ module Nexpose
     #
     # @return [Array[UserSummary]] Array of users.
     #
-    def users
+    def list_users
       r = execute(make_xml('UserListingRequest'))
       arr = []
       if r.success
@@ -18,7 +18,12 @@ module Nexpose
       arr
     end
 
+    alias_method :users, :list_users
+
     # Retrieve the User ID based upon the user's login name.
+    #
+    # @param [String] user_name User name to search for.
+    #
     def get_user_id(user_name)
       users.find { |user| user.name.eql? user_name }
     end
@@ -35,7 +40,9 @@ module Nexpose
   end
 
   # Summary only returned by API when issuing a listing request.
+  #
   class UserSummary
+
     attr_reader :id, :auth_source, :auth_module, :name, :full_name, :email
     attr_reader :is_admin, :is_disabled, :is_locked, :site_count, :group_count
 
@@ -176,6 +183,7 @@ module Nexpose
   end
 
   class UserAuthenticator
+
     attr_reader :id, :auth_source, :auth_module, :external
 
     def initialize(id, auth_module, auth_source, external = false)
@@ -189,13 +197,13 @@ module Nexpose
     # * *Returns* : An array of known user authenticator sources.
     def self.list(connection)
       r = connection.execute('<UserAuthenticatorListingRequest session-id="' + connection.session_id + '" />', '1.1')
+      modules = []
       if r.success
-        modules = []
         r.res.elements.each('UserAuthenticatorListingResponse/AuthenticatorSummary') do |summary|
           modules << UserAuthenticator.new(summary.attributes['id'], summary.attributes['authModule'], summary.attributes['authSource'], ('1'.eql? summary.attributes['external']))
         end
-        modules
       end
+      modules
     end
   end
 end

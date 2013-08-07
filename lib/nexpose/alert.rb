@@ -7,21 +7,16 @@ module Nexpose
 
     # Name for this alert.
     attr_accessor :name
-
     # Whether or not this alert is currently active.
     attr_accessor :enabled
-
     # Send at most this many alerts per scan.
     attr_accessor :max_alerts
-
     # Send alerts based upon scan status.
     attr_accessor :scan_filter
-
     # Send alerts based upon vulnerability finding status.
     attr_accessor :vuln_filter
-
     # Alert type and its configuration. One of SMTPAlert, SyslogAlert, SNMPAlert
-    attr_accessor :alert
+    attr_accessor :type
 
     def initialize(name, enabled = 1, max_alerts = -1)
       @name, @enabled, @max_alerts = name, enabled, max_alerts
@@ -29,9 +24,9 @@ module Nexpose
 
     def to_xml
       xml = '<Alert'
-      xml << %Q( name="#{@name}")
-      xml << %Q( enabled="#{@enabled}")
-      xml << %Q( maxAlerts="#{@max_alerts}")
+      xml << %( name="#{@name}")
+      xml << %( enabled="#{@enabled}")
+      xml << %( maxAlerts="#{@max_alerts}")
       xml << '>'
       xml << scan_filter.to_xml
       xml << vuln_filter.to_xml
@@ -43,7 +38,7 @@ module Nexpose
     #
     # @param [REXML::Document] rexml XML document to parse.
     # @return [Alert] Alert object represented by the XML.
-    # 
+    #
     def self.parse(rexml)
       name = rexml.attributes['name']
       rexml.elements.each("//Alert[@name='#{name}']") do |xml|
@@ -53,11 +48,11 @@ module Nexpose
         alert.scan_filter = ScanFilter.parse(REXML::XPath.first(xml, "//Alert[@name='#{name}']/scanFilter"))
         alert.vuln_filter = VulnFilter.parse(REXML::XPath.first(xml, "//Alert[@name='#{name}']/vulnFilter"))
         if (type = REXML::XPath.first(xml, "//Alert[@name='#{name}']/smtpAlert"))
-          alert.alert = SMTPAlert.parse(type)
+          alert.type = SMTPAlert.parse(type)
         elsif (type = REXML::XPath.first(xml, "//Alert[@name='#{name}']/syslogAlert"))
-          alert.alert = SyslogAlert.parse(type)
+          alert.type = SyslogAlert.parse(type)
         elsif (type = REXML::XPath.first(xml, "//Alert[@name='#{name}']/snmpAlert"))
-          alert.alert = SNMPAlert.parse(type)
+          alert.type = SNMPAlert.parse(type)
         end
         return alert
       end
@@ -78,11 +73,11 @@ module Nexpose
 
     def to_xml
       xml = '<scanFilter'
-      xml << %Q( scanStart="#{@start}")
-      xml << %Q( scanStop="#{@stop}")
-      xml << %Q( scanFailed="#{@fail}")
-      xml << %Q( scanResumed="#{@resume}")
-      xml << %Q( scanPaused="#{@pause}")
+      xml << %( scanStart="#{@start}")
+      xml << %( scanStop="#{@stop}")
+      xml << %( scanFailed="#{@fail}")
+      xml << %( scanResumed="#{@resume}")
+      xml << %( scanPaused="#{@pause}")
       xml << '/>'
     end
 
@@ -99,6 +94,7 @@ module Nexpose
   # Set values to 1 to enable and 0 to disable.
   #
   class VulnFilter
+
     # Only alert on vulnerability findings with a severity level greater than this level.
     # Range is 0 to 10.
     # Values in the UI correspond as follows:
@@ -116,10 +112,10 @@ module Nexpose
 
     def to_xml
       xml = '<vulnFilter'
-      xml << %Q( severityThreshold="#{@severity}")
-      xml << %Q( confirmed="#{@confirmed}")
-      xml << %Q( unconfirmed="#{@unconfirmed}")
-      xml << %Q( potential="#{@potential}")
+      xml << %( severityThreshold="#{@severity}")
+      xml << %( confirmed="#{@confirmed}")
+      xml << %( unconfirmed="#{@unconfirmed}")
+      xml << %( potential="#{@potential}")
       xml << '/>'
     end
 
@@ -151,7 +147,7 @@ module Nexpose
 
     def to_xml
       xml = '<syslogAlert'
-      xml << %Q( server="#{replace_entities(server)}">)
+      xml << %( server="#{replace_entities(server)}">)
       xml << '</syslogAlert>'
     end
   end
@@ -180,8 +176,8 @@ module Nexpose
 
     def to_xml
       xml = '<snmpAlert'
-      xml << %Q( community="#{replace_entities(community)}")
-      xml << %Q( server="#{replace_entities(server)}">)
+      xml << %( community="#{replace_entities(community)}")
+      xml << %( server="#{replace_entities(server)}">)
       xml << '</snmpAlert>'
     end
   end
@@ -191,15 +187,12 @@ module Nexpose
   #
   class SMTPAlert
 
-    # The email address of the sender
+    # The e-mail address of the sender.
     attr_accessor :sender
-
-    # The server to sent this alert
+    # The server to sent this alert.
     attr_accessor :server
-
-    # Limit the text for mobile devices
+    # Limit the text for mobile devices.
     attr_accessor :limit_text
-
     # Array of strings with the e-mail addresses of the intended recipients.
     attr_accessor :recipients
 
@@ -210,7 +203,7 @@ module Nexpose
       @recipients = []
     end
 
-    # Adds a new Recipient to the recipients array
+    # Adds a new recipient to the alert.
     def add_recipient(recipient)
       @recipients << recipient
     end
@@ -219,9 +212,9 @@ module Nexpose
 
     def to_xml
       xml = '<smtpAlert'
-      xml << %Q( sender="#{replace_entities(sender)}")
-      xml << %Q( server="#{replace_entities(server)}")
-      xml << %Q( limitText="#{limit_text}">)
+      xml << %( sender="#{replace_entities(sender)}")
+      xml << %( server="#{replace_entities(server)}")
+      xml << %( limitText="#{limit_text}">)
       recipients.each do |recpt|
         xml << "<recipient>#{replace_entities(recpt)}</recipient>"
       end

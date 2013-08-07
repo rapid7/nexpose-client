@@ -27,6 +27,7 @@ module Nexpose
   # the application will send reports via e-mail to access-list members and
   # non-members.
   class Email
+
     # Send as file attachment or zipped file to individuals who are not members
     # of the report access list. One of: file|zip
     attr_accessor :send_as
@@ -55,17 +56,17 @@ module Nexpose
 
     def to_xml
       xml = '<Email'
-      xml << %Q{ toAllAuthorized='#{@toAllAuthorized ? 1 : 0}'}
-      xml << %Q{ sendToOwnerAs='#{@send_to_owner_as}'} if @send_to_owner_as
-      xml << %Q{ sendToAclAs='#{@send_to_acl_as}'} if @send_to_acl_as
-      xml << %Q{ sendAs='#{@send_as}'} if @send_as
+      xml << %( toAllAuthorized='#{@toAllAuthorized ? 1 : 0}')
+      xml << %( sendToOwnerAs='#{@send_to_owner_as}') if @send_to_owner_as
+      xml << %( sendToAclAs='#{@send_to_acl_as}') if @send_to_acl_as
+      xml << %( sendAs='#{@send_as}') if @send_as
       xml << '>'
-      xml << %Q{<Sender>#{@sender}</Sender>} if @sender
-      xml << %Q{<SmtpRelayServer>#{@smtp_relay_server}</SmtpRelayServer>} if @smtp_relay_server
+      xml << %(<Sender>#{@sender}</Sender>) if @sender
+      xml << %(<SmtpRelayServer>#{@smtp_relay_server}</SmtpRelayServer>) if @smtp_relay_server
       if @recipients
         xml << '<Recipients>'
         @recipients.each do |recipient|
-          xml << %Q{<Recipient>#{recipient}</Recipient>}
+          xml << %(<Recipient>#{recipient}</Recipient>)
         end
         xml << '</Recipients>'
       end
@@ -121,11 +122,11 @@ module Nexpose
     end
 
     def to_xml
-      xml = %Q{<Schedule enabled='#{@enabled ? 1 : 0}' type='#{@type}' interval='#{@interval}' start='#{@start}'}
-      xml << %Q{ maxDuration='#@max_duration'} if @max_duration
-      xml << %Q{ notValidAfter='#@not_valid_after'} if @not_valid_after
-      xml << %Q{ incremental='#{@incremental ? 1 : 0}'} if @incremental
-      xml << %Q{ repeaterType='#@repeater_type'} if @repeater_type
+      xml = %(<Schedule enabled='#{@enabled ? 1 : 0}' type='#{@type}' interval='#{@interval}' start='#{@start}')
+      xml << %( maxDuration='#{@max_duration}') if @max_duration
+      xml << %( notValidAfter='#{@not_valid_after}') if @not_valid_after
+      xml << %( incremental='#{@incremental ? 1 : 0}') if @incremental
+      xml << %( repeaterType='#{@repeater_type}') if @repeater_type
       xml << '/>'
     end
 

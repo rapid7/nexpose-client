@@ -57,25 +57,21 @@ module Nexpose
     def login
       begin
         login_hash = {'sync-id' => 0, 'password' => @password, 'user-id' => @username}
-        unless @silo_id.nil?
-          login_hash['silo-id'] = @silo_id
-        end
+        login_hash['silo-id'] = @silo_id if @silo_id
         r = execute(make_xml('LoginRequest', login_hash))
+        if r.success
+          @session_id = r.sid
+          true
+        end
       rescue APIError
         raise AuthenticationFailed.new(r)
-      end
-      if (r.success)
-        @session_id = r.sid
-        true
       end
     end
 
     # Logout of the current connection
     def logout
       r = execute(make_xml('LogoutRequest', {'sync-id' => 0}))
-      if (r.success)
-        return true
-      end
+      return true if r.success
       raise APIError.new(r, 'Logout failed')
     end
 
