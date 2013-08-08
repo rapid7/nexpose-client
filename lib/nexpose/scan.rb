@@ -2,10 +2,102 @@ module Nexpose
   module NexposeAPI
     include XMLUtils
 
+    # Perform an ad hoc scan of a single device.
+    #
+    # @param [Device] device Device to scan.
+    # @return [Scan] Scan launch information.
+    #
+    def scan_device(device)
+      scan_devices([device])
+    end
+
+    # Perform an ad hoc scan of a subset of devices for a site.
+    # Nexpose only allows devices from a single site to be submitted per
+    # request.
+    # Method is designed to take objects from a Device listing.
+    #
+    # For example:
+    #   devices = nsc.devices(5)
+    #   nsc.scan_devices(devices.take(10))
+    #
+    # @param [Array[Device]] devices List of devices to scan.
+    # @return [Scan] Scan launch information.
+    #
+    def scan_devices(devices)
+      site_id = devices.map { |d| d.site_id }.uniq.first
+      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      elem = REXML::Element.new('Devices')
+      devices.each do |device|
+        elem.add_element('device', {'id' => "#{device.id}"})
+      end
+      xml.add_element(elem)
+
+      _scan_ad_hoc(xml)
+    end
+
+    # Perform an ad hoc scan of a single asset of a site.
+    #
+    # @param [Fixnum] site_id Site ID that the assets belong to.
+    # @param [HostName|IPRange] asset Asset to scan.
+    # @return [Scan] Scan launch information.
+    #
+    def scan_asset(site_id, asset)
+      scan_assets(site_id, [asset])
+    end
+
+    # Perform an ad hoc scan of a subset of assets for a site.
+    # Only assets from a single site should be submitted per request.
+    # Method is designed to take objects filtered from Site#assets.
+    #
+    # For example:
+    #   site = Site.load(nsc, 5)
+    #   nsc.scan_assets(5, site.assets.take(10))
+    #
+    # @param [Fixnum] site_id Site ID that the assets belong to.
+    # @param [Array[HostName|IPRange]] assets List of assets to scan.
+    # @return [Scan] Scan launch information.
+    #
+    def scan_assets(site_id, assets)
+      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      hosts = REXML::Element.new('Hosts')
+      assets.each { |asset| _append_asset!(hosts, asset) }
+      xml.add_element(hosts)
+
+      _scan_ad_hoc(xml)
+    end
+
+    # Utility method for appending a HostName or IPRange object into an
+    # XML object, in preparation for ad hoc scanning.
+    #
+    # @param [REXML::Document] xml Prepared API call to execute.
+    # @param [HostName|IPRange] asset Asset to append to XML.
+    #
+    def _append_asset!(xml, asset)
+      if asset.kind_of? Nexpose::IPRange
+        xml.add_element('range', {'from' => asset.from, 'to' => asset.to})
+      else  # Assume HostName
+        host = REXML::Element.new('host')
+        host.text = asset.host
+        xml.add_element(host)
+      end
+    end
+
+    # Utility method for executing prepared XML and extracting Scan launch
+    # information.
+    #
+    # @param [REXML::Document] xml Prepared API call to execute.
+    # @return [Scan] Scan launch information.
+    #
+    def _scan_ad_hoc(xml)
+      r = execute(xml)
+      Scan.parse(r.res)
+    end
+
     # Stop a running or paused scan.
     #
     # @param [Fixnum] scan_id ID of the scan to stop.
-    # @param [Fixnum] wait_sec Number of seconds to wait for status to be updated. Default: 0
+    # @param [Fixnum] wait_sec Number of seconds to wait for status to be
+    #   updated.
     #
     def stop_scan(scan_id, wait_sec = 0)
       r = execute(make_xml('ScanStopRequest', {'scan-id' => scan_id}))
@@ -41,12 +133,12 @@ module Nexpose
     # @param [Fixnum] scan_id The scan ID.
     #
     def pause_scan(scan_id)
-      r = execute(make_xml('ScanPauseRequest',{ 'scan-id' => scan_id}))
+      r = execute(make_xml('ScanPauseRequest', {'scan-id' => scan_id}))
       r.success ? r.attributes['success'] : nil
     end
 
-    # Retrieve a list of current scan activities across all Scan Engines managed
-    # by Nexpose.
+    # Retrieve a list of current scan activities across all Scan Engines
+    # managed by Nexpose.
     #
     # @return [Array[ScanSummary]] Array of ScanSummary objects associated with
     #   each active scan on the engines.
@@ -266,6 +358,27 @@ module Nexpose
           @count += count
           @severities[severity] = count
         end
+      end
+    end
+  end
+
+  # Struct class for tracking scan launch information.
+  #
+  class Scan
+
+    # The scan ID when a scan is successfully launched.
+    attr_reader :id
+    # The engine the scan was dispatched to.
+    attr_reader :engine
+
+    def initialize(scan_id, engine_id)
+      @id, @engine = scan_id, engine_id
+    end
+
+    def self.parse(xml)
+      xml.elements.each('//Scan') do |scan|
+        return new(scan.attributes['scan-id'].to_i,
+                   scan.attributes['engine-id'].to_i)
       end
     end
   end

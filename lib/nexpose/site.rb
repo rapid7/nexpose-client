@@ -42,8 +42,9 @@ module Nexpose
     # occurs across multiple sites.
     #
     # @param [String] address Address of the device to find. Usually the IP address.
-    # @param [FixNum] site_id Site ID to request scan history for.
-    # @return [Device] The first matching Device with the provided address, if found.
+    # @param [FixNum] site_id Site ID to restrict search to.
+    # @return [Device] The first matching Device with the provided address,
+    #   if found.
     #
     def find_device_by_address(address, site_id = nil)
       r = execute(make_xml('SiteDeviceListingRequest', {'site-id' => site_id}))
@@ -111,69 +112,11 @@ module Nexpose
     # Method will not return data on an active scan.
     #
     # @param [FixNum] site_id Site ID to find latest scan for.
+    # @return [ScanSummary] details of the last completed scan for a site.
     #
     def last_scan(site_id)
       site_scan_history(site_id).select { |scan| scan.end_time }.max_by { |scan| scan.end_time }
     end
-
-    #-----------------------------------------------------------------------
-    # Starts device specific site scanning.
-    #
-    # devices - An Array of device IDs
-    # hosts - An Array of Hashes [o]=>{:range=>"from,to"} [1]=>{:host=>host}
-    #-----------------------------------------------------------------------
-    def site_device_scan_start(site_id, devices, hosts = nil)
-      # TODO Refactor to design principles ... probably two methods.
-
-      if hosts == nil and devices == nil
-        raise ArgumentError.new('Both the device and host list is nil.')
-      end
-
-      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
-
-      if devices != nil
-        inner_xml = REXML::Element.new('Devices')
-        for device_id in devices
-          inner_xml.add_element 'device', {'id' => "#{device_id}"}
-        end
-        xml.add_element inner_xml
-      end
-
-      if hosts
-        inner_xml = REXML::Element.new 'Hosts'
-        hosts.each_index do |x|
-          if hosts[x].key? :range
-            from, to = hosts[x][:range].split(',')
-            if to
-              inner_xml.add_element 'range', {'to' => to, 'from' => from}
-            else
-              inner_xml.add_element 'range', {'from' => from}
-            end
-          end
-          if hosts[x].key? :host
-            host_element = REXML::Element.new 'host'
-            host_element.text = "#{hosts[x][:host]}"
-            inner_xml.add_element host_element
-          end
-        end
-        xml.add_element inner_xml
-      end
-
-      r = execute xml
-      if r.success
-        r.res.elements.each('//Scan') do |scan_info|
-          return {
-            :scan_id => scan_info.attributes['scan-id'].to_i,
-            :engine_id => scan_info.attributes['engine-id'].to_i
-          }
-        end
-      else
-        false
-      end
-    end
-
-    alias_method :site_device_scan, :site_device_scan_start
-    alias_method :adhoc_device_scan, :site_device_scan_start
   end
 
   # Configuration object representing a Nexpose site.
@@ -304,7 +247,7 @@ module Nexpose
     # Returned object will reset the site ID and append "Copy" to the existing
     # name.
     #
-    # @param [Connection] connection Connection to console where scan will be launched.
+    # @param [Connection] connection Connection to the security console.
     # @param [Fixnum] id Site ID of an existing site.
     # @return [Site] Site configuration loaded from a Nexpose console.
     #
@@ -339,7 +282,7 @@ module Nexpose
     #
     # @param [Connection] connection Connection to console where scan will be launched.
     # @param [String] sync_id Optional synchronization token.
-    # @return [Fixnum, Fixnum] Scan ID and engine ID where the scan was launched.
+    # @return [Scan] Scan launch information.
     #
     def scan(connection, sync_id = nil)
       xml = REXML::Element.new('SiteScanRequest')
@@ -348,10 +291,7 @@ module Nexpose
                           'sync-id' => sync_id})
 
       response = connection.execute(xml)
-      if response.success
-        scan = REXML::XPath.first(response.res, '/SiteScanResponse/Scan/')
-        [scan.attributes['scan-id'].to_i, scan.attributes['engine-id'].to_i]
-      end
+      Scan.parse(response.res) if response.success
     end
 
     # Generate an XML representation of this site configuration
