@@ -66,6 +66,42 @@ module Nexpose
       _scan_ad_hoc(xml)
     end
 
+    # Perform an ad hoc scan of a subset of IP addresses for a site.
+    # Only IPs from a single site can be submitted per request,
+    # and IP addresses must already be included in the site configuration.
+    # Method is designed for scanning when the targets are coming from an
+    # external source that does not have access to internal identfiers.
+    #
+    # For example:
+    #   to_scan = ['192.168.2.1', '192.168.2.107']
+    #   nsc.scan_ips(5, to_scan)
+    #
+    # @param [Fixnum] site_id Site ID that the assets belong to.
+    # @param [Array[String]] ip_addresses Array of IP addresses to scan.
+    # @return [Scan] Scan launch information.
+    #
+    def scan_ips(site_id, ip_addresses)
+      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      hosts = REXML::Element.new('Hosts')
+      ip_addresses.each do |ip|
+        xml.add_element('range', {'from' => ip})
+      end
+      xml.add_element(hosts)
+
+      _scan_ad_hoc(xml)
+    end
+
+    # Initiate a site scan.
+    #
+    # @param [Fixnum] site_id Site ID to scan.
+    # @return [Scan] Scan launch information.
+    #
+    def scan_site(site_id)
+      xml = make_xml('SiteScanRequest', {'site-id' => site_id})
+      response = execute(xml)
+      Scan.parse(response.res) if response.success
+    end
+
     # Utility method for appending a HostName or IPRange object into an
     # XML object, in preparation for ad hoc scanning.
     #
