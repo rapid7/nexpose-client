@@ -97,15 +97,14 @@ module Nexpose
     #
     # @param [Connection] connection Connection to console where asset group
     #   is configured.
-    # @return [Array[Hash[Fixnum, Fixnum]]] Array of scan ID and engine ID
-    #   pairs for each scan launched.
+    # @return [Hash] Hash of scan_id to Scan launch information for each scan.
     #
     def rescan_assets(connection)
       sites_ids = @devices.map { |d| d.site_id }.uniq
-      scans = []
+      scans = {}
       sites_ids.each do |id|
-        dev_ids = @devices.select { |d| d.site_id == id }.map { |d| d.id }
-        scans << connection.site_device_scan(id, dev_ids).merge(:site_id => id)
+        to_scan = @devices.select { |d| d.site_id == id }
+        scans[id] = connection.scan_devices(to_scan)
       end
       scans
     end
