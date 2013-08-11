@@ -9,7 +9,7 @@ module Nexpose
     #   It can take twice a long to retrieve full summary information.
     # @return [Array[Vulnerability|VulnerabilitySummary]] Collection of all known vulnerabilities.
     #
-    def vuln_listing(full = false)
+    def list_vulns(full = false)
       xml = make_xml('VulnerabilityListingRequest')
       # TODO Add a flag to do stream parsing of the XML to improve performance.
       response = execute(xml, '1.2')
@@ -28,7 +28,7 @@ module Nexpose
       vulns
     end
 
-    alias_method :vulns, :vuln_listing
+    alias_method :vulns, :list_vulns
 
     # Retrieve details for a vulnerability.
     #
@@ -178,7 +178,7 @@ module Nexpose
     # @param status - (optional) The status of the vulnerability exception:
     # "Under Review", "Approved", "Rejected"
     #-----------------------------------------------------------------------
-    def vuln_exception_listing(status = nil)
+    def list_vuln_exceptions(status = nil)
       option = {}
 
       if status && !status.empty?
@@ -219,6 +219,7 @@ module Nexpose
       end
     end
 
+    alias_method :vuln_exceptions, :list_vuln_exceptions
     #-------------------------------------------------------------------------------------------------------------------
     # Creates a vulnerability exception.
     #
@@ -482,7 +483,7 @@ module Nexpose
     #
     # @param exception_id - The exception id returned after the vuln exception was submitted for creation.
     #-------------------------------------------------------------------------------------------------------------------
-    def vuln_exception_delete(exception_id)
+    def delete_vuln_exception(exception_id)
       unless exception_id
         raise ArgumentError.new 'Exception Id is required'
       end
