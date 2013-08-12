@@ -61,7 +61,6 @@ require 'nexpose/alert'
 require 'nexpose/ajax'
 require 'nexpose/api_request'
 require 'nexpose/common'
-require 'nexpose/connection'
 require 'nexpose/creds'
 require 'nexpose/engine'
 require 'nexpose/group'
@@ -76,6 +75,7 @@ require 'nexpose/site'
 require 'nexpose/ticket'
 require 'nexpose/user'
 require 'nexpose/vuln'
+require 'nexpose/connection'
 
 module Nexpose
 
