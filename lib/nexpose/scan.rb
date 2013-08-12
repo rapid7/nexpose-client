@@ -149,8 +149,13 @@ module Nexpose
       r.success
     end
 
-    def scan_status(param)
-      r = execute(make_xml('ScanStatusRequest', {'scan-id' => param}))
+    # Retrieve the status of a scan.
+    #
+    # @param [Fixnum] scan_id The scan ID.
+    # @return [String] Current status of the scan.
+    #
+    def scan_status(scan_id)
+      r = execute(make_xml('ScanStatusRequest', {'scan-id' => scan_id}))
       r.success ? r.attributes['status'] : nil
     end
 
