@@ -3,7 +3,7 @@
 #
 =begin
 
-Copyright (C) 2009-2012, Rapid7 LLC
+Copyright (C) 2009-2013, Rapid7 LLC
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -54,26 +54,28 @@ require 'net/http'
 require 'uri'
 require 'rex/mime'
 require 'ipaddr'
+require 'json'
 require 'nexpose/error'
 require 'nexpose/util'
-require 'nexpose/user'
+require 'nexpose/alert'
+require 'nexpose/ajax'
 require 'nexpose/api_request'
+require 'nexpose/common'
+require 'nexpose/connection'
+require 'nexpose/creds'
+require 'nexpose/engine'
+require 'nexpose/group'
 require 'nexpose/manage'
 require 'nexpose/misc'
-require 'nexpose/report'
-require 'nexpose/scan'
-require 'nexpose/engine'
 require 'nexpose/pool'
+require 'nexpose/report'
+require 'nexpose/role'
+require 'nexpose/scan'
 require 'nexpose/silo'
 require 'nexpose/site'
 require 'nexpose/ticket'
+require 'nexpose/user'
 require 'nexpose/vuln'
-require 'nexpose/creds'
-require 'nexpose/connection'
-require 'nexpose/role'
-require 'nexpose/common'
-require 'nexpose/group'
-require 'nexpose/alert'
 
 module Nexpose
 
