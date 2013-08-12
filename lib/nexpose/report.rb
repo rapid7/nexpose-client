@@ -6,6 +6,42 @@ module Nexpose
   module NexposeAPI
     include XMLUtils
 
+    # Provide a listing of all report definitions the user can access on the
+    # Security Console.
+    #
+    # @return [Array[ReportConfigSummary]] List of current report configuration.
+    #
+    def list_reports
+      r = execute(make_xml('ReportListingRequest'))
+      reports = []
+      if r.success
+        r.res.elements.each('//ReportConfigSummary') do |report|
+          reports << ReportConfigSummary.parse(report)
+        end
+      end
+      reports
+    end
+
+    alias_method :reports, :list_reports
+
+    # Provide a list of all report templates the user can access on the
+    # Security Console.
+    #
+    # @return [Array[ReportTemplateSummary]] List of current report templates.
+    #
+    def list_report_templates
+      r = execute(make_xml('ReportTemplateListingRequest', {}))
+      templates = []
+      if r.success
+        r.res.elements.each('//ReportTemplateSummary') do |template|
+          templates << ReportTemplateSummary.parse(template)
+        end
+      end
+      templates
+    end
+
+    alias_method :report_templates, :list_report_templates
+
     # Generate a new report using the specified report definition.
     def generate_report(report_id, wait = false)
       xml = make_xml('ReportGenerateRequest', { 'report-id' => report_id })
@@ -43,48 +79,33 @@ module Nexpose
       history.sort { |a, b| b.generated_on <=> a.generated_on }.first
     end
 
-    # Delete a previously generated report definition.
-    # Also deletes any reports generated from that configuration.
-    def delete_report_config(report_config_id)
-      xml = make_xml('ReportDeleteRequest', { 'reportcfg-id' => report_config_id })
-      execute(xml).success
-    end
-
     # Delete a previously generated report.
+    #
+    # @param [Fixnum] report_id ID of individual report to delete.
+    #
     def delete_report(report_id)
       xml = make_xml('ReportDeleteRequest', { 'report-id' => report_id })
       execute(xml).success
     end
 
-    # Provide a list of all report templates the user can access on the
-    # Security Console.
-    def list_report_templates
-      r = execute(make_xml('ReportTemplateListingRequest', {}))
-      templates = []
-      if r.success
-        r.res.elements.each('//ReportTemplateSummary') do |template|
-          templates << ReportTemplateSummary.parse(template)
-        end
-      end
-      templates
+    # Delete a previously generated report definition.
+    # Also deletes any reports generated from that configuration.
+    #
+    # @param [Fixnum] report_config_id ID of the report configuration to remove.
+    #
+    def delete_report_config(report_config_id)
+      xml = make_xml('ReportDeleteRequest', { 'reportcfg-id' => report_config_id })
+      execute(xml).success
     end
 
-    alias_method :report_templates, :list_report_templates
-
-    # Provide a listing of all report definitions the user can access on the
-    # Security Console.
-    def list_reports
-      r = execute(make_xml('ReportListingRequest'))
-      reports = []
-      if r.success
-        r.res.elements.each('//ReportConfigSummary') do |report|
-          reports << ReportConfigSummary.parse(report)
-        end
-      end
-      reports
+    # Deletes an existing, custom report template.
+    # Cannot delete built-in templates.
+    #
+    # @param [String] template_id Unique identifier of the report template to remove.
+    #
+    def delete_report_template(template_id)
+      AJAX.delete(self, "/data/report/templates/#{template_id}")
     end
-
-    alias_method :reports, :list_reports
   end
 
   # Data object for report configuration information.
@@ -709,7 +730,9 @@ module Nexpose
       ReportTemplate.parse(connection.execute(xml))
     end
 
-    alias_method :get, :load
+    def delete(connection)
+      connection.delete_report_template(@id)
+    end
 
     include Sanitize
 
