@@ -44,9 +44,26 @@ module Nexpose
         end
       end
     end
+
+    # Search for Vulnerability Checks.
+    #
+    # @param [String] search_term Search terms to search for.
+    # @param [Boolean] partial_words Allow partial word matches.
+    # @param [Boolean] all_words All words must be present.
+    # @return [Array[VulnCheck]] List of matching Vulnerability Checks.
+    #
+    def find_vuln_check(search_term, partial_words = true, all_words = true)
+      uri = "/ajax/vulnck_synopsis.txml?phrase=#{URI.encode(search_term)}"
+      uri += "&wholeWords=1" unless partial_words
+      uri += "&allWords=1" if all_words
+      data = DataTable._get_dyn_table(self, uri)
+      data.map do |vuln|
+        VulnCheck.new(vuln)
+      end
+    end
   end
 
-  # Basic vulnerability information. Only includes id, title, and severity.
+  # Basic vulnerability information. Only includes ID, title, and severity.
   #
   class Vulnerability
 
@@ -60,7 +77,25 @@ module Nexpose
     attr_reader :severity
 
     def initialize(id, title, severity)
-      @id, @title, @severity = id, title, severity
+      @id, @title, @severity = id, title, severity.to_i
+    end
+  end
+
+  # Vulnerability Check information.
+  #
+  class VulnCheck < Vulnerability
+
+    attr_reader :check_id
+    attr_reader :categories
+    attr_reader :check_type
+
+    def initialize(json)
+      @id = json['Vuln ID']
+      @check_id = json['Vuln Check ID']
+      @title = json['Vulnerability']
+      @severity = json['Severity'].to_i
+      @check_type = json['Check Type']
+      @categories = json['Category'].split(/, */)
     end
   end
 
