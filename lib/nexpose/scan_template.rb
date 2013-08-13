@@ -21,4 +21,83 @@ module Nexpose
       AJAX.delete(self, "/data/scan/templates/#{URI.encode(id)}")
     end
   end
+
+  # Configuration object for a scan template.
+  # This class is only a partial representation of some of the features
+  # available for configuration.
+  #
+  class ScanTemplate
+
+    # Unique identifier of the scan template.
+    attr_accessor :id
+
+    attr_accessor :name
+    attr_accessor :description
+
+    # Whether to correlate reliable checks with regular checks.
+    attr_accessor :correlate
+
+    # Parsed XML of a scan template
+    attr_accessor :xml
+
+    def initialize(xml)
+      @xml = xml
+
+      root = REXML::XPath.first(xml, 'ScanTemplate')
+      @id = root.attributes['id']
+
+      desc = REXML::XPath.first(root, 'templateDescription')
+      @name = desc.attributes['title']
+      @description = desc.text.to_s
+
+      vuln_checks = REXML::XPath.first(root, 'VulnerabilityChecks')
+      @correlate = vuln_checks.attributes['correlate'] == '1'
+    end
+
+    # Save this scan template configuration to a Nexpose console.
+    #
+    def save(nsc)
+      root = REXML::XPath.first(@xml, 'ScanTemplate')
+      existing = root.attributes['id'] == @id
+      root.attributes['id'] = @id unless existing
+
+      desc = REXML::XPath.first(root, 'templateDescription')
+      desc.attributes['title'] = @name
+      desc.text = @description
+
+      vuln_checks = REXML::XPath.first(root, 'VulnerabilityChecks')
+      vuln_checks.attributes['correlate'] = (@correlate ? '1' : '0')
+
+      if existing
+        response = AJAX.put(nsc, "/data/scan/templates/#{URI.encode(id)}", xml)
+      else
+        response = JSON.parse(AJAX.post(nsc, '/data/scan/templates', xml))
+        @id = response['value']
+      end
+    end
+
+    # Load an existing scan template.
+    #
+    # @param [Connection] nsc API connection to a Nexpose console.
+    # @param [String] id Unique identifier of an existing scan template.
+    # @return [ScanTemplate] The requested scan template configuration.
+    #
+    def self.load(nsc, id)
+      response = JSON.parse(AJAX.get(nsc, "/data/scan/templates/#{URI.encode(id)}"))
+      new(REXML::Document.new(response['value']))
+    end
+
+    # Copy an existing scan template, changing the id and title.
+    #
+    # @param [Connection] nsc API connection to a Nexpose console.
+    # @param [String] id Unique identifier of an existing scan template.
+    # @return [ScanTemplate] A copy of the requested scan template configuration.
+    #
+    def self.copy(nsc, id)
+      dupe = load(nsc, id)
+      dupe.id = "#{dupe.id}-copy"
+      dupe.title = "#{dupe.title} Copy"
+      dupe
+    end
+  end
 end
