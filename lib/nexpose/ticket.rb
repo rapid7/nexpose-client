@@ -143,7 +143,6 @@ module Nexpose
     def save(connection)
       xml = connection.make_xml('TicketCreateRequest')
       xml.add_element(to_xml)
-      puts xml.to_s
 
       response = connection.execute(xml, '1.2')
       @id = response.attributes['id'].to_i if response.success
