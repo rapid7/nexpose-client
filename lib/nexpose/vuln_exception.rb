@@ -27,189 +27,60 @@ module Nexpose
     end
 
     alias_method :vuln_exceptions, :list_vuln_exceptions
-    #-------------------------------------------------------------------------------------------------------------------
-    # Creates a vulnerability exception.
+
+    # Resubmit a vulnerability exception request with a new comment and reason
+    # after an exception has been rejected.
     #
-    # @param input - data used to create the vulnerability exception:
-    # :vuln_id - The Nexpose vulnerability ID.
-    # :reason - The reason for the exception
-    #         values - "False Positive", "Compensating Control", "Acceptable Use", "Acceptable Risk", "Other"
-    # :scope - The scope type  (NOTE: The case is important)
-    #        values - "All Instances", "All Instances on a Specific Asset", "Specific Instance of a specific Asset"
-    # :comment - A user comment
-    # :device-id - Used for specific instances related to "All Instances on a Specific Asset" AND "Specific Instance of Specific Asset"
-    # :port - All assets on this port related to "Specific Instance of a specific Asset"
-    # :vuln-key - The vulnerability key related to the "Specific Instance of a specific Asset"
+    # You can only resubmit a request that has a “Rejected” status; if an
+    # exception is “Approved” or “Under Review” you will receive an error
+    # message stating that the exception request cannot be resubmitted.
     #
-    # @returns exception-id - The Id associated with this create request
-    #-------------------------------------------------------------------------------------------------------------------
-    def vuln_exception_create(input)
-      options = {}
-
-      reason = input[:reason]
-      if reason.nil? || reason.empty?
-        raise ArgumentError.new 'The reason is required'
-      end
-
-      unless reason =~ /False Positive|Compensating Control|Acceptable Use|Acceptable Risk|Other/
-        raise ArgumentError.new 'The reason type is invalid'
-      end
-      options['reason'] = reason
-
-      scope = input[:scope]
-      if scope.nil? || scope.empty?
-        raise ArgumentError.new 'The scope is required'
-      end
-
-      # For scope case matters.
-      unless scope =~ /All Instances|All Instances on a Specific Asset|Specific Instance of Specific Asset/
-        raise ArgumentError.new 'The scope type is invalid'
-      end
-
-      if scope =~ /All Instances on a Specific Asset|Specific Instance of Specific Asset/
-        device_id = input[:device_id]
-        vuln_key = input[:vuln_key]
-        port = input[:port]
-        if device_id
-          options['device-id'] = device_id
-        end
-
-        if scope =~ /All Instances on a Specific Asset/ && (vuln_key || port)
-          raise ArgumentError.new 'Vulnerability key or port cannot be used with the scope specified'
-        end
-
-        if vuln_key
-          options['vuln-key'] = vuln_key
-        end
-
-        if port
-          options['port-no'] = port
-        end
-      end
-      options['scope'] = scope
-
-      xml = make_xml('VulnerabilityExceptionCreateRequest', options)
-
-      comment = input[:comment]
-      if comment && !comment.empty?
-        comment_xml = make_xml('comment', {}, comment, false)
-        xml.add_element comment_xml
-      else
-        raise ArgumentError.new 'The comment cannot be empty'
-      end
-
-      r = execute xml, '1.2'
-      if r.success
-        r.res.elements.each('//VulnerabilityExceptionCreateResponse') do |vecr|
-          return vecr.attributes['exception-id']
-        end
-      else
-        false
-      end
-    end
-
-    #-------------------------------------------------------------------------------------------------------------------
-    # Resubmit a vulnerability exception.
+    # @param [Fixnum] id Unique identifier of the exception to resubmit.
+    # @param [String] comment Comment to justify the exception resubmission.
+    # @param [String] reason The reason for the exception status, if changing.
+    #   @see Nexpose::VulnException::Reason
+    # @return [Boolean] Whether or not the resubmission was valid.
     #
-    # @param input - data used to create the vulnerability exception:
-    # :vuln_id - The Nexpose vulnerability ID. (required)
-    # :reason - The reason for the exception (optional)
-    #         values - "False Positive", "Compensating Control", "Acceptable Use", "Acceptable Risk", "Other"
-    # :comment - A user comment  (required)
-    #-------------------------------------------------------------------------------------------------------------------
-    def vuln_exception_resubmit(input)
-      options = {}
-
-      if input.nil?
-        raise ArgumentError.new 'The input element cannot be null'
-      end
-
-      exception_id = input[:exception_id]
-      unless exception_id
-        raise ArgumentError.new 'The exception ID is required'
-      end
-      options['exception-id'] = exception_id
-
-      reason = input[:reason]
-      if !reason.nil? && !reason.empty?
-        unless reason =~ /False Positive|Compensating Control|Acceptable Use|Acceptable Risk|Other/
-          raise ArgumentError.new 'The reason type is invalid'
-        end
-        options['reason'] = reason
-
-      end
-
+    def resubmit_vuln_exception(id, comment, reason = nil)
+      options = { 'exception-id' = id }
+      options['reason'] = reason if reason
       xml = make_xml('VulnerabilityExceptionResubmitRequest', options)
-
-      comment = input[:comment]
-      if comment && !comment.empty?
-        comment_xml = make_xml('comment', {}, comment, false)
-        xml.add_element comment_xml
-      end
-
-      r = execute xml, '1.2'
+      comment_xml = make_xml('comment', {}, comment, false)
+      xml.add_element(comment_xml)
+      r = execute(xml, '1.2')
       r.success
     end
 
-    #-------------------------------------------------------------------------------------------------------------------
-    # Allows a previously submitted exception that has not been approved to be withdrawn.
+    # Recall a vulnerability exception. Recall is used by a submitter to undo an
+    # exception request that has not been approved yet.
     #
-    # @param exception_id - The exception id returned after the vuln exception was submitted for creation.
-    #-------------------------------------------------------------------------------------------------------------------
-    def vuln_exception_recall(exception_id)
-      xml = make_xml('VulnerabilityExceptionRecallRequest', {'exception-id' => exception_id})
-      r = execute xml, '1.2'
-      r.success
+    # You can only recall a vulnerability exception that has 'Under Review'
+    # status.
+    #
+    # @param [Fixnum] id Unique identifier of the exception to resubmit.
+    # @return [Boolean] Whether or not the recall was accepted by the console.
+    #
+    def recall_vuln_exception(id)
+      xml = make_xml('VulnerabilityExceptionRecallRequest',
+                     { 'exception-id' => id })
+      execute(xml, '1.2').success
     end
 
 
-    #-------------------------------------------------------------------------------------------------------------------
+
     # Allows a submitted vulnerability exception to be approved.
     #
     # @param input:
     # :exception_id - The exception id returned after the vuln exception was submitted for creation.
     # :comment - An optional comment
-    #-------------------------------------------------------------------------------------------------------------------
     def vuln_exception_approve(input)
       exception_id = input[:exception_id]
       unless exception_id
         raise ArgumentError.new 'Exception Id is required'
       end
 
-      xml = make_xml('VulnerabilityExceptionApproveRequest', {'exception-id' => exception_id})
-      comment = input[:comment]
-      if comment && !comment.empty?
-        comment_xml = make_xml('comment', {}, comment, false)
-        xml.add_element comment_xml
-      end
-
-      r = execute xml, '1.2'
-      r.success
     end
 
-    #-------------------------------------------------------------------------------------------------------------------
-    # Rejects a submitted vulnerability exception to be approved.
-    #
-    # @param input:
-    # :exception_id - The exception id returned after the vuln exception was submitted for creation.
-    # :comment - An optional comment
-    #-------------------------------------------------------------------------------------------------------------------
-    def vuln_exception_reject(input)
-      exception_id = input[:exception_id]
-      unless exception_id
-        raise ArgumentError.new 'Exception Id is required'
-      end
-
-      xml = make_xml('VulnerabilityExceptionRejectRequest', {'exception-id' => exception_id})
-      comment = input[:comment]
-      if comment && !comment.empty?
-        comment_xml = make_xml('comment', {}, comment, false)
-        xml.add_element comment_xml
-      end
-
-      r = execute xml, '1.2'
-      r.success
-    end
 
     #-------------------------------------------------------------------------------------------------------------------
     # Updates a vulnerability exception comment.
@@ -343,14 +214,84 @@ module Nexpose
       @vuln_id, @scope, @reason, @status = vuln_id, scope, reason, status
     end
 
-    # Create this exception on the security console.
+    # Submit this exception on the security console.
     #
     # @param [Connection] connection Connection to security console.
+    # @return [Fixnum] Newly assigned exception ID.
     #
     def save(connection, comment = nil)
       validate
       @submitter_comment = comment if comment
       response = execute(to_xml, '1.2')
+      @id = response.attributes['exception-id'].to_i if response.success
+    end
+
+    # Resubmit a vulnerability exception request with a new comment and reason
+    # after an exception has been rejected.
+    #
+    # You can only resubmit a request that has a “Rejected” status; if an
+    # exception is “Approved” or “Under Review” you will receive an error
+    # message stating that the exception request cannot be resubmitted.
+    #
+    # This call will use the object's current state to resubmit.
+    #
+    # @param [Connection] connection Connection to security console.
+    # @return [Boolean] Whether or not the resubmission was valid.
+    #
+    def resubmit(connection)
+      raise ArgumentError.new('Only Rejected exceptions can be resubmitted.') unless @status == Status::REJECTED
+      connection.resubmit_vuln_exception(@id, @comments.last, @reason)
+    end
+
+    # Recall a vulnerability exception. Recall is used by a submitter to undo an
+    # exception request that has not been approved yet.
+    #
+    # You can only recall a vulnerability exception that has 'Under Review'
+    # status.
+    #
+    # @param [Connection] connection Connection to security console.
+    # @return [Boolean] Whether or not the recall was accepted by the console.
+    #
+    def recall(connection)
+      connection.recall_vuln_exception(id)
+    end
+
+    # Approve a vulnerability exception request, update comments and expiration
+    # dates on vulnerability exceptions that are "Under Review".
+    #
+    # @param [Connection] connection Connection to security console.
+    # @param [String] comment Comment to accompany the approval.
+    # @return [Boolean] Whether or not the approval was accepted by the console.
+    #
+    def approve(connection, comment = nil)
+      xml = connection.make_xml('VulnerabilityExceptionApproveRequest',
+                                { 'exception-id' => @id })
+      if comment
+        cxml = REXML::Element.new('comment')
+        cxml.add_text(comment)
+        xml.add_element(cxml)
+      end
+
+      execute(xml, '1.2').success
+    end
+
+    # Reject a vulnerability exception request and update comments for the
+    # vulnerability exception request.
+    #
+    # @param [Connection] connection Connection to security console.
+    # @param [String] comment Comment to accompany the rejection.
+    # @return [Boolean] Whether or not the reject was accepted by the console.
+    #
+    def reject(connection, comment = nil)
+      xml = connection.make_xml('VulnerabilityExceptionRejectRequest',
+                                { 'exception-id' => @id })
+      if comment
+        cxml = REXML::Element.new('comment')
+        cxml.add_text(comment)
+        xml.add_element(cxml)
+      end
+
+      execute(xml, '1.2').success
     end
 
     def to_xml
