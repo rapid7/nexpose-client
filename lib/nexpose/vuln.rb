@@ -199,6 +199,43 @@ module Nexpose
     end
   end
 
+  # Vulnerability information pulled from AJAX requests.
+  # Data uses a numeric, console-specific vuln ID, which may need to be
+  # cross-referenced to the String ID to be used elsewhere.
+  #
+  class VulnInfo
+
+    # Unique, console-specific identifier of the vulnerability.
+    attr_reader :id
+    # Vulnerability title.
+    attr_reader :title
+    attr_reader :cvss_score
+    attr_reader :cvss_vector
+    attr_reader :risk
+    # Date this exploit was published.
+    attr_reader :published
+    attr_reader :severity
+    # Number of instances of this vulnerabilty finding on an asset.
+    attr_reader :instances
+    # Any published exploit modules against this vulnerability.
+    attr_reader :exploits
+    # Whether known malware kits exploit this vulnerability.
+    attr_reader :malware
+
+    def initialize(json)
+      @id = json['Vuln ID'].to_i
+      @title = json['Vulnerability']
+      @cvss_vector = json['CVSS Base Vector']
+      @cvss_score = json['CVSS Score'].to_f
+      @risk = json['Risk'].to_f
+      @published = Time.at(json['Published On'].to_i / 1000)
+      @severity = json['Severity'].to_i
+      @instances = json['Instances'].to_i
+      @exploits = json['ExploitSource']
+      @malware = json['MalwareSource'] == 'true'
+    end
+  end
+
   module NexposeAPI
     include XMLUtils
 
