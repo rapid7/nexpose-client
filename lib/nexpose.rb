@@ -78,6 +78,7 @@ require 'nexpose/site'
 require 'nexpose/ticket'
 require 'nexpose/user'
 require 'nexpose/vuln'
+require 'nexpose/vuln_exception'
 require 'nexpose/connection'
 
 module Nexpose
