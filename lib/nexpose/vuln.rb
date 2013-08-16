@@ -199,11 +199,11 @@ module Nexpose
     end
   end
 
-  # Vulnerability information pulled from AJAX requests.
+  # Vulnerability finding information pulled from AJAX requests.
   # Data uses a numeric, console-specific vuln ID, which may need to be
   # cross-referenced to the String ID to be used elsewhere.
   #
-  class VulnInfo
+  class VulnFinding
 
     # Unique, console-specific identifier of the vulnerability.
     attr_reader :id

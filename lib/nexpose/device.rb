@@ -66,7 +66,7 @@ module Nexpose
     #
     def list_device_vulns(dev_id)
       raw = DataTable._get_dyn_table(self, "/ajax/device_vulns.txml?devid=#{dev_id}")
-      raw.map { |vuln| VulnInfo.new(vuln) }
+      raw.map { |vuln| VulnFinding.new(vuln) }
     end
 
     def delete_device(device_id)
