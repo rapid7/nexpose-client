@@ -217,22 +217,22 @@ module Nexpose
     attr_reader :severity
     # Number of instances of this vulnerabilty finding on an asset.
     attr_reader :instances
-    # Any published exploit modules against this vulnerability.
-    attr_reader :exploits
+    # Main published exploit module against this vulnerability, if any.
+    attr_reader :exploit
     # Whether known malware kits exploit this vulnerability.
     attr_reader :malware
 
     def initialize(json)
-      @id = json['Vuln ID'].to_i
-      @title = json['Vulnerability']
-      @cvss_vector = json['CVSS Base Vector']
-      @cvss_score = json['CVSS Score'].to_f
-      @risk = json['Risk'].to_f
-      @published = Time.at(json['Published On'].to_i / 1000)
-      @severity = json['Severity'].to_i
-      @instances = json['Instances'].to_i
-      @exploits = json['ExploitSource']
-      @malware = json['MalwareSource'] == 'true'
+      @id = json['vulnID']
+      @title = json['title']
+      @cvss_vector = json['cvssBase']
+      @cvss_score = json['cvssScore']
+      @risk = json['riskScore']
+      @published = Time.at(json['publishedDate'] / 1000)
+      @severity = json['severity']
+      @instances = json['vulnInstanceCount']
+      @exploit = json['mainExploit']
+      @malware = json['malwareCount']
     end
   end
 end

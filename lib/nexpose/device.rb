@@ -65,8 +65,12 @@ module Nexpose
     # @return [Array[Vulnerability]] List of vulnerability findings.
     #
     def list_device_vulns(dev_id)
-      raw = DataTable._get_dyn_table(self, "/ajax/device_vulns.txml?devid=#{dev_id}")
-      raw.map { |vuln| VulnFinding.new(vuln) }
+      parameters = { 'devid' => dev_id,
+                     'table-id' => 'vulnerability-listing' }
+      json = DataTable._get_json_table(self,
+                                       '/data/vulnerability/asset-vulnerabilities',
+                                       parameters)
+      json.map { |vuln| VulnFinding.new(vuln) }
     end
 
     def delete_device(device_id)

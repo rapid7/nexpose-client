@@ -357,7 +357,7 @@ module Nexpose
       xml = connection.make_xml('VulnerabilityExceptionCreateRequest')
       xml.add_attributes({ 'vuln-id' => @vuln_id,
                            'scope' => @scope,
-                           'reason' => @reason }
+                           'reason' => @reason })
       case @scope
       when Scope::ALL_INSTANCES_ON_A_SPECIFIC_ASSET
         xml.add_attributes({ 'device-id' => @device_id })
