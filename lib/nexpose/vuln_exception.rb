@@ -42,7 +42,7 @@ module Nexpose
     # @return [Boolean] Whether or not the resubmission was valid.
     #
     def resubmit_vuln_exception(id, comment, reason = nil)
-      options = { 'exception-id' = id }
+      options = { 'exception-id' => id }
       options['reason'] = reason if reason
       xml = make_xml('VulnerabilityExceptionResubmitRequest', options)
       comment_xml = make_xml('comment', {}, comment, false)
