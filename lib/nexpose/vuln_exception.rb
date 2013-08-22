@@ -21,7 +21,6 @@ module Nexpose
         response.res.elements.each('//VulnerabilityException') do |ve|
           xs << VulnException.parse(ve)
         end
-        res
       end
       xs
     end
@@ -66,105 +65,22 @@ module Nexpose
       execute(xml, '1.2').success
     end
 
-
-
-    # Allows a submitted vulnerability exception to be approved.
+    # Delete an existing vulnerability exception.
     #
-    # @param input:
-    # :exception_id - The exception id returned after the vuln exception was submitted for creation.
-    # :comment - An optional comment
-    def vuln_exception_approve(input)
-      exception_id = input[:exception_id]
-      unless exception_id
-        raise ArgumentError.new 'Exception Id is required'
-      end
-
-    end
-
-
-    #-------------------------------------------------------------------------------------------------------------------
-    # Updates a vulnerability exception comment.
+    # @param [Fixnum] id The ID of a vuln exception.
+    # @return [Boolean] Whether or not deletion was successful.
     #
-    # @param input:
-    # :exception_id - The exception id returned after the vuln exception was submitted for creation.
-    # :submitter_comment - The submitter comment
-    # :reviewer_comment - The reviewer comment
-    #-------------------------------------------------------------------------------------------------------------------
-    def vuln_exception_update_comment(input)
-      exception_id = input[:exception_id]
-      unless exception_id
-        raise ArgumentError.new 'Exception Id is required'
-      end
-
-      xml = make_xml('VulnerabilityExceptionUpdateCommentRequest', {'exception-id' => exception_id})
-      submitter_comment = input[:submitter_comment]
-      if submitter_comment && !submitter_comment.empty?
-        comment_xml = make_xml('submitter-comment', {}, submitter_comment, false)
-        xml.add_element comment_xml
-      end
-
-      reviewer_comment = input[:reviewer_comment]
-      if reviewer_comment && !reviewer_comment.empty?
-        comment_xml = make_xml('reviewer-comment', {}, reviewer_comment, false)
-        xml.add_element comment_xml
-      end
-
-      r = execute xml, '1.2'
-      r.success
-    end
-
-    #-------------------------------------------------------------------------------------------------------------------
-    # Update the expiration date for a vulnerability exception.
-    #
-    # @param input
-    # :exception_id - The exception id returned after the vulnerability exception was submitted for creation.
-    # :expiration_date - The new expiration date format: YYYY-MM-DD
-    #-------------------------------------------------------------------------------------------------------------------
-    def vuln_exception_update_expiration_date(input)
-      exception_id = input[:exception_id]
-      unless exception_id
-        raise ArgumentError.new 'Exception Id is required'
-      end
-
-      expiration_date = input[:expiration_date]
-      if expiration_date && !expiration_date.empty? && expiration_date =~ /\A\d{4}-(\d{2})-(\d{2})\z/
-        if $1.to_i > 12
-          raise ArgumentError.new 'The expiration date month value is invalid'
-        end
-      if $2.to_i > 31
-        raise ArgumentError.new 'The expiration date day value is invalid'
-      end
-      else
-        raise ArgumentError.new 'Expiration date is invalid'
-      end
-
-      options = {}
-      options['exception-id'] = exception_id
-      options['expiration-date'] = expiration_date
-      xml = make_xml('VulnerabilityExceptionUpdateExpirationDateRequest', options)
-      r = execute xml, '1.2'
-      r.success
-    end
-
-    #-------------------------------------------------------------------------------------------------------------------
-    # Deletes a submitted vulnerability exception to be approved.
-    #
-    # @param exception_id - The exception id returned after the vuln exception was submitted for creation.
-    #-------------------------------------------------------------------------------------------------------------------
-    def delete_vuln_exception(exception_id)
-      unless exception_id
-        raise ArgumentError.new 'Exception Id is required'
-      end
-
-      xml = make_xml('VulnerabilityExceptionDeleteRequest', {'exception-id' => exception_id})
-      r = execute xml, '1.2'
-      r.success
+    def delete_vuln_exception(id)
+      xml = make_xml('VulnerabilityExceptionDeleteRequest',
+                     { 'exception-id' => id })
+      execute(xml, '1.2').success
     end
   end
 
-  # In addition to attributes listed as required in the preceding table, certain
-  # attributes are necessary for certain exception scopes, even though they are
-  # listed as optional.
+  # A vulnerability exception.
+  #
+  # Certain attributes are necessary for some exception scopes, even though
+  # they are optional otherwise.
   # • An exception for all instances of a vulnerability on all assets only
   #   requires the vuln_id attribute. The device_id, vuln_key and port
   #   attributes are ignored for this scope type.
@@ -221,8 +137,28 @@ module Nexpose
     #
     def save(connection, comment = nil)
       validate
+
+      xml = connection.make_xml('VulnerabilityExceptionCreateRequest')
+      xml.add_attributes({ 'vuln-id' => @vuln_id,
+                           'scope' => @scope,
+                           'reason' => @reason })
+      case @scope
+      when Scope::ALL_INSTANCES_ON_A_SPECIFIC_ASSET
+        xml.add_attributes({ 'device-id' => @device_id })
+      when Scope::SPECIFIC_INSTANCE_OF_SPECIFIC_ASSET
+        xml.add_attributes({ 'device-id' => @device_id,
+                             'port-no' => @port,
+                             'vuln-key' => @vuln_key })
+      end
+
       @submitter_comment = comment if comment
-      response = execute(to_xml, '1.2')
+      if @submitter_comment
+        comment = REXML::Element.new('comment')
+        comment.add_text(comment)
+        xml.add_element(comment)
+      end
+
+      response = connection.execute(xml, '1.2')
       @id = response.attributes['exception-id'].to_i if response.success
     end
 
@@ -240,7 +176,7 @@ module Nexpose
     #
     def resubmit(connection)
       raise ArgumentError.new('Only Rejected exceptions can be resubmitted.') unless @status == Status::REJECTED
-      connection.resubmit_vuln_exception(@id, @comments.last, @reason)
+      connection.resubmit_vuln_exception(@id, @submitter_comment, @reason)
     end
 
     # Recall a vulnerability exception. Recall is used by a submitter to undo an
@@ -270,9 +206,10 @@ module Nexpose
         cxml = REXML::Element.new('comment')
         cxml.add_text(comment)
         xml.add_element(cxml)
+        @reviewer_comment = comment
       end
 
-      execute(xml, '1.2').success
+      connection.execute(xml, '1.2').success
     end
 
     # Reject a vulnerability exception request and update comments for the
@@ -291,30 +228,69 @@ module Nexpose
         xml.add_element(cxml)
       end
 
-      execute(xml, '1.2').success
+      connection.execute(xml, '1.2').success
     end
 
-    def to_xml
-      xml = connection.make_xml('VulnerabilityExceptionCreateRequest')
-      xml.add_attributes({ 'vuln-id' => @vuln_id,
-                           'scope' => @scope,
-                           'reason' => @reason })
-      case @scope
-      when Scope::ALL_INSTANCES_ON_A_SPECIFIC_ASSET
-        xml.add_attributes({ 'device-id' => @device_id })
-      when Scope::SPECIFIC_INSTANCE_OF_SPECIFIC_ASSET
-        xml.add_attributes({ 'device-id' => @device_id,
-                             'port-no' => @port,
-                             'vuln-key' => @vuln_key })
-      end
+    # Deletes this vulnerability exception.
+    #
+    # @param [Connection] connection Connection to security console.
+    # @return [Boolean] Whether or not deletion was successful.
+    #
+    def delete(connection)
+      connection.delete_vuln_exception(@id)
+    end
 
-      if @submitter_comment
-        comment = REXML::Element.new('submitter-comment')
-        comment.add_text(@submitter_comment)
-        xml.add_element(comment)
-      end
+    # Update security console with submitter comment on this vulnerability
+    # exceptions.
+    #
+    # Cannot update a submit comment unless exception is under review or has
+    # expired.
+    #
+    # @param [Connection] connection Connection to security console.
+    # @param [String] comment Submitter comment on this exception.
+    # @return [Boolean] Whether the comment was successfully submitted.
+    #
+    def update_submitter_comment(connection, comment)
+      xml = connection.make_xml('VulnerabilityExceptionUpdateCommentRequest',
+                                { 'exception-id' => @id })
+      cxml = REXML::Element.new('submitter-comment')
+      cxml.add_text(comment)
+      xml.add_element(cxml)
+      @submitter_comment = comment
 
-      xml
+      connection.execute(xml, '1.2').success
+    end
+
+    # Update security console with reviewer comment on this vulnerability
+    # exceptions.
+    #
+    # @param [Connection] connection Connection to security console.
+    # @param [String] comment Reviewer comment on this exception.
+    # @return [Boolean] Whether the comment was successfully submitted.
+    #
+    def update_reviewer_comment(connection, comment)
+      xml = connection.make_xml('VulnerabilityExceptionUpdateCommentRequest',
+                                { 'exception-id' => @id })
+      cxml = REXML::Element.new('reviewer-comment')
+      cxml.add_text(comment)
+      xml.add_element(cxml)
+      @reviewer_comment = comment
+
+      connection.execute(xml, '1.2').success
+    end
+
+    # Update the expiration date for this exception.
+    # The expiration time cannot be in the past.
+    #
+    # @param [Connection] connection Connection to security console.
+    # @param [String] new_date Date in the format "YYYY-MM-DD".
+    # @return [Boolean] Whether the update was successfully submitted.
+    #
+    def update_expiration_date(connection, new_date)
+      xml = connection.make_xml('VulnerabilityExceptionUpdateExpirationDateRequest',
+                                { 'exception-id' => @id,
+                                  'expiration-date' => new_date })
+      connection.execute(xml, '1.2').success
     end
 
     # Validate that this exception meets to requires for the assigned scope.
@@ -350,7 +326,7 @@ module Nexpose
       exception.device_id = xml.attributes['device-id']
       exception.port = xml.attributes['port-no']
       exception.vuln_key = xml.attributes['vuln-key']
-      # TODO Convert to Date/Time object.
+      # TODO Convert to Date/Time object?
       exception.expiration = xml.attributes['expiration-date']
 
       submitter_comment = xml.elements['submitter-comment']
@@ -367,6 +343,7 @@ module Nexpose
       UNDER_REVIEW = 'Under Review'
       APPROVED = 'Approved'
       REJECTED = 'Rejected'
+      DELETED = 'Deleted'
     end
 
     # The reason for the exception status.
@@ -384,6 +361,7 @@ module Nexpose
     module Scope
       ALL_INSTANCES = 'All Instances'
       ALL_INSTANCES_ON_A_SPECIFIC_ASSET = 'All Instances on a Specific Asset'
+      ALL_INSTANCES_IN_A_SPECIFIC_SITE = 'All Instances in a Specific Site'
       SPECIFIC_INSTANCE_OF_SPECIFIC_ASSET = 'Specific Instance of Specific Asset'
     end
   end
