@@ -310,8 +310,8 @@ module Nexpose
         end
 
         s.elements.each('Credentials/adminCredentials') do |credconf|
-          cred = AdminCredentials.new(true)
-          cred.set_service(credconf.attributes['service'])
+          cred = Credential.new
+          cred.service = credconf.attributes['service']
           cred.set_blob(credconf.get_text)
           site.credentials << cred
         end

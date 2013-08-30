@@ -34,6 +34,7 @@ module Nexpose
     end
 
     alias_method :groups, :list_asset_groups
+    alias_method :asset_groups, :list_asset_groups
   end
 
   # Summary value object for asset group information.

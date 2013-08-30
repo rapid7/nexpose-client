@@ -6,13 +6,11 @@ module Nexpose
   # be passed back as is during a Site Save operation. This object
   # can only be used to create a new set of credentials.
   #
-  class AdminCredentials
+  class Credential
     include XMLUtils
 
     # Security blob for an existing set of credentials
-    attr_accessor :securityblob
-    # Designates if this object contains user defined credentials or a security blob
-    attr_accessor :isblob
+    attr_accessor :blob
     # The service for these credentials. Can be All.
     attr_accessor :service
     # The host for these credentials. Can be Any.
@@ -38,22 +36,6 @@ module Nexpose
     # The password to use when escalating privileges (optional)
     attr_accessor :priv_password
 
-    def initialize(isblob = false)
-      @isblob = isblob
-    end
-
-    # Sets the credentials information for this object.
-    def set_credentials(service, host, port, userid, password, realm)
-      @isblob = false
-      @securityblob = nil
-      @service = service
-      @host = host
-      @port = port
-      @userid = userid
-      @password = password
-      @realm = realm
-    end
-
     def self.for_service(service, user, password, realm = nil, host = nil, port = nil)
       cred = new
       cred.service = service
@@ -65,39 +47,11 @@ module Nexpose
       cred
     end
 
-    # Sets privilege escalation credentials.  Type should be either
-    # sudo/su.
-    def set_privilege_credentials(type, username, password)
+    # Sets privilege escalation credentials. Type should be either sudo/su.
+    def add_privilege_credentials(type, username, password)
       @priv_type = type
       @priv_username = username
       @priv_password = password
-    end
-
-    # The name of the service.  Possible values are outlined in the
-    # Nexpose API docs.
-    def set_service(service)
-      @service = service
-    end
-
-    def set_host(host)
-      @host = host
-    end
-
-    # Credentials fetched from the API are encrypted into a
-    # securityblob.  If you want to use those credentials on a
-    # different site, copy the blob into the credential.
-    def set_blob(securityblob)
-      @isblob = true
-      @securityblob = securityblob
-    end
-
-    # Add Headers to credentials for httpheaders.
-    def set_headers(headers)
-      @headers = headers
-    end
-
-    def set_html_forms(html_forms)
-      @html_forms = html_forms
     end
 
     def to_xml
@@ -118,8 +72,7 @@ module Nexpose
       attributes['privilegeelevationusername'] = @priv_username if @priv_username
       attributes['privilegeelevationpassword'] = @priv_password if @priv_password
 
-      data = isblob ? securityblob : ''
-      xml = make_xml('adminCredentials', attributes, data)
+      xml = make_xml('adminCredentials', attributes, blob)
       xml.add_element(@headers.to_xml_elem) if @headers
       xml.add_element(@html_forms.to_xml_elem) if @html_forms
       xml
