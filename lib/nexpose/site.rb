@@ -157,6 +157,14 @@ module Nexpose
       @assets << IPRange.new(ip)
     end
 
+    # Adds assets to this site by IP address range.
+    #
+    # @param [String] from Beginning IP address of a range.
+    # @param [String] to Ending IP address of a range.
+    def add_ip(from, to)
+      @assets << IPRange.new(from, to)
+    end
+
     # Adds an asset to this site, resolving whether an IP or hostname is
     # provided.
     #
@@ -229,9 +237,9 @@ module Nexpose
     #
     def scan(connection, sync_id = nil)
       xml = REXML::Element.new('SiteScanRequest')
-      xml.add_attributes({'session-id' => connection.session_id,
-                          'site-id' => @id,
-                          'sync-id' => sync_id})
+      xml.add_attributes({ 'session-id' => connection.session_id,
+                           'site-id' => @id,
+                           'sync-id' => sync_id })
 
       response = connection.execute(xml)
       Scan.parse(response.res) if response.success
@@ -409,18 +417,46 @@ module Nexpose
     attr_accessor :to
 
     def initialize(from, to = nil)
-      @from = IPAddr.new(from)
-      @to = IPAddr.new(to) if to
+      @from = from
+      @to = to unless from == to
     end
 
     include Comparable
 
     def <=>(other)
-      to_xml <=> other.to_xml
+      from = IPAddr.new(@from)
+      to = @to.nil? ? from : IPAddr.new(@to)
+      cf_from = IPAddr.new(other.from)
+      cf_to = IPAddr.new(other.to.nil? ? other.from : other.to)
+      if cf_to < from
+        1
+      elsif to < cf_from
+        -1
+      else # Overlapping
+        0
+      end
+    end
+
+    def ==(other)
+      eql?(other)
     end
 
     def eql?(other)
-      to_xml == other.to_xml
+      @from == other.from && @to == other.to
+    end
+
+    def include?(single_ip)
+      from = IPAddr.new(@from)
+      to = @to.nil? ? from : IPAddr.new(@to)
+      other = IPAddr.new(single_ip)
+
+      if other < from
+        false
+      elsif to < other
+        false
+      else
+        true
+      end
     end
 
     def hash
@@ -429,7 +465,7 @@ module Nexpose
 
     def to_xml_elem
       xml = REXML::Element.new('range')
-      xml.add_attributes({'from' => @from, 'to' => @to})
+      xml.add_attributes({ 'from' => @from, 'to' => @to })
       xml
     end
 
