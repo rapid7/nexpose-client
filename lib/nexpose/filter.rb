@@ -69,14 +69,16 @@ module Nexpose
     def search_any(criteria)
       data = []
       criteria.each do |criterion|
-        data << Search._map_criterion(criterion[:field], criterion[:operator], criterion[:value])
+        data << Search._map_criterion(criterion[:field],
+                                      criterion[:operator],
+                                      criterion[:value])
       end
       results = DataTable._get_json_table(self,
                                           '/data/asset/filterAssets',
                                           Search._create_payload(data, 'OR'))
       results.map { |a| Asset.new(a) }
     end
-  end 
+  end
 
   # Module for performing Asset Filter searches.
   #
@@ -147,7 +149,8 @@ module Nexpose
       RISK_SCORE = 'RISK_SCORE'
 
       # Search based on the last scan date of an asset.
-      # Valid Operators: ON_OR_BEFORE, ON_OR_AFTER, BETWEEN, EARLIER_THAN, WITHIN_THE_LAST
+      # Valid Operators: ON_OR_BEFORE, ON_OR_AFTER, BETWEEN, EARLIER_THAN,
+      #                  WITHIN_THE_LAST
       # Valid Values: Use Value::ScanDate::FORMAT for date arguments.
       #               Use FixNum for day arguments.
       SCAN_DATE = 'SCAN_DATE'
@@ -248,7 +251,7 @@ module Nexpose
 
       module VulnerabilityExposure
         MALWARE = 'type:"malware_type", name:"malwarekit"'
-        # TODO A problem in Nexpose causes these values to not be constant.
+        # TODO: A problem in Nexpose causes these values to not be constant.
         METASPLOIT = 'type:"exploit_source_type", name:"2"'
         DATABASE = 'type:"exploit_source_type", name:"1"'
       end
@@ -257,9 +260,9 @@ module Nexpose
     # Turn criterion into the format required by the Asset Filter calls.
     #
     def _map_criterion(field, operator, value)
-      { 'metadata' => {'fieldName' => field},
+      { 'metadata' => { 'fieldName' => field },
         'operator' => operator,
-        'values' => value.kind_of?(Array) ? value : [value] } 
+        'values' => value.kind_of?(Array) ? value : [value] }
     end
 
     # Generate the payload needed for a POST request for Asset Filter.

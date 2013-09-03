@@ -30,8 +30,8 @@ module Nexpose
     # Resubmit a vulnerability exception request with a new comment and reason
     # after an exception has been rejected.
     #
-    # You can only resubmit a request that has a “Rejected” status; if an
-    # exception is “Approved” or “Under Review” you will receive an error
+    # You can only resubmit a request that has a "Rejected" status; if an
+    # exception is "Approved" or "Under Review" you will receive an error
     # message stating that the exception request cannot be resubmitted.
     #
     # @param [Fixnum] id Unique identifier of the exception to resubmit.
@@ -165,8 +165,8 @@ module Nexpose
     # Resubmit a vulnerability exception request with a new comment and reason
     # after an exception has been rejected.
     #
-    # You can only resubmit a request that has a “Rejected” status; if an
-    # exception is “Approved” or “Under Review” you will receive an error
+    # You can only resubmit a request that has a "Rejected" status; if an
+    # exception is "Approved" or "Under Review" you will receive an error
     # message stating that the exception request cannot be resubmitted.
     #
     # This call will use the object's current state to resubmit.
@@ -308,7 +308,7 @@ module Nexpose
         @port = @vuln_key = nil
       when Scope::SPECIFIC_INSTANCE_OF_SPECIFIC_ASSET
         raise ArgumentError.new('No device_id.') unless @device_id
-        raise ArgumentError.new('Port or vuln_key is required.') unless @port or @vuln_key
+        raise ArgumentError.new('Port or vuln_key is required.') unless @port || @vuln_key
       else
         raise ArgumentError.new("Invalid scope: #{@scope}")
       end
@@ -326,7 +326,7 @@ module Nexpose
       exception.device_id = xml.attributes['device-id']
       exception.port = xml.attributes['port-no']
       exception.vuln_key = xml.attributes['vuln-key']
-      # TODO Convert to Date/Time object?
+      # TODO: Convert to Date/Time object?
       exception.expiration = xml.attributes['expiration-date']
 
       submitter_comment = xml.elements['submitter-comment']

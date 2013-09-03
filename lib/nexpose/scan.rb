@@ -25,10 +25,10 @@ module Nexpose
     #
     def scan_devices(devices)
       site_id = devices.map { |d| d.site_id }.uniq.first
-      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      xml = make_xml('SiteDevicesScanRequest', { 'site-id' => site_id })
       elem = REXML::Element.new('Devices')
       devices.each do |device|
-        elem.add_element('device', {'id' => "#{device.id}"})
+        elem.add_element('device', { 'id' => "#{device.id}" })
       end
       xml.add_element(elem)
 
@@ -58,7 +58,7 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_assets(site_id, assets)
-      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      xml = make_xml('SiteDevicesScanRequest', { 'site-id' => site_id })
       hosts = REXML::Element.new('Hosts')
       assets.each { |asset| _append_asset!(hosts, asset) }
       xml.add_element(hosts)
@@ -81,10 +81,10 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_ips(site_id, ip_addresses)
-      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      xml = make_xml('SiteDevicesScanRequest', { 'site-id' => site_id })
       hosts = REXML::Element.new('Hosts')
       ip_addresses.each do |ip|
-        xml.add_element('range', {'from' => ip})
+        xml.add_element('range', { 'from' => ip })
       end
       xml.add_element(hosts)
 
@@ -97,7 +97,7 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_site(site_id)
-      xml = make_xml('SiteScanRequest', {'site-id' => site_id})
+      xml = make_xml('SiteScanRequest', { 'site-id' => site_id })
       response = execute(xml)
       Scan.parse(response.res) if response.success
     end
@@ -110,7 +110,7 @@ module Nexpose
     #
     def _append_asset!(xml, asset)
       if asset.kind_of? Nexpose::IPRange
-        xml.add_element('range', {'from' => asset.from, 'to' => asset.to})
+        xml.add_element('range', { 'from' => asset.from, 'to' => asset.to })
       else  # Assume HostName
         host = REXML::Element.new('host')
         host.text = asset.host
@@ -136,7 +136,7 @@ module Nexpose
     #   updated.
     #
     def stop_scan(scan_id, wait_sec = 0)
-      r = execute(make_xml('ScanStopRequest', {'scan-id' => scan_id}))
+      r = execute(make_xml('ScanStopRequest', { 'scan-id' => scan_id }))
       if r.success
         so_far = 0
         while so_far < wait_sec
@@ -155,7 +155,7 @@ module Nexpose
     # @return [String] Current status of the scan.
     #
     def scan_status(scan_id)
-      r = execute(make_xml('ScanStatusRequest', {'scan-id' => scan_id}))
+      r = execute(make_xml('ScanStatusRequest', { 'scan-id' => scan_id }))
       r.success ? r.attributes['status'] : nil
     end
 
@@ -164,17 +164,16 @@ module Nexpose
     # @param [Fixnum] scan_id The scan ID.
     #
     def resume_scan(scan_id)
-      r = execute(make_xml('ScanResumeRequest', {'scan-id' => scan_id}))
+      r = execute(make_xml('ScanResumeRequest', { 'scan-id' => scan_id }))
       r.success ? r.attributes['success'] : nil
     end
-
 
     # Pauses a scan.
     #
     # @param [Fixnum] scan_id The scan ID.
     #
     def pause_scan(scan_id)
-      r = execute(make_xml('ScanPauseRequest', {'scan-id' => scan_id}))
+      r = execute(make_xml('ScanPauseRequest', { 'scan-id' => scan_id }))
       r.success ? r.attributes['success'] : nil
     end
 
@@ -201,7 +200,7 @@ module Nexpose
     # @return [ScanSummary] ScanSummary object providing statistics for the scan.
     #
     def scan_statistics(scan_id)
-      r = execute(make_xml('ScanStatisticsRequest', {'scan-id' => scan_id}))
+      r = execute(make_xml('ScanStatisticsRequest', { 'scan-id' => scan_id }))
       if r.success
         ScanSummary.parse(r.res.elements['//ScanSummary'])
       else
@@ -266,16 +265,16 @@ module Nexpose
       if xml.attributes['endTime']
         end_time = DateTime.parse(xml.attributes['endTime'].to_s).to_time
       end
-      return ScanSummary.new(xml.attributes['scan-id'].to_i,
-                             xml.attributes['site-id'].to_i,
-                             xml.attributes['engine-id'].to_i,
-                             xml.attributes['status'],
-                             start_time,
-                             end_time,
-                             msg,
-                             tasks,
-                             nodes,
-                             vulns)
+      ScanSummary.new(xml.attributes['scan-id'].to_i,
+                      xml.attributes['site-id'].to_i,
+                      xml.attributes['engine-id'].to_i,
+                      xml.attributes['status'],
+                      start_time,
+                      end_time,
+                      msg,
+                      tasks,
+                      nodes,
+                      vulns)
     end
 
     # Value class to tracking task counts.
@@ -295,9 +294,9 @@ module Nexpose
       #
       def self.parse(rexml)
         return nil unless rexml
-        return Tasks.new(rexml.attributes['pending'].to_i,
-                         rexml.attributes['active'].to_i,
-                         rexml.attributes['completed'].to_i)
+        Tasks.new(rexml.attributes['pending'].to_i,
+                  rexml.attributes['active'].to_i,
+                  rexml.attributes['completed'].to_i)
       end
     end
 
@@ -318,11 +317,11 @@ module Nexpose
       #
       def self.parse(rexml)
         return nil unless rexml
-        return Nodes.new(rexml.attributes['live'].to_i,
-                         rexml.attributes['dead'].to_i,
-                         rexml.attributes['filtered'].to_i,
-                         rexml.attributes['unresolved'].to_i,
-                         rexml.attributes['other'].to_i)
+        Nodes.new(rexml.attributes['live'].to_i,
+                  rexml.attributes['dead'].to_i,
+                  rexml.attributes['filtered'].to_i,
+                  rexml.attributes['unresolved'].to_i,
+                  rexml.attributes['other'].to_i)
       end
     end
 
@@ -331,8 +330,8 @@ module Nexpose
     class Vulnerabilities
 
       attr_reader :vuln_exploit, :vuln_version, :vuln_potential,
-        :not_vuln_exploit, :not_vuln_version,
-        :error, :disabled, :other
+                  :not_vuln_exploit, :not_vuln_version,
+                  :error, :disabled, :other
 
       def initialize(vuln_exploit, vuln_version, vuln_potential,
                      not_vuln_exploit, not_vuln_version,

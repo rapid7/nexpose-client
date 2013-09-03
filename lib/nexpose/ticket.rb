@@ -4,13 +4,13 @@ module Nexpose
     include XMLUtils
 
     def list_tickets
-      # TODO Should take in filters as arguments.
+      # TODO: Should take in filters as arguments.
       xml = make_xml('TicketListingRequest')
       r = execute(xml, '1.2')
       tickets = []
       if r.success
         r.res.elements.each('TicketListingResponse/TicketSummary') do |summary|
-          tickets << TicketSummary::parse(summary)
+          tickets << TicketSummary.parse(summary)
         end
       end
       tickets
@@ -24,7 +24,7 @@ module Nexpose
     # @return [Boolean] Whether or not the ticket deletion succeeded.
     #
     def delete_ticket(ticket)
-      # TODO Take Ticket object, too, and pull out IDs.
+      # TODO: Take Ticket object, too, and pull out IDs.
       delete_tickets([ticket])
     end
 
@@ -34,10 +34,10 @@ module Nexpose
     # @return [Boolean] Whether or not the ticket deletions succeeded.
     #
     def delete_tickets(tickets)
-      # TODO Take Ticket objects, too, and pull out IDs.
+      # TODO: Take Ticket objects, too, and pull out IDs.
       xml = make_xml('TicketDeleteRequest')
       tickets.each do |id|
-        xml.add_element('Ticket', {'id' => id})
+        xml.add_element('Ticket', { 'id' => id })
       end
 
       (execute xml, '1.2').success
@@ -87,7 +87,7 @@ module Nexpose
       lookup = Ticket::Priority.constants.reduce({}) { |a, e| a[Ticket::Priority.const_get(e)] = e; a }
       ticket.priority = lookup[xml.attributes['priority']]
       ticket.author = xml.attributes['author']
-      ticket.created_on = DateTime::parse(xml.attributes['created-on'])
+      ticket.created_on = DateTime.parse(xml.attributes['created-on'])
       lookup = Ticket::State.constants.reduce({}) { |a, e| a[Ticket::State.const_get(e)] = e; a }
       ticket.state = lookup[xml.attributes['state']]
       ticket
@@ -115,9 +115,9 @@ module Nexpose
       CRITICAL = 'critical'
     end
   end
-  
+
   class Ticket < TicketSummary
-    
+
     # List of vulnerabilities (by ID) this ticket addresses.
     attr_accessor :vulnerabilities
 
@@ -164,9 +164,9 @@ module Nexpose
     # @return [Ticket] Ticket populated with current state.
     #
     def self.load(connection, id)
-      # TODO Load multiple tickets in a single request, as supported by API.
+      # TODO: Load multiple tickets in a single request, as supported by API.
       xml = connection.make_xml('TicketDetailsRequest')
-      xml.add_element('Ticket', {'id' => id})
+      xml.add_element('Ticket', { 'id' => id })
       response = connection.execute(xml, '1.2')
       response.res.elements.each('//TicketInfo') do |info|
         return parse_details(info)
@@ -234,7 +234,7 @@ module Nexpose
 
       def self.parse(xml)
         author = xml.attributes['author']
-        created_on = DateTime::parse(xml.attributes['created-on'])
+        created_on = DateTime.parse(xml.attributes['created-on'])
 
         event = REXML::XPath.first(xml, 'Event')
         lookup = Ticket::State.constants.reduce({}) { |a, e| a[Ticket::State.const_get(e)] = e; a }
@@ -245,7 +245,7 @@ module Nexpose
 
         comment = REXML::XPath.first(xml, 'Comment')
         event.comment = comment.text if comment
-        
+
         event.description = desc if desc
         event
       end

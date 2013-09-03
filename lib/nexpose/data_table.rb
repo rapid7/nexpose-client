@@ -1,8 +1,11 @@
-# The functions in this file are utility functions for accessing data in the
-# same manner as the Nexpose UI. These functions are not designed for external
-# use, but to aid exposing data through other methods in the gem.
-
 module Nexpose
+
+  # Data table functions which extract data from the Nexpose UI.
+  #
+  # The functions in this file are utility functions for accessing data in the
+  # same manner as the Nexpose UI. These functions are not designed for external
+  # use, but to aid exposing data through other methods in the gem.
+  #
   module DataTable
     module_function
 
@@ -16,7 +19,7 @@ module Nexpose
     #    The following attributes need to be provided:
     #      'sort' Column to sort by
     #      'table-id' The ID of the table to get from this controller
-    #  @return [Array[Hash]] An array of hashes representing the requested table.
+    # @return [Array[Hash]] An array of hashes representing the requested table.
     #
     # Example usage:
     #   DataTable._get_json_table(@console,
@@ -36,7 +39,7 @@ module Nexpose
 
       rows = []
       parameters['results'] = page_size
-      while rows.length < total do
+      while rows.length < total
         parameters['startIndex'] = rows.length
 
         data = JSON.parse(AJAX.form_post(console, address, parameters))
@@ -48,11 +51,12 @@ module Nexpose
     # Helper method to get a Dyntable into a consumable Ruby object.
     #
     # @param [Connection] console API connection to a Nexpose console.
-    # @param [String] address Tag address with parameters relative to https://host:port
+    # @param [String] address Tag address with parameters relative to
+    #    https://host:port
     # @return [Array[Hash]] array of hashes representing the requested table.
     #
     # Example usage:
-    #   DataTable._get_dyn_table(@console, '/data/asset/os/dyntable.xml?printDocType=0&tableID=OSSynopsisTable')
+    #   DataTable._get_dyn_table(@console, '/data/asset/os/dyntable.xml?tableID=OSSynopsisTable')
     #
     def _get_dyn_table(console, address, payload = nil)
       if payload
@@ -67,7 +71,7 @@ module Nexpose
       rows.map { |row| Hash[headers.zip(row)] }
     end
 
-    # Parse headers out of a dyntable reponse.
+    # Parse headers out of a dyntable response.
     def _dyn_headers(response)
       headers = []
       response.elements.each('DynTable/MetaData/Column') do |header|

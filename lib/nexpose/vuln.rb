@@ -11,13 +11,13 @@ module Nexpose
     #
     def list_vulns(full = false)
       xml = make_xml('VulnerabilityListingRequest')
-      # TODO Add a flag to do stream parsing of the XML to improve performance.
+      # TODO: Add a flag to do stream parsing of the XML to improve performance.
       response = execute(xml, '1.2')
       vulns = []
       if response.success
         response.res.elements.each('VulnerabilityListingResponse/VulnerabilitySummary') do |vuln|
           if full
-            vulns << VulnerabilitySummary::parse(vuln)
+            vulns << VulnerabilitySummary.parse(vuln)
           else
             vulns << Vulnerability.new(vuln.attributes['id'],
                                        vuln.attributes['title'],
@@ -36,11 +36,11 @@ module Nexpose
     # @return [VulnerabilityDetail] Details of the requested vulnerability.
     #
     def vuln_details(vuln_id)
-      xml = make_xml('VulnerabilityDetailsRequest', {'vuln-id' => vuln_id})
+      xml = make_xml('VulnerabilityDetailsRequest', { 'vuln-id' => vuln_id })
       response = execute(xml, '1.2')
       if response.success
         response.res.elements.each('VulnerabilityDetailsResponse/Vulnerability') do |vuln|
-          return VulnerabilityDetail::parse(vuln)
+          return VulnerabilityDetail.parse(vuln)
         end
       end
     end
@@ -54,8 +54,8 @@ module Nexpose
     #
     def find_vuln_check(search_term, partial_words = true, all_words = true)
       uri = "/ajax/vulnck_synopsis.txml?phrase=#{URI.encode(search_term)}"
-      uri += "&wholeWords=1" unless partial_words
-      uri += "&allWords=1" if all_words
+      uri += '&wholeWords=1' unless partial_words
+      uri += '&allWords=1' if all_words
       data = DataTable._get_dyn_table(self, uri)
       data.map do |vuln|
         VulnCheck.new(vuln)
@@ -103,14 +103,14 @@ module Nexpose
   #
   class VulnerabilitySummary < Vulnerability
 
-    # PCI severity value for the vulnerability on a scale of 1 to 5. 
+    # PCI severity value for the vulnerability on a scale of 1 to 5.
     attr_accessor :pci_severity
 
     # Whether all checks for the vulnerability are safe.
     # Unsafe checks may cause denial of service or otherwise disrupt system performance.
     attr_accessor :safe
 
-    # A vulnerability is considered “credentialed” when all of its checks
+    # A vulnerability is considered "credentialed" when all of its checks
     # require credentials or if the check depends on previous authentication
     # during a scan.
     attr_accessor :credentials
@@ -138,12 +138,12 @@ module Nexpose
 
       vuln.pci_severity = xml.attributes['pciSeverity'].to_i
       vuln.safe = xml.attributes['safe'] == 'true'  # or xml.attributes['safe'] == '1'
-      vuln.added = Date::parse(xml.attributes['added'])
-      vuln.modified = Date::parse(xml.attributes['modified'])
+      vuln.added = Date.parse(xml.attributes['added'])
+      vuln.modified = Date.parse(xml.attributes['modified'])
       vuln.credentials = xml.attributes['requiresCredentials'] == 'true'
 
       # These three fields are optional in the XSD.
-      vuln.published = Date::parse(xml.attributes['published']) if xml.attributes['published']
+      vuln.published = Date.parse(xml.attributes['published']) if xml.attributes['published']
       vuln.cvss_vector = xml.attributes['cvssVector'] if xml.attributes['cvssVector']
       vuln.cvss_score = xml.attributes['cvssScore'].to_f if xml.attributes['cvssScore']
       vuln

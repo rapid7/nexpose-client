@@ -14,7 +14,7 @@ module Nexpose
     #   if found.
     #
     def find_device_by_address(address, site_id = nil)
-      r = execute(make_xml('SiteDeviceListingRequest', {'site-id' => site_id}))
+      r = execute(make_xml('SiteDeviceListingRequest', { 'site-id' => site_id }))
       if r.success
         device = REXML::XPath.first(r.res, "SiteDeviceListingResponse/SiteDevices/device[@address='#{address}']")
         return Device.new(device.attributes['id'].to_i,
@@ -36,7 +36,7 @@ module Nexpose
     #   all devices on the console if no site is provided.
     #
     def list_site_devices(site_id = nil)
-      r = execute(make_xml('SiteDeviceListingRequest', {'site-id' => site_id}))
+      r = execute(make_xml('SiteDeviceListingRequest', { 'site-id' => site_id }))
 
       devices = []
       if r.success
@@ -74,7 +74,7 @@ module Nexpose
     end
 
     def delete_device(device_id)
-      r = execute(make_xml('DeviceDeleteRequest', {'device-id' => device_id}))
+      r = execute(make_xml('DeviceDeleteRequest', { 'device-id' => device_id }))
       r.success
     end
   end

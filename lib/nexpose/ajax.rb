@@ -46,7 +46,7 @@ module Nexpose
     # @param [String] content_type Content type to use when issuing the POST.
     # @return [String|REXML::Document|Hash] The response from the call.
     #
-    def post(nsc, uri, payload = nil, content_type = 'text/xml' )
+    def post(nsc, uri, payload = nil, content_type = 'text/xml')
       post = Net::HTTP::Post.new(uri)
       post.set_content_type(content_type)
       post.body = payload.to_s if payload
@@ -89,7 +89,7 @@ module Nexpose
     # @return [Hash] The parametrized URI.
 
     def parametrize_uri(uri, parameters)
-      uri = uri.concat(('?').concat(parameters.collect { |k,v| "#{k}=#{CGI::escape(v[0].to_s)}" }.join('&'))) if parameters
+      uri = uri.concat(('?').concat(parameters.map { |k, v| "#{k}=#{CGI.escape(v[0].to_s)}" }.join('&'))) if parameters
     end
 
     ###
