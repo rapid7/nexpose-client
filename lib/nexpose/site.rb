@@ -172,12 +172,14 @@ module Nexpose
     #
     def add_asset(asset)
       begin
+        # If the asset registers as a valid IP, store as IP.
+        ip = IPAddr.new(asset)
         add_ip(asset)
       rescue ArgumentError => e
         if e.message == 'invalid address'
           add_host(asset)
         else
-          raise "Unable to parse asset: '#{asset}'"
+          raise "Unable to parse asset: '#{asset}'. #{e.message}"
         end
       end
     end
