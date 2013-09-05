@@ -120,7 +120,7 @@ module Nexpose
         response.body
       else
         req_type = request.class.name.split('::').last
-        raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed.")
+        raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}")
       end
     end
   end
