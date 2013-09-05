@@ -64,6 +64,10 @@ module Nexpose
       @description = description
     end
 
+    def delete(connection)
+      connection.delete_report_template(@id)
+    end
+
     def self.parse(xml)
       description = nil
       xml.elements.each('description') { |desc| description = desc.text }
