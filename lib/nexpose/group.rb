@@ -98,7 +98,7 @@ module Nexpose
     #
     # @param [Connection] connection Connection to console where asset group
     #   is configured.
-    # @return [Hash] Hash of scan_id to Scan launch information for each scan.
+    # @return [Hash] Hash of site ID to Scan launch information for each scan.
     #
     def rescan_assets(connection)
       sites_ids = @devices.map { |d| d.site_id }.uniq
@@ -123,8 +123,6 @@ module Nexpose
       r = APIRequest.execute(connection.url, xml)
       parse(r.res)
     end
-
-    alias_method :get, :load
 
     def self.parse(xml)
       return nil unless xml
