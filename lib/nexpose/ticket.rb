@@ -88,6 +88,7 @@ module Nexpose
       ticket.priority = lookup[xml.attributes['priority']]
       ticket.author = xml.attributes['author']
       ticket.created_on = DateTime.parse(xml.attributes['created-on'])
+      ticket.created_on -= ticket.created_on.gmt_offset
       lookup = Ticket::State.constants.reduce({}) { |a, e| a[Ticket::State.const_get(e)] = e; a }
       ticket.state = lookup[xml.attributes['state']]
       ticket
@@ -235,6 +236,7 @@ module Nexpose
       def self.parse(xml)
         author = xml.attributes['author']
         created_on = DateTime.parse(xml.attributes['created-on'])
+        created_on -= created_on.gmt_offset
 
         event = REXML::XPath.first(xml, 'Event')
         lookup = Ticket::State.constants.reduce({}) { |a, e| a[Ticket::State.const_get(e)] = e; a }

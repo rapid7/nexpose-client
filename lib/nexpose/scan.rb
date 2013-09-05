@@ -258,12 +258,16 @@ module Nexpose
       start_time = nil
       unless xml.attributes['startTime'] == ''
         start_time = DateTime.parse(xml.attributes['startTime'].to_s).to_time
+        # Timestamp is UTC, but parsed as local time.
+        start_time -= start_time.gmt_offset
       end
 
       # End time is often not present, since reporting on running scans.
       end_time = nil
       if xml.attributes['endTime']
         end_time = DateTime.parse(xml.attributes['endTime'].to_s).to_time
+        # Timestamp is UTC, but parsed as local time.
+        end_time -= end_time.gmt_offset
       end
       ScanSummary.new(xml.attributes['scan-id'].to_i,
                       xml.attributes['site-id'].to_i,
