@@ -161,7 +161,7 @@ module Nexpose
     #
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
-    def add_ip(from, to)
+    def add_ip_range(from, to)
       @assets << IPRange.new(from, to)
     end
 
