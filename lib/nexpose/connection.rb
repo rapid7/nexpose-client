@@ -43,14 +43,36 @@ module Nexpose
     attr_reader :response_xml
 
     # Constructor for Connection
-    def initialize(ip, user, pass, port = 3780, silo_id = nil)
+    def initialize(ip, user = nil, pass = nil, port = 3780, silo_id = nil)
+      # If the user specified a URI, parse it
+      if [URI::HTTP, URI::HTTPS].include? ip.class
+        user = ip.user
+        pass = ip.password
+        port = ip.port
+
+# TODO: Add support for custom paths (allows a user to specify the API
+#   endpoint)
+#        if ip.path =~ /^\/api\/\S+\/xml$/
+#          path = ip.path
+#        else
+#          # TODO: API_VERSION should be a constant (Nexpose::API_VERSION) which holds the latest version
+#          # Nexpose::API_VERSION = 'v1'; "api/#{Nexpose::API_VERSION}/xml"
+#          path = 'api/API_VERSION/xml'
+#        end
+          
+        ip = ip.host
+      end
+      
+      raise ArgumentError, "wrong number of arguments (1 for 3..5)" if user.nil?
+      raise ArgumentError, "wrong number of arguments (2 for 3..5)" if pass.nil?
+
       @host = ip
       @port = port
       @username = user
       @password = pass
       @silo_id = silo_id
       @session_id = nil
-      @url = "https://#{@host}:#{@port}/api/API_VERSION/xml"
+      @url = File.join("https://#{@host}:#{@port}", '/api/API_VERSION/xml')
     end
 
     # Establish a new connection and Session ID
