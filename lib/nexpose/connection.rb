@@ -4,8 +4,11 @@ module Nexpose
   # Object that represents a connection to a Nexpose Security Console.
   #
   # === Examples
-  #   # Create a new Nexpose Connection on the default port
+  #   # Create a new Nexpose::Connection on the default port
   #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password')
+  #
+  #   # Create a new Nexpose::Connection from a URI or "URI" String
+  #   nsc = Connection.from_uri('https://10.1.40.10:3780', 'nxadmin', 'password')
   #
   #   # Login to NSC and Establish a Session ID
   #   nsc.login
@@ -17,7 +20,7 @@ module Nexpose
   #       puts 'Login Failure'
   #   end
   #
-  #   # //Logout
+  #   # Logout
   #   logout_success = nsc.logout
   #
   class Connection
@@ -42,37 +45,21 @@ module Nexpose
     # The last XML response received by this object, useful for debugging.
     attr_reader :response_xml
 
-    # Constructor for Connection
-    def initialize(ip, user = nil, pass = nil, port = 3780, silo_id = nil)
-      # If the user specified a URI, parse it
-      if [URI::HTTP, URI::HTTPS].include? ip.class
-        user = ip.user
-        pass = ip.password
-        port = ip.port
+    # A constructor to load a Connection object from a URI
+    def self.from_uri(uri, user, pass, silo_id = nil)
+      uri = URI.parse(uri)
+      new(uri.host, user, pass, uri.port, silo_id)
+    end
 
-# TODO: Add support for custom paths (allows a user to specify the API
-#   endpoint)
-#        if ip.path =~ /^\/api\/\S+\/xml$/
-#          path = ip.path
-#        else
-#          # TODO: API_VERSION should be a constant (Nexpose::API_VERSION) which holds the latest version
-#          # Nexpose::API_VERSION = 'v1'; "api/#{Nexpose::API_VERSION}/xml"
-#          path = 'api/API_VERSION/xml'
-#        end
-          
-        ip = ip.host
-      end
-      
-      raise ArgumentError, "wrong number of arguments (1 for 3..5)" if user.nil?
-      raise ArgumentError, "wrong number of arguments (2 for 3..5)" if pass.nil?
-
+    # A constructor for Connection
+    def initialize(ip, user, pass, port = 3780, silo_id = nil)
       @host = ip
       @port = port
       @username = user
       @password = pass
       @silo_id = silo_id
       @session_id = nil
-      @url = File.join("https://#{@host}:#{@port}", '/api/API_VERSION/xml')
+      @url = "https://#{@host}:#{@port}/api/API_VERSION/xml"
     end
 
     # Establish a new connection and Session ID
