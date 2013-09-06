@@ -4,8 +4,11 @@ module Nexpose
   # Object that represents a connection to a Nexpose Security Console.
   #
   # === Examples
-  #   # Create a new Nexpose Connection on the default port
+  #   # Create a new Nexpose::Connection on the default port
   #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password')
+  #
+  #   # Create a new Nexpose::Connection from a URI or "URI" String
+  #   nsc = Connection.from_uri('https://10.1.40.10:3780', 'nxadmin', 'password')
   #
   #   # Login to NSC and Establish a Session ID
   #   nsc.login
@@ -17,7 +20,7 @@ module Nexpose
   #       puts 'Login Failure'
   #   end
   #
-  #   # //Logout
+  #   # Logout
   #   logout_success = nsc.logout
   #
   class Connection
@@ -42,7 +45,13 @@ module Nexpose
     # The last XML response received by this object, useful for debugging.
     attr_reader :response_xml
 
-    # Constructor for Connection
+    # A constructor to load a Connection object from a URI
+    def self.from_uri(uri, user, pass, silo_id = nil)
+      uri = URI.parse(uri)
+      new(uri.host, user, pass, uri.port, silo_id)
+    end
+
+    # A constructor for Connection
     def initialize(ip, user, pass, port = 3780, silo_id = nil)
       @host = ip
       @port = port
