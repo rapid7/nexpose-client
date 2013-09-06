@@ -30,7 +30,7 @@ module Nexpose
       xml << '>'
       xml << scan_filter.to_xml
       xml << vuln_filter.to_xml
-      xml << alert.to_xml
+      xml << type.to_xml
       xml << '</Alert>'
     end
 

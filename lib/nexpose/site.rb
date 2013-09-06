@@ -247,12 +247,14 @@ module Nexpose
       Scan.parse(response.res) if response.success
     end
 
+    include Sanitize
+
     # Generate an XML representation of this site configuration
     #
     # @return [String] XML valid for submission as part of other requests.
     #
     def to_xml
-      xml = %(<Site id='#{id}' name='#{name}' description='#{description}' riskfactor='#{risk_factor}'>)
+      xml = %(<Site id='#{id}' name='#{replace_entities(name)}' description='#{description}' riskfactor='#{risk_factor}'>)
 
       xml << '<Hosts>'
       xml << assets.reduce('') { |a, e| a << e.to_xml }
