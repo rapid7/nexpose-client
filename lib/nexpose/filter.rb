@@ -244,6 +244,12 @@ module Nexpose
         'operator' => operator,
         'values' => value.kind_of?(Array) ? value : [value] }
     end
+
+    def self.parse(json)
+      Criterion.new(json['metadata']['fieldName'],
+                    json['operator'],
+                    json['values'])
+    end
   end
 
   # Join search criteria for an asset filter search or dynamic asset group.
@@ -264,11 +270,15 @@ module Nexpose
       @match = match.upcase
     end
 
+    def to_map
+      { 'operator' => @match,
+        'criteria' => @criteria.map { |c| c.to_map } }
+    end
+
     # Convert this object into the format expected by Nexpose.
     #
     def to_json
-      JSON.generate({ 'operator' => @match,
-                      'criteria' => @criteria.map { |c| c.to_map } })
+      JSON.generate(to_map)
     end
 
     # Generate the payload needed for a POST request for Asset Filter.
@@ -280,6 +290,14 @@ module Nexpose
         'startIndex' => -1,
         'table-id' => 'assetfilter',
         'searchCriteria' => to_json }
+    end
+
+    def self.parse(json)
+      ret = Criteria.new([], json['operator'])
+      json['criteria'].each do |c|
+        ret.criteria << Criterion.parse(c)
+      end
+      ret
     end
   end
 
