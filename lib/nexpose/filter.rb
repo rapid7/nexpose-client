@@ -2,17 +2,11 @@ module Nexpose
 
   module NexposeAPI
 
-    # Perform an asset filter search that will located assets matching the
+    # Perform an asset filter search that will locate assets matching the
     # provided conditions.
     #
     # For example, the following call will return assets with Java installed:
     #   nsc.filter(Search::Field::SOFTWARE, Search::Operator::CONTAINS, 'java')
-    #
-    # The following will show assets with Malware and Metasploit exposure:
-    #   nsc.filter(Search::Field::VULNERABILITY_EXPOSURES,
-    #              Search::Operator::INCLUDE,
-    #              [Search::Value::VulnerabilityExposure::METASPLOIT,
-    #               Search::Value::VulnerabilityExposure::MALWARE])
     #
     # @param [String] field Constant from Search::Field
     # @param [String] operator Constant from Search::Operator
@@ -20,67 +14,36 @@ module Nexpose
     # @return [Array[Asset]] List of matching assets.
     #
     def filter(field, operator, value = '')
-      criterion = Search._map_criterion(field, operator, value)
-      results = DataTable._get_json_table(self,
-                                          '/data/asset/filterAssets',
-                                          Search._create_payload(criterion))
-      results.map { |a| Asset.new(a) }
+      criterion = Criterion.new(field, operator, value)
+      criteria = Criteria.new(criterion)
+      search(criteria)
     end
 
-    # Perform a search that will match all of the criteria in the provided map.
+    # Perform a search that will match the criteria provided.
     #
     # For example, the following call will return assets with Java and .NET:
-    #   criteria = [{:field => Search::Field::SOFTWARE,
-    #                :operator => Search::Operator::CONTAINS,
-    #                :value => 'java'},
-    #               {:field => Search::Field::SOFTWARE,
-    #                :operator => Search::Operator::CONTAINS,
-    #                :value => '.net'}]
-    #   nsc.search_all(criteria)
+    #   java_criterion = Criterion.new(Search::Field::SOFTWARE,
+    #                                  Search::Operator::CONTAINS,
+    #                                  'java')
+    #   dot_net_criterion = Criterion.new(Search::Field::SOFTWARE,
+    #                                     Search::Operator::CONTAINS,
+    #                                     '.net')
+    #   criteria = Criteria.new([java_criterion, dot_net_criterion])
+    #   results = nsc.search(criteria)
     #
-    # @param [Hash] Map of search criteria.
+    # @param [Criteria] criteria Criteria search object.
     # @return [Array[Asset]] List of matching assets.
     #
-    def search_all(criteria)
-      data = []
-      criteria.each do |criterion|
-        data << Search._map_criterion(criterion[:field], criterion[:operator], criterion[:value])
-      end
+    def search(criteria)
       results = DataTable._get_json_table(self,
                                           '/data/asset/filterAssets',
-                                          Search._create_payload(data))
-      results.map { |a| Asset.new(a) }
-    end
-
-    # Perform a search that will match any of the criteria in the provided map.
-    #
-    # For example, the following call will return assets with Java or .NET:
-    #   criteria = [{:field => Search::Field::SOFTWARE,
-    #                :operator => Search::Operator::CONTAINS,
-    #                :value => 'java'},
-    #               {:field => Search::Field::SOFTWARE,
-    #                :operator => Search::Operator::CONTAINS,
-    #                :value => '.net'}]
-    #   nsc.search_any(criteria)
-    #
-    # @param [Hash] Map of search criteria.
-    # @return [Array[Asset]] List of matching assets.
-    #
-    def search_any(criteria)
-      data = []
-      criteria.each do |criterion|
-        data << Search._map_criterion(criterion[:field],
-                                      criterion[:operator],
-                                      criterion[:value])
-      end
-      results = DataTable._get_json_table(self,
-                                          '/data/asset/filterAssets',
-                                          Search._create_payload(data, 'OR'))
+                                          criteria._to_payload)
       results.map { |a| Asset.new(a) }
     end
   end
 
-  # Module for performing Asset Filter searches.
+  # Constans for performing Asset Filter searches and generating Dynamic Asset
+  # Groups.
   #
   module Search
     module_function
@@ -256,28 +219,67 @@ module Nexpose
         DATABASE = 'type:"exploit_source_type", name:"1"'
       end
     end
+  end
 
-    # Turn criterion into the format required by the Asset Filter calls.
+  # Individual search criterion.
+  #
+  class Criterion
+
+    # Search field. One of Nexpose::Search::Field
+    # @see Nexpose::Search::Field for any restrictions on the other attibutes.
+    attr_accessor :field
+    # Search operator. One of Nexpose::Search::Operator
+    attr_accessor :operator
+    # Search value. A search string or one of Nexpose::Search::Value
+    attr_accessor :value
+
+    def initialize(field, operator, value = '')
+      @field, @operator, @value = field.upcase, operator.upcase, value
+    end
+
+    # Convert this object into the map format expected by Nexpose.
     #
-    def _map_criterion(field, operator, value)
+    def to_map
       { 'metadata' => { 'fieldName' => field },
         'operator' => operator,
         'values' => value.kind_of?(Array) ? value : [value] }
     end
+  end
+
+  # Join search criteria for an asset filter search or dynamic asset group.
+  #
+  class Criteria
+
+    # Whether to match any or all filters. One of 'OR' or 'AND'.
+    attr_accessor :match
+    # Array of criteria to match against.
+    attr_accessor :criteria
+
+    def initialize(criteria = [], match = 'AND')
+      if criteria.kind_of?(Array)
+        @criteria = criteria
+      else
+        @criteria = [criteria]
+      end
+      @match = match.upcase
+    end
+
+    # Convert this object into the format expected by Nexpose.
+    #
+    def to_json
+      JSON.generate({ 'operator' => @match,
+                      'criteria' => @criteria.map { |c| c.to_map } })
+    end
 
     # Generate the payload needed for a POST request for Asset Filter.
     #
-    def _create_payload(criteria, match = 'AND')
-      match = match =~ /(?:and|all)/i ? 'AND' : 'OR'
-      criteria = [criteria] unless criteria.kind_of?(Array)
-      json = JSON.generate({ 'operator' => match,
-                             'criteria' => criteria })
+    def _to_payload
       { 'dir' => -1,
         'results' => -1,
         'sort' => 'assetIP',
         'startIndex' => -1,
         'table-id' => 'assetfilter',
-        'searchCriteria' => json }
+        'searchCriteria' => to_json }
     end
   end
 
