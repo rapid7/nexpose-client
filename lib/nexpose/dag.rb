@@ -54,7 +54,7 @@ module Nexpose
     end
 
     def to_json
-      obj = { 'searchCriteria' => @criteria.to_json,
+      obj = { 'searchCriteria' => @criteria.to_map,
               'name' => @name,
               'tag' => @description.nil? ? '' : @description,
               'dynamic' => true,
