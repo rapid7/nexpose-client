@@ -26,6 +26,8 @@ module Nexpose
       nil
     end
 
+    alias_method :find_asset_by_address, :find_device_by_address
+
     # Retrieve a list of all of the assets in a site.
     #
     # If no site-id is specified, then return all of the assets
@@ -72,6 +74,10 @@ module Nexpose
                                        parameters)
       json.map { |vuln| VulnFinding.new(vuln) }
     end
+
+    alias_method :list_asset_vulns, :list_device_vulns
+    alias_method :asset_vulns, :list_device_vulns
+    alias_method :device_vulns, :list_device_vulns
 
     def delete_device(device_id)
       r = execute(make_xml('DeviceDeleteRequest', { 'device-id' => device_id }))
