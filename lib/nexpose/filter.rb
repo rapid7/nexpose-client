@@ -234,7 +234,12 @@ module Nexpose
     attr_accessor :value
 
     def initialize(field, operator, value = '')
-      @field, @operator, @value = field.upcase, operator.upcase, value.to_s
+      @field, @operator = field.upcase, operator.upcase
+      if value.kind_of? Array
+        @value = value.map { |v| v.to_s }
+      else
+        @value = value.to_s
+      end
     end
 
     # Convert this object into the map format expected by Nexpose.

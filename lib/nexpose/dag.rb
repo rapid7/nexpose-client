@@ -33,7 +33,7 @@ module Nexpose
       @users.reject! { |id| admins.member? id }
       data = JSON.parse(AJAX.form_post(nsc,
                                        '/data/assetGroup/saveAssetGroup',
-                                       to_json))
+                                       to_map))
       data['response'] == 'success.'
     end
 
@@ -53,7 +53,7 @@ module Nexpose
       dag
     end
 
-    def to_json
+    def to_map
       obj = { 'searchCriteria' => @criteria.to_map,
               'name' => @name,
               'tag' => @description.nil? ? '' : @description,
@@ -61,7 +61,6 @@ module Nexpose
               'users' => @users }
       map = { 'entityDetails' => JSON.generate(obj) }
       if @id
-        # TODO: Edit isn't working at the moment.
         map['entityid'] = @id
         map['mode'] = 'edit'
       else
