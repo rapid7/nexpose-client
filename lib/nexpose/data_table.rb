@@ -33,7 +33,8 @@ module Nexpose
       parameters['startIndex'] = -1
       parameters['results'] = -1
 
-      data = JSON.parse(AJAX.form_post(console, address, parameters))
+      post = AJAX.form_post(console, address, parameters)
+      data = JSON.parse(post)
       total = records || data['totalRecords']
       return [] if total == 0
 

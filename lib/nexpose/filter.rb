@@ -234,7 +234,7 @@ module Nexpose
     attr_accessor :value
 
     def initialize(field, operator, value = '')
-      @field, @operator, @value = field.upcase, operator.upcase, value
+      @field, @operator, @value = field.upcase, operator.upcase, value.to_s
     end
 
     # Convert this object into the map format expected by Nexpose.
