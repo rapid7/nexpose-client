@@ -179,6 +179,7 @@ module Nexpose
     attr_accessor :format
     attr_accessor :owner
     attr_accessor :time_zone
+    attr_accessor :language
 
     # Array of filters associated with this report.
     attr_accessor :filters
@@ -209,6 +210,7 @@ module Nexpose
       xml = %(<AdhocReportConfig format='#{@format}' template-id='#{@template_id}')
       xml << %( owner='#{@owner}') if @owner
       xml << %( timezone='#{@time_zone}') if @time_zone
+      xml << %( language='#{@language}') if @language
       xml << '>'
 
       xml << '<Filters>'
@@ -338,7 +340,11 @@ module Nexpose
     end
 
     def to_xml
-      xml = %(<ReportConfig format='#{@format}' id='#{@id}' name='#{@name}' owner='#{@owner}' template-id='#{@template_id}' timezone='#{@time_zone}'>)
+      xml = %(<ReportConfig format='#{@format}' id='#{@id}' name='#{@name}' template-id='#{@template_id}')
+      xml << %( owner='#{@owner}') if @owner
+      xml << %( timezone='#{@time_zone}') if @time_zone
+      xml << %( language='#{@language}') if @language
+      xml << '>'
       xml << %(<description>#{@description}</description>) if @description
 
       xml << '<Filters>'
