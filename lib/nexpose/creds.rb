@@ -91,6 +91,60 @@ module Nexpose
     def hash
       to_xml.hash
     end
+
+    # Credential type options.
+    #
+    module Type
+
+      # Concurrent Versioning System (CVS)
+      CVS = 'cvs'
+      # File Transfer Protocol (FTP)
+      FTP = 'ftp'
+      # Web Site HTTP Authentication
+      HTTP = 'http'
+      # IBM AS/400
+      AS400 = 'as400'
+      # Lotus Notes/Domino
+      NOTES = 'notes'
+      # Microsoft SQL Server
+      TDS = 'tds'
+      # Sybase SQL Server
+      SYBASE = 'sybase'
+      # Microsoft Windows/Samba (SMB/CIFS)
+      CIFS = 'cifs'
+      # Microsoft Windows/Samba LM/NTLM Hash (SMB/CIFS)
+      CIFSHASH = 'cifshash'
+      # Oracle
+      ORACLE = 'oracle'
+      # Post Office Protocol (POP)
+      POP = 'pop'
+      # PostgreSQL
+      POSTGRESQL = 'postgresql'
+      # Remote Execution
+      REMOTE_EXECUTION = 'remote execution'
+      # Simple Network Management Protocol
+      SNMP = 'snmp'
+      # Secure Shell (SSH)
+      SSH = 'ssh'
+      # Secure Shell (SSH) Public Key
+      SSH_KEY = 'ssh-key'
+      # TELNET
+      TELNET = 'telnet'
+      # MySQL Server
+      MYSQL = 'mysql'
+      # DB2
+      DB2 = 'db2'
+    end
+
+    # Permission Elevation Types
+    #
+    module ElevationType
+
+      NONE = 'NONE'
+      SUDO = 'SUDO'
+      SUDOSU = 'SUDOSU'
+      SU = 'SU'
+    end
   end
 
   # Object that represents Header name-value pairs, associated with Web Session Authentication.
