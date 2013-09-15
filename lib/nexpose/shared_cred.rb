@@ -73,10 +73,13 @@ module Nexpose
 
     # Array of site IDs that this credential is restricted to.
     attr_accessor :sites
+    # Array of sites where this credential has been temporarily disabled.
+    attr_accessor :disabled
 
     def initialize(name, id = -1)
       @name, @id = name, id.to_i
       @sites = []
+      @disabled = []
     end
 
     def self.load(nsc, id)
@@ -96,7 +99,7 @@ module Nexpose
 
     def to_xml
       xml = '<Credential '
-      xml << %( id="#{@id}>")
+      xml << %( id="#{@id}">)
 
       xml << %(<Name>#{@name}</Name>)
       xml << %(<Description>#{@description}</Description>)
@@ -122,7 +125,14 @@ module Nexpose
 
       xml << %(<Sites all="#{@all_sites ? 1 : 0}">)
       @sites.each do |site|
-        xml << %(<Site id="#{site}"></Site>)
+        xml << %(<Site id="#{site}")
+        xml << ' enabled="0"' if @disabled.member? site
+        xml << '></Site>'
+      end
+      if @sites.empty?
+        @disabled.each do |site|
+          xml << %(<Site id="#{site}" enabled="0"></Site>)
+        end
       end
       xml << '</Sites>'
 
@@ -171,10 +181,10 @@ module Nexpose
         sites = REXML::XPath.first(c, 'Sites')
         cred.all_sites = sites.attributes['all'] == '1'
 
-        unless cred.all_sites
-          sites.elements.each('Site') do |site|
-            cred.sites << site.attributes['id'].to_i
-          end
+        sites.elements.each('Site') do |site|
+          site_id = site.attributes['id'].to_i
+          cred.sites << site_id unless cred.all_sites
+          cred.disabled << site_id if site.attributes['enabled'] == '0'
         end
 
         return cred
