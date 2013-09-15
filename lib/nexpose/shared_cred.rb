@@ -13,6 +13,12 @@ module Nexpose
     alias_method :list_shared_creds, :list_shared_credentials
     alias_method :shared_credentials, :list_shared_credentials
     alias_method :shared_creds, :list_shared_credentials
+
+    def delete_shared_credential(id)
+      AJAX.post(self, "/data/credential/shared/delete?credid=#{id}")
+    end
+
+    alias_method :delete_shared_cred, :delete_shared_credential
   end
 
   class SharedCredentialSummary
