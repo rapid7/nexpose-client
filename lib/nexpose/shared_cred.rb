@@ -74,13 +74,9 @@ module Nexpose
     # Array of site IDs that this credential is restricted to.
     attr_accessor :sites
 
-    # Whether this credential is enabled or should be enabled when saved.
-    attr_accessor :enabled
-
     def initialize(name, id = -1)
       @name, @id = name, id.to_i
       @sites = []
-      @enabled = true
     end
 
     def self.load(nsc, id)
@@ -100,9 +96,7 @@ module Nexpose
 
     def to_xml
       xml = '<Credential '
-      xml << %( id="#{@id}")
-      xml << ' shared="1"'
-      xml << %( enabled="#{@enabled ? 1 : 0}">)
+      xml << %( id="#{@id}>")
 
       xml << %(<Name>#{@name}</Name>)
       xml << %(<Description>#{@description}</Description>)
