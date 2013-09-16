@@ -52,6 +52,14 @@ module Nexpose
       cred.last_modified = Time.at(json['lastModified']['time'] / 1000)
       cred
     end
+
+    # Delete this credential from the security console.
+    #
+    # @param [Connection] nsc An active connection to the security console.
+    #
+    def delete(nsc)
+      nsc.delete_shared_credential(@id)
+    end
   end
 
   class SharedCredential < SharedCredentialSummary
