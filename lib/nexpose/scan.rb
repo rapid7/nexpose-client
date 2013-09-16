@@ -152,7 +152,7 @@ module Nexpose
     # Retrieve the status of a scan.
     #
     # @param [Fixnum] scan_id The scan ID.
-    # @return [String] Current status of the scan.
+    # @return [String] Current status of the scan. See Nexpose::Scan::Status.
     #
     def scan_status(scan_id)
       r = execute(make_xml('ScanStatusRequest', { 'scan-id' => scan_id }))
@@ -424,6 +424,20 @@ module Nexpose
         return new(scan.attributes['scan-id'].to_i,
                    scan.attributes['engine-id'].to_i)
       end
+    end
+
+    # Scan status constants. These are all the possible values which may be
+    # returned by a #scan_status call.
+    #
+    module Status
+      RUNNING = 'running'
+      FINISHED = 'finished'
+      ABORTED = 'aborted'
+      STOPPED = 'stopped'
+      ERROR = 'error'
+      PAUSED = 'paused'
+      DISPATCHED = 'dispatched'
+      UNKNOWN = 'unknown'
     end
   end
 end
