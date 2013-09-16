@@ -143,5 +143,16 @@ module Nexpose
       schedule.repeater_type = xml.attributes['repeaterType'] if xml.attributes['repeaterType']
       schedule
     end
+
+    # Recurring report type constants. These are all the possible values which
+    # may be used to create a Schedule.
+    #
+    module Type
+      DAILY = 'daily'
+      HOURLY = 'hourly'
+      WEEKLY = 'weekly'
+      MONTHLY_DATE = 'monthly-date'
+      MONTHLY_DAY = 'monthly-day'
+    end
   end
 end
