@@ -54,6 +54,15 @@ module Nexpose
       @priv_password = password
     end
 
+    def self.parse(xml)
+      cred = new
+      cred.service = xml.attributes['service']
+      cred.host = xml.attributes['host']
+      cred.port = xml.attributes['port']
+      cred.blob = xml.get_text
+      cred
+    end
+
     def to_xml
       to_xml_elem.to_s
     end

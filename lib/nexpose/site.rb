@@ -101,7 +101,8 @@ module Nexpose
     # The risk factor associated with this site. Default: 1.0
     attr_accessor :risk_factor
 
-    # [Array] Collection of credentials associated with this site.
+    # [Array] Collection of credentials associated with this site. Does not
+    # include shared credentials.
     attr_accessor :credentials
 
     # [Array] Collection of real-time alerts.
@@ -321,11 +322,8 @@ module Nexpose
           site.exclude << HostName.new(host.text)
         end
 
-        s.elements.each('Credentials/adminCredentials') do |credconf|
-          cred = Credential.new
-          cred.service = credconf.attributes['service']
-          cred.set_blob(credconf.get_text)
-          site.credentials << cred
+        s.elements.each('Credentials/adminCredentials') do |cred|
+          site.credentials << Credential.parse(cred)
         end
 
         s.elements.each('ScanConfig') do |scan_config|
