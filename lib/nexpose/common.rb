@@ -144,7 +144,7 @@ module Nexpose
       schedule
     end
 
-    # Recurring report type constants. These are all the possible values which
+    # Recurring schedule type constants. These are all the possible values which
     # may be used to create a Schedule.
     #
     module Type
