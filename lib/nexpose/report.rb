@@ -102,7 +102,7 @@ module Nexpose
     attr_reader :scope
 
     def initialize(config_id, template_id, status, generated_on, uri, scope)
-      @config_id = config_id
+      @config_id = config_id.to_i
       @template_id = template_id
       @status = status
       @generated_on = generated_on
@@ -111,7 +111,7 @@ module Nexpose
     end
 
     def self.parse(xml)
-      ReportConfigSummary.new(xml.attributes['cfg-id'],
+      ReportConfigSummary.new(xml.attributes['cfg-id'].to_i,
                               xml.attributes['template-id'],
                               xml.attributes['status'],
                               xml.attributes['generated-on'],
@@ -138,7 +138,7 @@ module Nexpose
 
     def initialize(id, config_id, status, generated_on, uri)
       @id = id
-      @config_id = config_id
+      @config_id = config_id.to_i
       @status = status
       @generated_on = generated_on
       @uri = uri
@@ -368,8 +368,8 @@ module Nexpose
         config = ReportConfig.new(cfg.attributes['name'],
                                   cfg.attributes['template-id'],
                                   cfg.attributes['format'],
-                                  cfg.attributes['id'],
-                                  cfg.attributes['owner'],
+                                  cfg.attributes['id'].to_i,
+                                  cfg.attributes['owner'].to_i,
                                   cfg.attributes['timezone'])
 
         cfg.elements.each('//description') do |desc|
