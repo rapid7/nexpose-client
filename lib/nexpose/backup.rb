@@ -1,0 +1,109 @@
+module Nexpose
+
+  module NexposeAPI
+
+    # Retrieve a list of all backups currently stored on the Console.
+    #
+    # @return [Array[Backup]] List of backups.
+    #
+    def list_backups
+      data = DataTable._get_dyn_table(self, '/admin/global/ajax/backup_listing.txml')
+      data.map { |b| Backup.parse(b) }
+    end
+
+    # Create a backup of this security console's data.
+    # A restart will be initiated in order to put the product into maintenance
+    # mode while the backup is made. It will then restart automatically.
+    #
+    # @param [Boolean] platform_independent Whether to make a platform
+    #   independent backup.
+    # @param [String] description A note about this backup which will be
+    #   visible through the web interface.
+    # @return [Boolean] Whether a backup is successfully initiated.
+    #
+    def backup(platform_independent = false, description = nil)
+      parameters = { 'backup_desc' => description,
+                     'cmd' => 'backup',
+                     'platform_independent' => platform_independent,
+                     'targetTask' => 'backupRestore' }
+      xml = AJAX.form_post(self, '/admin/global/maintenance/maintCmd.txml', parameters)
+      if !!(xml =~ /succeded="true"/)
+        _maintenance_restart
+      end
+    end
+
+    def _maintenance_restart
+      parameters = { 'cancelAllTasks' => false,
+                     'cmd' => 'restartServer',
+                     'targetTask' => 'maintModeHandler' }
+      xml = AJAX.form_post(self, '/admin/global/maintenance/maintCmd.txml', parameters)
+      !!(xml =~ /succeded="true"/)
+    end
+  end
+
+  # Details about an existing backup on the security console.
+  #
+  class Backup
+
+    # Filename
+    attr_reader :name
+    # Date the backup was made.
+    attr_reader :date
+    # Description of the backup.
+    attr_reader :description
+    # Nexpose version the console was on when the backup was made.
+    attr_reader :version
+    # Whether the backup is platform-idependent or not.
+    attr_reader :platform_independent
+    # Size of backup file on disk, in Bytes. Can be used to estimate the amount
+    # of time the backup may take to load.
+    attr_reader :size
+
+    def initialize(name, date, description, version, independent, size)
+      @name = name
+      @date = date
+      @description = description
+      @version = version
+      @platform_independent = independent
+      @size = size
+    end
+
+    # Restore this backup to the Nexpose console.
+    # It will restart the console after acknowledging receiving the request.
+    #
+    # @param [Connection] nsc An active connection to a Nexpose console.
+    # @return [Boolean] Whether the request was received.
+    #
+    def restore(nsc)
+      parameters = { 'backupid' => @name,
+                     'cmd' => 'restore',
+                     'targetTask' => 'backupRestore' }
+      xml = AJAX.form_post(nsc, '/admin/global/maintenance/maintCmd.txml', parameters)
+      if !!(xml =~ /succeded="true"/)
+        nsc._maintenance_restart
+      end
+    end
+
+    # Remove this backup file from the security console.
+    #
+    # @param [Connection] nsc An active connection to a Nexpose console.
+    # @return [Boolean] If the backup was removed.
+    #
+    def delete(nsc)
+      parameters = { 'backupid' => @name,
+                     'cmd' => 'deleteBackup',
+                     'targetTask' => 'backupRestore' }
+      xml = AJAX.form_post(nsc, '/admin/global/maintenance/maintCmd.txml', parameters)
+      !!(xml =~ /succeded="true"/)
+    end
+
+    def self.parse(hash)
+      new(hash['Download'],
+          Time.at(hash['Date'].to_i / 1000),
+          hash['Description'],
+          hash['Version'],
+          hash['Platform-Independent'],
+          hash['Size'])
+    end
+  end
+end

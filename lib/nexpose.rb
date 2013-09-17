@@ -83,6 +83,7 @@ require 'nexpose/user'
 require 'nexpose/vuln'
 require 'nexpose/vuln_exception'
 require 'nexpose/connection'
+require 'nexpose/backup'
 
 module Nexpose
 
