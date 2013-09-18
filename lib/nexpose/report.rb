@@ -339,8 +339,10 @@ module Nexpose
       connection.delete_report_config(@id)
     end
 
+    include Sanitize
+
     def to_xml
-      xml = %(<ReportConfig format='#{@format}' id='#{@id}' name='#{@name}' template-id='#{@template_id}')
+      xml = %(<ReportConfig format='#{@format}' id='#{@id}' name='#{replace_entities(@name)}' template-id='#{@template_id}')
       xml << %( owner='#{@owner}') if @owner
       xml << %( timezone='#{@time_zone}') if @time_zone
       xml << %( language='#{@language}') if @language
