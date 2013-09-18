@@ -423,6 +423,18 @@ module Nexpose
       @to = to unless from == to
     end
 
+    # Size of the IP range. The total number of IP addresses represented
+    # by this range.
+    #
+    # @return [Fixnum] size of the range.
+    #
+    def size
+      return 1 if @to.nil?
+      from = IPAddr.new(@from)
+      to = IPAddr.new(@to)
+      (from..to).to_a.size
+    end
+
     include Comparable
 
     def <=>(other)
