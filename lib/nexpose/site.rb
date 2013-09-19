@@ -438,6 +438,7 @@ module Nexpose
     include Comparable
 
     def <=>(other)
+      return 1 unless other.respond_to? :from
       from = IPAddr.new(@from)
       to = @to.nil? ? from : IPAddr.new(@to)
       cf_from = IPAddr.new(other.from)
@@ -456,10 +457,12 @@ module Nexpose
     end
 
     def eql?(other)
+      return false unless other.respond_to? :from
       @from == other.from && @to == other.to
     end
 
     def include?(single_ip)
+      return false unless single_ip.respond_to? :from
       from = IPAddr.new(@from)
       to = @to.nil? ? from : IPAddr.new(@to)
       other = IPAddr.new(single_ip)
