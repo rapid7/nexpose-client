@@ -30,6 +30,28 @@ module Nexpose
 
     alias_method :vulns, :list_vulns
 
+    # Retrieve a list of the different vulnerability check categories.
+    #
+    # @return [Array[String]] Array of currently valid check categories.
+    #
+    def list_vuln_categories
+      data = DataTable._get_dyn_table(self, '/data/vulnerability/categories/dyntable.xml?tableID=VulnCategorySynopsis')
+      data.map { |c| c['Category'] }
+    end
+
+    alias_method :vuln_categories, :list_vuln_categories
+
+    # Retrieve a list of the different vulnerability check types.
+    #
+    # @return [Array[String]] Array of currently valid check types.
+    #
+    def list_vuln_types
+      data = DataTable._get_dyn_table(self, '/ajax/vulnck_cat_synopsis.txml')
+      data.map { |c| c['Category'] }
+    end
+
+    alias_method :vuln_types, :list_vuln_types
+
     # Retrieve details for a vulnerability.
     #
     # @param [String] vuln_id Nexpose vulnerability ID, such as 'windows-duqu-cve-2011-3402'.
@@ -86,7 +108,10 @@ module Nexpose
   class VulnCheck < Vulnerability
 
     attr_reader :check_id
+    # @return [Array[String]] Categories that this check is a member of.
+    #   Note that this is note the same as the categories from #list_vuln_categories.
     attr_reader :categories
+    # @return [String] Check type. @see #list_vuln_types
     attr_reader :check_type
 
     def initialize(json)
