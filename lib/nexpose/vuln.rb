@@ -108,7 +108,10 @@ module Nexpose
   class VulnCheck < Vulnerability
 
     attr_reader :check_id
+    # @return [Array[String]] Categories that this check is a member of.
+    #   Note that this is note the same as the categories from #list_vuln_categories.
     attr_reader :categories
+    # @return [String] Check type. @see #list_vuln_types
     attr_reader :check_type
 
     def initialize(json)
