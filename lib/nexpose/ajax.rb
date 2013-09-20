@@ -119,7 +119,7 @@ module Nexpose
       when Net::HTTPOK
         response.body
       else
-        req_type = request.class.name.split('::').last
+        req_type = request.class.name.split('::').last.upcase
         raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}")
       end
     end
