@@ -28,33 +28,64 @@ module Nexpose
   #
   class ScanTemplate
 
-    # Unique identifier of the scan template.
-    attr_accessor :id
-
-    attr_accessor :name
-    attr_accessor :description
-
     # Whether to correlate reliable checks with regular checks.
     attr_accessor :correlate
 
     # Parsed XML of a scan template
     attr_accessor :xml
 
+    # @param [String] xml XML representation of a scan template.
     def initialize(xml)
-      @xml = xml
+      @xml = REXML::Document.new(xml)
 
-      root = REXML::XPath.first(xml, 'ScanTemplate')
-      @id = root.attributes['id']
-      @id = nil if @id == '#NewScanTemplate#'
-
-      desc = REXML::XPath.first(root, 'templateDescription')
-      if desc
-        @name = desc.attributes['title']
-        @description = desc.text.to_s
-      end
-
-      vuln_checks = REXML::XPath.first(root, 'VulnerabilityChecks')
+      vuln_checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')
       @correlate = vuln_checks.attributes['correlate'] == '1'
+    end
+
+    # @return [String] Unique identifier of the scan template.
+    def id
+      root = REXML::XPath.first(xml, 'ScanTemplate')
+      root.attributes['id']
+    end
+
+    # @return [String] Name or title of this scan template.
+    def name
+      desc = REXML::XPath.first(@xml, 'ScanTemplate/templateDescription')
+      desc.nil? ? nil : desc.attributes['title']
+    end
+
+    # Assign name to this scan template. Required attribute.
+    # @param [String] name Title to assign.
+    def name=(name)
+      desc = REXML::XPath.first(@xml, 'ScanTemplate/templateDescription')
+      if desc
+        desc.attributes['title'] = name
+      else
+        root = REXML::XPath.first(xml, 'ScanTemplate')
+        desc = REXML::Element.new('templateDescription')
+        desc.add_attribute('title', name)
+        root.add_element(desc)
+      end
+    end
+
+    # @return [String] Description of this scan template.
+    def description
+      desc = REXML::XPath.first(@xml, 'ScanTemplate/templateDescription')
+      desc.nil? ? nil : desc.text.to_s
+    end
+
+    # Assign a description to this scan template. Require attribute.
+    # @param [String] description Description of the scan template.
+    def description=(description)
+      desc = REXML::XPath.first(@xml, 'ScanTemplate/templateDescription')
+      if desc
+        desc.text = description
+      else
+        root = REXML::XPath.first(xml, 'ScanTemplate')
+        desc = REXML::Element.new('templateDescription')
+        desc.add_text(description)
+        root.add_element(desc)
+      end
     end
 
     # Get a list of the check categories enabled for this scan template.
@@ -86,7 +117,8 @@ module Nexpose
       checks.elements['Disabled'].add_element('VulnCategory', { 'name' => category })
     end
 
-    # Remove checks by category for this template.
+    # Remove checks by category for this template. Removes both enabled and
+    # disabled checks.
     #
     # @param [String] category Category to remove. @see #list_vuln_categories
     #
@@ -102,21 +134,15 @@ module Nexpose
     #
     def save(nsc)
       root = REXML::XPath.first(@xml, 'ScanTemplate')
-      existing = root.attributes['id'] == @id
-      root.attributes['id'] = @id unless existing
-
-      desc = REXML::XPath.first(root, 'templateDescription')
-      desc.attributes['title'] = @name
-      desc.text = @description
 
       vuln_checks = REXML::XPath.first(root, 'VulnerabilityChecks')
       vuln_checks.attributes['correlate'] = (@correlate ? '1' : '0')
 
-      if existing
-        response = AJAX.put(nsc, "/data/scan/templates/#{URI.encode(id)}", xml)
-      else
+      if root.attributes['id'] == '#NewScanTemplate#'
         response = JSON.parse(AJAX.post(nsc, '/data/scan/templates', xml))
-        @id = response['value']
+        response['value']
+      else
+        response = AJAX.put(nsc, "/data/scan/templates/#{URI.encode(id)}", xml)
       end
     end
 
@@ -134,7 +160,7 @@ module Nexpose
       else
         xml = AJAX.get(nsc, '/ajax/scantemplate_config.txml')
       end
-      new(REXML::Document.new(xml))
+      new(xml)
     end
 
     # Copy an existing scan template, changing the id and title.
@@ -145,7 +171,7 @@ module Nexpose
     #
     def self.copy(nsc, id)
       dupe = load(nsc, id)
-      dupe.id = "#{dupe.id}-copy"
+      dupe.id = '#NewScanTemplate#'
       dupe.title = "#{dupe.title} Copy"
       dupe
     end
