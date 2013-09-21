@@ -128,6 +128,46 @@ module Nexpose
       checks.elements.delete("Enabled/VulnCategory[@name='#{category}']")
     end
 
+    # Get a list of the check types enabled for this scan template.
+    #
+    # @return [Array[String]] List of enabled check types.
+    #
+    def checks_by_type
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Enabled')
+      checks.elements.to_a('CheckType').map { |c| c.attributes['name'] }
+    end
+
+    # Enable checks by type for this template.
+    #
+    # @param [String] type Type to enable. @see #list_vuln_types
+    #
+    def enable_checks_by_type(type)
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
+      checks.elements.delete("Disabled/CheckType[@name='#{type}']")
+      checks.elements['Enabled'].add_element('CheckType', { 'name' => type })
+    end
+
+    # Disable checks by type for this template.
+    #
+    # @param [String] type Type to disable. @see #list_vuln_types
+    #
+    def disable_checks_by_type(type)
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
+      checks.elements.delete("Enabled/CheckType[@name='#{type}']")
+      checks.elements['Disabled'].add_element('CheckType', { 'name' => type })
+    end
+
+    # Remove checks by type for this template. Removes both enabled and
+    # disabled checks.
+    #
+    # @param [String] type Type to remove. @see #list_vuln_types
+    #
+    def remove_checks_by_type(type)
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
+      checks.elements.delete("Disabled/CheckType[@name='#{type}']")
+      checks.elements.delete("Enabled/CheckType[@name='#{type}']")
+    end
+
     # Save this scan template configuration to a Nexpose console.
     #
     # @param [Connection] nsc API connection to a Nexpose console.
@@ -140,13 +180,13 @@ module Nexpose
 
       if root.attributes['id'] == '#NewScanTemplate#'
         response = JSON.parse(AJAX.post(nsc, '/data/scan/templates', xml))
-        response['value']
       else
-        response = AJAX.put(nsc, "/data/scan/templates/#{URI.encode(id)}", xml)
+        response = JSON.parse(AJAX.put(nsc, "/data/scan/templates/#{URI.encode(id)}", xml))
       end
+      response['value']
     end
 
-    # Load an existing scan template.
+    # Load a scan template.
     #
     # @param [Connection] nsc API connection to a Nexpose console.
     # @param [String] id Unique identifier of an existing scan template.
@@ -174,6 +214,15 @@ module Nexpose
       dupe.id = '#NewScanTemplate#'
       dupe.title = "#{dupe.title} Copy"
       dupe
+    end
+
+    # Delete this scan template from the console.
+    # Cannot be used to delete a built-in template.
+    #
+    # @param [Connection] nsc API connection to a Nexpose console.
+    #
+    def delete(nsc)
+      nsc.delete_scan_template(@id)
     end
   end
 end
