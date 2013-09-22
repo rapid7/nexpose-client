@@ -32,7 +32,7 @@ module Nexpose
     attr_accessor :correlate
 
     # Parsed XML of a scan template
-    attr_accessor :xml
+    attr_reader :xml
 
     # @param [String] xml XML representation of a scan template.
     def initialize(xml)
@@ -102,9 +102,7 @@ module Nexpose
     # @param [String] category Category to enable. @see #list_vuln_categories
     #
     def enable_checks_by_category(category)
-      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
-      checks.elements.delete("Disabled/VulnCategory[@name='#{category}']")
-      checks.elements['Enabled'].add_element('VulnCategory', { 'name' => category })
+      _enable_check(category, 'VulnCategory')
     end
 
     # Disable checks by category for this template.
@@ -112,9 +110,7 @@ module Nexpose
     # @param [String] category Category to disable. @see #list_vuln_categories
     #
     def disable_checks_by_category(category)
-      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
-      checks.elements.delete("Enabled/VulnCategory[@name='#{category}']")
-      checks.elements['Disabled'].add_element('VulnCategory', { 'name' => category })
+      _disable_check(category, 'VulnCategory')
     end
 
     # Remove checks by category for this template. Removes both enabled and
@@ -123,9 +119,7 @@ module Nexpose
     # @param [String] category Category to remove. @see #list_vuln_categories
     #
     def remove_checks_by_category(category)
-      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
-      checks.elements.delete("Disabled/VulnCategory[@name='#{category}']")
-      checks.elements.delete("Enabled/VulnCategory[@name='#{category}']")
+      _remove_check(category, 'VulnCategory')
     end
 
     # Get a list of the check types enabled for this scan template.
@@ -142,9 +136,7 @@ module Nexpose
     # @param [String] type Type to enable. @see #list_vuln_types
     #
     def enable_checks_by_type(type)
-      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
-      checks.elements.delete("Disabled/CheckType[@name='#{type}']")
-      checks.elements['Enabled'].add_element('CheckType', { 'name' => type })
+      _enable_check(type, 'CheckType')
     end
 
     # Disable checks by type for this template.
@@ -152,9 +144,7 @@ module Nexpose
     # @param [String] type Type to disable. @see #list_vuln_types
     #
     def disable_checks_by_type(type)
-      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
-      checks.elements.delete("Enabled/CheckType[@name='#{type}']")
-      checks.elements['Disabled'].add_element('CheckType', { 'name' => type })
+      _disable_check(type, 'CheckType')
     end
 
     # Remove checks by type for this template. Removes both enabled and
@@ -163,9 +153,25 @@ module Nexpose
     # @param [String] type Type to remove. @see #list_vuln_types
     #
     def remove_checks_by_type(type)
+      _remove_check(type, 'CheckType')
+    end
+
+    def _enable_check(check, elem)
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
-      checks.elements.delete("Disabled/CheckType[@name='#{type}']")
-      checks.elements.delete("Enabled/CheckType[@name='#{type}']")
+      checks.elements.delete("Disabled/#{elem}[@name='#{check}']")
+      checks.elements['Enabled'].add_element(elem, { 'name' => check })
+    end
+
+    def _disable_check(check, elem)
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
+      checks.elements.delete("Enabled/#{elem}[@name='#{check}']")
+      checks.elements['Disabled'].add_element(elem, { 'name' => check })
+    end
+
+    def _remove_check(check, elem)
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
+      checks.elements.delete("Disabled/#{elem}[@name='#{check}']")
+      checks.elements.delete("Enabled/#{elem}[@name='#{check}']")
     end
 
     # Save this scan template configuration to a Nexpose console.
