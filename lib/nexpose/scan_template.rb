@@ -28,18 +28,12 @@ module Nexpose
   #
   class ScanTemplate
 
-    # Whether to correlate reliable checks with regular checks.
-    attr_accessor :correlate
-
     # Parsed XML of a scan template
     attr_reader :xml
 
     # @param [String] xml XML representation of a scan template.
     def initialize(xml)
       @xml = REXML::Document.new(xml)
-
-      vuln_checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')
-      @correlate = vuln_checks.attributes['correlate'] == '1'
     end
 
     # @return [String] Unique identifier of the scan template.
@@ -86,6 +80,18 @@ module Nexpose
         desc.add_text(description)
         root.add_element(desc)
       end
+    end
+
+    # @return [Boolean] Whether to correlate reliable checks with regular checks.
+    def correlate
+      vuln_checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')
+      vuln_checks.attributes['correlate'] == '1'
+    end
+
+    # Adjust whether to correlate reliable checks with regular checks.
+    def correlate=(enable)
+      vuln_checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')
+      vuln_checks.attributes['correlate'] = enable ? '1' : '0'
     end
 
     # Get a list of the check categories enabled for this scan template.
@@ -220,10 +226,6 @@ module Nexpose
     #
     def save(nsc)
       root = REXML::XPath.first(@xml, 'ScanTemplate')
-
-      vuln_checks = REXML::XPath.first(root, 'VulnerabilityChecks')
-      vuln_checks.attributes['correlate'] = (@correlate ? '1' : '0')
-
       if root.attributes['id'] == '#NewScanTemplate#'
         response = JSON.parse(AJAX.post(nsc, '/data/scan/templates', xml))
       else
