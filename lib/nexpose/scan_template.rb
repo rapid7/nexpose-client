@@ -82,13 +82,53 @@ module Nexpose
       end
     end
 
+    # @return [Boolean] Whether vuln scanning in enabled.
+    def vuln_scanning?
+      gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
+      gen.attributes['disableVulnScan'] == '0'
+    end
+
+    # Adjust whether to perform vuln scanning with this template.
+    # @param [Boolean] enable Whether to turn on vuln scanning.
+    def vuln_scanning=(enable)
+      gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
+      gen.attributes['disableVulnScan'] == enable ? '0' : '1'
+    end
+
+    # @return [Boolean] Whether policy scanning in enabled.
+    def policy_scanning?
+      gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
+      gen.attributes['disablePolicyScan'] == '0'
+    end
+
+    # Adjust whether to perform policy scanning with this template.
+    # @param [Boolean] enable Whether to turn on policy scanning.
+    def policy_scanning=(enable)
+      gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
+      gen.attributes['disablePolicyScan'] == enable ? '0' : '1'
+    end
+
+    # @return [Boolean] Whether web spidering in enabled.
+    def web_spidering?
+      gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
+      gen.attributes['disableWebSpider'] == '0'
+    end
+
+    # Adjust whether to perform web spidering with this template.
+    # @param [Boolean] enable Whether to turn on web spider scanning.
+    def web_spidering=(enable)
+      gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
+      gen.attributes['disableWebSpider'] == enable ? '0' : '1'
+    end
+
     # @return [Boolean] Whether to correlate reliable checks with regular checks.
-    def correlate
+    def correlate?
       vuln_checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')
       vuln_checks.attributes['correlate'] == '1'
     end
 
     # Adjust whether to correlate reliable checks with regular checks.
+    # @param [Boolean] enable Whether to turn on vulnerability correlation.
     def correlate=(enable)
       vuln_checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')
       vuln_checks.attributes['correlate'] = enable ? '1' : '0'
