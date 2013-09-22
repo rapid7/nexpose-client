@@ -174,6 +174,46 @@ module Nexpose
       checks.elements.delete("Enabled/#{elem}[@name='#{check}']")
     end
 
+    # Get a list of the individual vuln checks enabled for this scan template.
+    #
+    # @return [Array[String]] List of enabled vulnerability checks.
+    #
+    def vuln_checks
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Enabled')
+      checks.elements.to_a('Check').map { |c| c.attributes['id'] }
+    end
+
+    # Enable individual check for this template.
+    #
+    # @param [String] check_id Unique identifier of vuln check.
+    #
+    def enable_vuln_check(check_id)
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
+      checks.elements.delete("Disabled/Check[@id='#{check_id}']")
+      checks.elements['Enabled'].add_element('Check', { 'id' => check_id })
+    end
+
+    # Disable individual check for this template.
+    #
+    # @param [String] check_id Unique identifier of vuln check.
+    #
+    def disable_vuln_check(check_id)
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
+      checks.elements.delete("Enabled/Check[@id='#{check_id}']")
+      checks.elements['Disabled'].add_element('Check', { 'id' => check_id })
+    end
+
+    # Remove individual check for this template. Removes both enabled and
+    # disabled checks.
+    #
+    # @param [String] check_id Unique identifier of vuln check.
+    #
+    def remove_vuln_check(check_id)
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
+      checks.elements.delete("Disabled/Check[@id='#{check_id}']")
+      checks.elements.delete("Enabled/Check[@id='#{check_id}']")
+    end
+
     # Save this scan template configuration to a Nexpose console.
     #
     # @param [Connection] nsc API connection to a Nexpose console.
