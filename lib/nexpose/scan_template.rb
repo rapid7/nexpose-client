@@ -23,12 +23,18 @@ module Nexpose
   end
 
   # Configuration object for a scan template.
+  #
+  # The constructor is designed to take a valid XML representation of a scan
+  # template. If you wish to create a new scan template from scratch, use the
+  # #load method without a template ID. If you wish to copy and modify an
+  # existing template, use the #copy method.
+  #
   # This class is only a partial representation of some of the features
   # available for configuration.
   #
   class ScanTemplate
 
-    # Parsed XML of a scan template
+    # Parsed XML of a scan template.
     attr_reader :xml
 
     # @param [String] xml XML representation of a scan template.
