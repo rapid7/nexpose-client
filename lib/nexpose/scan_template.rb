@@ -134,6 +134,34 @@ module Nexpose
       vuln_checks.attributes['correlate'] = enable ? '1' : '0'
     end
 
+    # @return [Boolean] Whether unsafe vulnerability checks are performed
+    #   by this template.
+    def unsafe_checks?
+      checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')
+      checks.attributes['unsafe'] == '1'
+    end
+
+    # Adjust whether to perform unsafe vulnerability checks with this template.
+    # @param [Boolean] enable Whether to turn on unsafe checks.
+    def unsafe_checks=(enable)
+      checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')
+      checks.attributes['unsafe'] = enable ? '1' : '0'
+    end
+
+    # @return [Boolean] Whether potential vulnerability checks are performed
+    #   with this template.
+    def potential_checks?
+      checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')
+      checks.attributes['potential'] == '1'
+    end
+
+    # Adjust whether to perform potential vulnerability checks with this template.
+    # @param [Boolean] enable Whether to turn on potential checks.
+    def potential_checks=(enable)
+      checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')
+      checks.attributes['potential'] = enable ? '1' : '0'
+    end
+
     # Get a list of the check categories enabled for this scan template.
     #
     # @return [Array[String]] List of enabled categories.
