@@ -83,6 +83,21 @@ module Nexpose
         VulnCheck.new(vuln)
       end
     end
+
+    # Find vulnerabilities by date available in Nexpose.
+    # This is not the date the original vulnerability was published, but the
+    # date the check was made available in Nexpose.
+    #
+    # @param [String] from Vulnerability publish date in format YYYY-MM-DD.
+    # @param [String] to Vulnerability publish date in format YYYY-MM-DD.
+    # @return [Array[VulnSynopsis]] List of vulnerabilities published in
+    #   Nexpose between the provided dates.
+    #
+    def find_vulns_by_date(from, to = nil)
+      uri = "/ajax/vuln_synopsis.txml?addedMin=#{from}"
+      uri += "&addedMax=#{to}" if to
+      DataTable._get_dyn_table(self, uri).map { |v| VulnSynopsis.new(v) }
+    end
   end
 
   # Basic vulnerability information. Only includes ID, title, and severity.
@@ -258,6 +273,26 @@ module Nexpose
       @instances = json['vulnInstanceCount']
       @exploit = json['mainExploit']
       @malware = json['malwareCount']
+    end
+  end
+
+  # Vulnerability synopsis information pulled from AJAX requests.
+  # Data uses a numeric, console-specific vuln ID, which may need to be
+  # cross-referenced to the String ID to be used elsewhere.
+  #
+  class VulnSynopsis < VulnFinding
+
+    def initialize(hash)
+      @id = hash['Vuln ID'].to_i
+      @title = hash['Vulnerability']
+      @cvss_vector = hash['CVSS Base Vector']
+      @cvss_score = hash['CVSS Score'].to_f
+      @risk = hash['Risk'].to_f
+      @published = Time.at(hash['Published On'].to_i / 1000)
+      @severity = hash['Severity'].to_i
+      @instances = hash['Instances'].to_i
+      @exploit = hash['ExploitSource']
+      @malware = hash['MalwareSource'] == 'true'
     end
   end
 end
