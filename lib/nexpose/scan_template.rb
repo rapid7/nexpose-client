@@ -92,7 +92,7 @@ module Nexpose
     # @param [Boolean] enable Whether to turn on vuln scanning.
     def vuln_scanning=(enable)
       gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
-      gen.attributes['disableVulnScan'] == enable ? '0' : '1'
+      gen.attributes['disableVulnScan'] = enable ? '0' : '1'
     end
 
     # @return [Boolean] Whether policy scanning in enabled.
@@ -105,7 +105,7 @@ module Nexpose
     # @param [Boolean] enable Whether to turn on policy scanning.
     def policy_scanning=(enable)
       gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
-      gen.attributes['disablePolicyScan'] == enable ? '0' : '1'
+      gen.attributes['disablePolicyScan'] = enable ? '0' : '1'
     end
 
     # @return [Boolean] Whether web spidering in enabled.
@@ -118,7 +118,7 @@ module Nexpose
     # @param [Boolean] enable Whether to turn on web spider scanning.
     def web_spidering=(enable)
       gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
-      gen.attributes['disableWebSpider'] == enable ? '0' : '1'
+      gen.attributes['disableWebSpider'] = enable ? '0' : '1'
     end
 
     # @return [Boolean] Whether to correlate reliable checks with regular checks.
