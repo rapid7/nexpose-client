@@ -1,4 +1,5 @@
 module Nexpose
+
   module NexposeAPI
 
     # List the scan templates currently configured on the console.
@@ -302,6 +303,7 @@ module Nexpose
       root = REXML::XPath.first(@xml, 'ScanTemplate')
       if root.attributes['id'] == '#NewScanTemplate#'
         response = JSON.parse(AJAX.post(nsc, '/data/scan/templates', xml))
+        root.attributes['id'] = response['value']
       else
         response = JSON.parse(AJAX.put(nsc, "/data/scan/templates/#{URI.encode(id)}", xml))
       end
