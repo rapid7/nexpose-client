@@ -44,7 +44,7 @@ module Nexpose
     end
   end
 
-  module NexposeAPI
+  class Connection
     include XMLUtils
 
     # Returns a summary list of all roles.

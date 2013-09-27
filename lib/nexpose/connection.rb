@@ -25,7 +25,6 @@ module Nexpose
   #
   class Connection
     include XMLUtils
-    include NexposeAPI
 
     # Session ID of this connection
     attr_reader :session_id

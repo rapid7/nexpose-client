@@ -1,6 +1,6 @@
 module Nexpose
 
-  module NexposeAPI
+  class Connection
 
     # List the scan templates currently configured on the console.
     #
