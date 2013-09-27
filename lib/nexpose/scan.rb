@@ -1,5 +1,6 @@
 module Nexpose
-  module NexposeAPI
+
+  class Connection
     include XMLUtils
 
     # Perform an ad hoc scan of a single device.

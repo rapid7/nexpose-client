@@ -1,5 +1,6 @@
 module Nexpose
-  module NexposeAPI
+
+  class Connection
     include XMLUtils
 
     # Removes a scan engine from the list of available engines.

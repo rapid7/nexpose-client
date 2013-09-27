@@ -1,6 +1,6 @@
 module Nexpose
 
-  module NexposeAPI
+  class Connection
 
     # Retrieve a list of all backups currently stored on the Console.
     #

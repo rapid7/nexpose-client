@@ -1,5 +1,6 @@
 module Nexpose
-  module NexposeAPI
+
+  class Connection
     include XMLUtils
 
     # Retrieve a list of all Scan Engine Pools managed by the Security Console.

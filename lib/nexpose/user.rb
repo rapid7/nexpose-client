@@ -1,6 +1,6 @@
 module Nexpose
 
-  module NexposeAPI
+  class Connection
     include XMLUtils
 
     # Retrieve a list of all users configured on this console.

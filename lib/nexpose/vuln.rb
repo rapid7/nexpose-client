@@ -1,5 +1,6 @@
 module Nexpose
-  module NexposeAPI
+
+  class Connection
     include XMLUtils
 
     # Retrieve summary details of all vulnerabilities.

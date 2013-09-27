@@ -1,6 +1,7 @@
 # General management and diagnostic functions.
 module Nexpose
-  module NexposeAPI
+
+  class Connection
     include XMLUtils
 
     # Execute an arbitrary console command that is supplied as text via the

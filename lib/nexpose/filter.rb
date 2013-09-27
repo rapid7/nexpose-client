@@ -1,6 +1,6 @@
 module Nexpose
 
-  module NexposeAPI
+  class Connection
 
     # Perform an asset filter search that will locate assets matching the
     # provided conditions.

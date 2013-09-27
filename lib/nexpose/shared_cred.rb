@@ -1,6 +1,6 @@
 module Nexpose
 
-  module NexposeAPI
+  class Connection
 
     def list_shared_credentials
       creds = DataTable._get_json_table(self,

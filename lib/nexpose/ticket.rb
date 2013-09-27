@@ -1,6 +1,6 @@
 module Nexpose
 
-  module NexposeAPI
+  class Connection
     include XMLUtils
 
     def list_tickets

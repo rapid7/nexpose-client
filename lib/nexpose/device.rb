@@ -1,5 +1,6 @@
 module Nexpose
-  module NexposeAPI
+
+  class Connection
     include XMLUtils
 
     # Find a Device by its address.

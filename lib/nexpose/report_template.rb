@@ -1,9 +1,6 @@
 module Nexpose
 
-  # NexposeAPI module is mixed into the Connection object, and all methods are
-  # expected to be called from there.
-  #
-  module NexposeAPI
+  class Connection
     include XMLUtils
 
     # Provide a list of all report templates the user can access on the
