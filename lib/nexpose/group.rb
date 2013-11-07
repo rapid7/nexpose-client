@@ -59,6 +59,8 @@ module Nexpose
   # Asset group configuration object containing Device details.
   #
   class AssetGroup < AssetGroupSummary
+    include Sanitize
+
     attr_accessor :name, :description, :id
 
     # Array[Device] of devices associated with this asset group.
@@ -84,8 +86,8 @@ module Nexpose
     # @return [String] XML representation of the asset group.
     #
     def to_xml
-      xml = %(<AssetGroup id="#{@id}" name="#{@name}")
-      xml << %( description="#{@description}") if @description
+      xml = %(<AssetGroup id="#{@id}" name="#{replace_entities(@name)}")
+      xml << %( description="#{replace_entities(@description)}") if @description
       xml << '>'
       xml << '<Devices>'
       @devices.each do |device|
