@@ -117,7 +117,7 @@ module Nexpose
       xml << %Q{ authsrcid="#{@authsrcid}"}
       xml << %Q{ name="#{replace_entities(@name)}"}
       xml << %Q{ fullname="#{replace_entities(@full_name)}"}
-      xml << %Q{ role-name="#{@role_name}"}
+      xml << %Q{ role-name="#{replace_entities(@role_name)}"}
       xml << %Q{ password="#{replace_entities(@password)}"} if @password
       xml << %Q{ email="#{@email}"} if @email
       xml << %Q{ enabled="#{@enabled}"}

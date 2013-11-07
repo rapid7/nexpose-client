@@ -112,6 +112,7 @@ module Nexpose
   end
 
   class Role < RoleSummary
+    include Sanitize
 
     # Constants, mapping UI terms to role names expected by API.
 
@@ -231,10 +232,10 @@ module Nexpose
     end
 
     def to_xml
-      xml = %Q(<Role name="#{@name}" full-name="#{@full_name}")
+      xml = %Q(<Role name="#{replace_entities(@name)}" full-name="#{replace_entities(@full_name)}")
       xml << %Q( enabled="#{(enabled ? 'true' : 'false')}")
       xml << %Q( scope="#{@scope}">)
-      xml << %Q(<Description>#{@description}</Description>)
+      xml << %Q(<Description>#{replace_entities(@description)}</Description>)
 
       xml << '<SitePrivileges>'
       Privilege::Site::constants.each do |field|
