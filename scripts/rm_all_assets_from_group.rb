@@ -46,7 +46,7 @@ Nexpose::AssetGroup.load(nsc, group_id).devices.each do |device|
   if @dry_run
     puts "#{device.address} [ID: #{device.id}] Site: #{device.site_id}"
   else
-    nsc.device_delete(device.id)
+    nsc.delete_device(device.id)
   end
 end
 
