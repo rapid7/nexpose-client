@@ -34,6 +34,7 @@ module Nexpose
   # available for configuration.
   #
   class ScanTemplate
+    include Sanitize
 
     # Parsed XML of a scan template.
     attr_reader :xml
@@ -60,7 +61,7 @@ module Nexpose
     def name=(name)
       desc = REXML::XPath.first(@xml, 'ScanTemplate/templateDescription')
       if desc
-        desc.attributes['title'] = name
+        desc.attributes['title'] = replace_entities(name)
       else
         root = REXML::XPath.first(xml, 'ScanTemplate')
         desc = REXML::Element.new('templateDescription')
@@ -80,7 +81,7 @@ module Nexpose
     def description=(description)
       desc = REXML::XPath.first(@xml, 'ScanTemplate/templateDescription')
       if desc
-        desc.text = description
+        desc.text = replace_entities(description)
       else
         root = REXML::XPath.first(xml, 'ScanTemplate')
         desc = REXML::Element.new('templateDescription')
