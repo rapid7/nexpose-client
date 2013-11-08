@@ -84,6 +84,8 @@ module Nexpose
       r = execute(make_xml('DeviceDeleteRequest', { 'device-id' => device_id }))
       r.success
     end
+
+    alias_method :delete_asset, :delete_device
   end
 
   # Object that represents a single device in a Nexpose security console.

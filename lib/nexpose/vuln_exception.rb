@@ -83,13 +83,13 @@ module Nexpose
   # Certain attributes are necessary for some exception scopes, even though
   # they are optional otherwise.
   # • An exception for all instances of a vulnerability on all assets only
-  #   requires the vuln_id attribute. The device_id, vuln_key and port
+  #   requires the vuln_id attribute. The asset_id, vuln_key and port
   #   attributes are ignored for this scope type.
   # • An exception for all instances on a specific asset requires the vuln_id
-  #   and device_id attributes. The vuln_key and port attributes are ignored for
+  #   and asset_id attributes. The vuln_key and port attributes are ignored for
   #   this scope type.
   # • An exception for a specific instance of a vulnerability on a specific
-  #   asset requires the vuln_id, device_id. Additionally, the port and/or the
+  #   asset requires the vuln_id, asset_id. Additionally, the port and/or the
   #   key attribute must be specified.
   #
   class VulnException
@@ -111,9 +111,12 @@ module Nexpose
     # The scope of the exception.
     # @see Nexpose::VulnException::Scope
     attr_accessor :scope
-    # ID of device, if this exception applies to only one device.
-    attr_accessor :device_id
-    # Port on a device, if this exception applies to a specific port.
+    # ID of asset, if this exception applies to only one asset.
+    attr_accessor :asset_id
+    alias :device_id :asset_id
+    alias :device_id= :asset_id=
+
+    # Port on a asset, if this exception applies to a specific port.
     attr_accessor :port
     # The specific vulnerable component in a discovered instance of the
     # vulnerability referenced by the vuln_id, such as a program, file or user
@@ -145,9 +148,9 @@ module Nexpose
                            'reason' => @reason })
       case @scope
       when Scope::ALL_INSTANCES_ON_A_SPECIFIC_ASSET
-        xml.add_attributes({ 'device-id' => @device_id })
+        xml.add_attributes({ 'device-id' => @asset_id })
       when Scope::SPECIFIC_INSTANCE_OF_SPECIFIC_ASSET
-        xml.add_attributes({ 'device-id' => @device_id,
+        xml.add_attributes({ 'device-id' => @asset_id,
                              'port-no' => @port,
                              'vuln-key' => @vuln_key })
       end
@@ -303,12 +306,12 @@ module Nexpose
 
       case @scope
       when Scope::ALL_INSTANCES
-        @device_id = @port = @vuln_key = nil
+        @asset_id = @port = @vuln_key = nil
       when Scope::ALL_INSTANCES_ON_A_SPECIFIC_ASSET
-        raise ArgumentError.new('No device_id.') unless @device_id
+        raise ArgumentError.new('No asset_id.') unless @asset_id
         @port = @vuln_key = nil
       when Scope::SPECIFIC_INSTANCE_OF_SPECIFIC_ASSET
-        raise ArgumentError.new('No device_id.') unless @device_id
+        raise ArgumentError.new('No asset_id.') unless @asset_id
         raise ArgumentError.new('Port or vuln_key is required.') unless @port || @vuln_key
       else
         raise ArgumentError.new("Invalid scope: #{@scope}")
@@ -324,7 +327,7 @@ module Nexpose
       exception.id = xml.attributes['exception-id']
       exception.submitter = xml.attributes['submitter']
       exception.reviewer = xml.attributes['reviewer']
-      exception.device_id = xml.attributes['device-id']
+      exception.asset_id = xml.attributes['device-id']
       exception.port = xml.attributes['port-no']
       exception.vuln_key = xml.attributes['vuln-key']
       # TODO: Convert to Date/Time object?

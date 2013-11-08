@@ -396,9 +396,9 @@ module Nexpose
   end
 
   # Object that represents a report filter which determines which sites, asset
-  # groups, and/or devices that a report is run against.
+  # groups, and/or assets that a report is run against.
   #
-  # The configuration must include at least one of device (asset), site,
+  # The configuration must include at least one of asset, site,
   # group (asset group) or scan filter to define the scope of report.
   # The vuln-status filter can be used only with raw report formats: csv
   # or raw_xml. If the vuln-status filter is not included in the configuration,
@@ -408,7 +408,7 @@ module Nexpose
   class Filter
     include Sanitize
 
-    # The ID of the specific site, group, device, or scan.
+    # The ID of the specific site, group, asset, or scan.
     # For scan, this can also be "last" for the most recently run scan.
     # For vuln-status, the ID can have one of the following values:
     # 1. vulnerable-exploited (The check was positive. An exploit verified the vulnerability.)

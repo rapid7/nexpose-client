@@ -108,7 +108,9 @@ module Nexpose
     # Array of report attributes, in the order they will be present in a report.
     attr_accessor :attributes
     # Display asset names with IPs.
-    attr_accessor :show_device_names
+    attr_accessor :show_asset_names
+    alias :show_device_names :show_asset_names
+    alias :show_device_names= :show_asset_names=
 
     def initialize(name, type = 'document', id = -1, scope = 'silo', built_in = false)
       @name = name
@@ -120,7 +122,7 @@ module Nexpose
       @sections = []
       @properties = {}
       @attributes = []
-      @show_device_names = false
+      @show_asset_names = false
     end
 
     # Save the configuration for a report template.
@@ -170,7 +172,7 @@ module Nexpose
         xml << '</ReportSections>'
       end
 
-      xml << %(<Settings><showDeviceNames enabled='#{@show_device_names ? 1 : 0}' /></Settings>)
+      xml << %(<Settings><showDeviceNames enabled='#{@show_asset_names ? 1 : 0}' /></Settings>)
       xml << '</ReportTemplate>'
     end
 
@@ -198,7 +200,7 @@ module Nexpose
         end
 
         tmp.elements.each('//showDeviceNames') do |show|
-          template.show_device_names = show.attributes['enabled'] == '1'
+          template.show_asset_names = show.attributes['enabled'] == '1'
         end
 
         return template

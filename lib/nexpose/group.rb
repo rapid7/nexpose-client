@@ -64,11 +64,13 @@ module Nexpose
     attr_accessor :name, :description, :id
 
     # Array[Device] of devices associated with this asset group.
-    attr_accessor :devices
+    attr_accessor :assets
+    alias :devices :assets
+    alias :devices= :assets=
 
     def initialize(name, desc, id = -1, risk = 0.0)
       @name, @description, @id, @risk_score = name, desc, id, risk
-      @devices = []
+      @assets = []
     end
 
     def save(connection)
@@ -80,7 +82,7 @@ module Nexpose
     end
 
     # Get an XML representation of the group that is valid for a save request.
-    # Note that only name, description, and device ID information is accepted
+    # Note that only name, description, and asset ID information is accepted
     # by a save request.
     #
     # @return [String] XML representation of the asset group.
@@ -90,8 +92,8 @@ module Nexpose
       xml << %( description="#{replace_entities(@description)}") if @description
       xml << '>'
       xml << '<Devices>'
-      @devices.each do |device|
-        xml << %(<device id="#{device.id}"/>)
+      @assets.each do |asset|
+        xml << %(<device id="#{asset.id}"/>)
       end
       xml << '</Devices>'
       xml << '</AssetGroup>'
@@ -104,11 +106,11 @@ module Nexpose
     # @return [Hash] Hash of site ID to Scan launch information for each scan.
     #
     def rescan_assets(connection)
-      sites_ids = @devices.map { |d| d.site_id }.uniq
+      sites_ids = @assets.map { |d| d.site_id }.uniq
       scans = {}
       sites_ids.each do |id|
-        to_scan = @devices.select { |d| d.site_id == id }
-        scans[id] = connection.scan_devices(to_scan)
+        to_scan = @assets.select { |d| d.site_id == id }
+        scans[id] = connection.scan_assets(to_scan)
       end
       scans
     end
@@ -136,11 +138,11 @@ module Nexpose
                         group.attributes['id'].to_i,
                         group.attributes['riskscore'].to_f)
       group.elements.each('Devices/device') do |dev|
-        asset_group.devices << Device.new(dev.attributes['id'].to_i,
-                                          dev.attributes['address'],
-                                          dev.attributes['site-id'].to_i,
-                                          dev.attributes['riskfactor'].to_f,
-                                          dev.attributes['riskscore'].to_f)
+        asset_group.assets << Device.new(dev.attributes['id'].to_i,
+                                         dev.attributes['address'],
+                                         dev.attributes['site-id'].to_i,
+                                         dev.attributes['riskfactor'].to_f,
+                                         dev.attributes['riskscore'].to_f)
       end
       asset_group
     end

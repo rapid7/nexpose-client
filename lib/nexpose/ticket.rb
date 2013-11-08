@@ -56,10 +56,12 @@ module Nexpose
     attr_accessor :name
 
     # The asset the ticket is created for.
-    attr_accessor :device_id
+    attr_accessor :asset_id
+    alias :device_id :asset_id
+    alias :device_id= :asset_id=
 
     # The login name of person to whom the ticket is assigned.
-    # The user must have view asset privilege on the asset specified in the device-id attribute.
+    # The user must have view asset privilege on the asset specified in the asset-id attribute.
     attr_accessor :assigned_to
 
     # The relative priority of the ticket, assigned by the creator of the ticket.
@@ -82,7 +84,7 @@ module Nexpose
     def self.parse(xml)
       ticket = new(xml.attributes['name'],
                    xml.attributes['id'].to_i)
-      ticket.device_id = xml.attributes['device-id'].to_i
+      ticket.asset_id = xml.attributes['device-id'].to_i
       ticket.assigned_to = xml.attributes['assigned-to']
       lookup = Ticket::Priority.constants.reduce({}) { |a, e| a[Ticket::Priority.const_get(e)] = e; a }
       ticket.priority = lookup[xml.attributes['priority']]
@@ -178,7 +180,7 @@ module Nexpose
       xml = REXML::Element.new('TicketCreate')
       xml.add_attributes({ 'name' => @name,
                            'priority' => @priority,
-                           'device-id' => @device_id,
+                           'device-id' => @asset_id,
                            'assigned-to' => @assigned_to })
 
       vuln_xml = REXML::Element.new('Vulnerabilities')

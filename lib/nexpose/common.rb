@@ -31,7 +31,7 @@ module Nexpose
     # Send as file attachment or zipped file to individuals who are not members
     # of the report access list. One of: file|zip
     attr_accessor :send_as
-    # Send to all the authorized users of sites, groups, and devices.
+    # Send to all the authorized users of sites, groups, and assets.
     attr_accessor :to_all_authorized
     # Send to users on the report access list.
     attr_accessor :send_to_acl_as
