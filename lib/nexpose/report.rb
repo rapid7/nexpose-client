@@ -406,6 +406,7 @@ module Nexpose
   # exported by default in csv and raw_xml reports.
   #
   class Filter
+    include Sanitize
 
     # The ID of the specific site, group, device, or scan.
     # For scan, this can also be "last" for the most recently run scan.
@@ -424,7 +425,7 @@ module Nexpose
     end
 
     def to_xml
-      %(<filter id='#{@id}' type='#{@type}' />)
+      %(<filter id='#{replace_entities(@id)}' type='#{@type}' />)
     end
 
     def self.parse(xml)
