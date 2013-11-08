@@ -119,7 +119,7 @@ module Nexpose
       xml << %Q{ fullname="#{replace_entities(@full_name)}"}
       xml << %Q{ role-name="#{replace_entities(@role_name)}"}
       xml << %Q{ password="#{replace_entities(@password)}"} if @password
-      xml << %Q{ email="#{@email}"} if @email
+      xml << %Q{ email="#{replace_entities(@email)}"} if @email
       xml << %Q{ enabled="#{@enabled}"}
       # These two fields are keying off role_name to work around a defect.
       xml << %Q{ allGroups="#{@all_groups || @role_name == 'global-admin'}"}
