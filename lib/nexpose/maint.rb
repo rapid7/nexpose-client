@@ -32,6 +32,31 @@ module Nexpose
       end
     end
 
+    # Initiate database maintenance tasks to improve database performance and
+    # consistency.
+    # A restart will be initiated in order to put the product into maintenance
+    # mode while the tasks are run. It will then restart automatically.
+    #
+    # @param [Boolean] clean_up Removes any unnecessary data from the database.
+    # @param [Boolean] compress Compresses the database tables and reclaims
+    #   unused, allocated space.
+    # @param [Boolean] reindex Drops and recreates the database indexes for
+    #   improved performance.
+    # @return [Boolean] Whether a maintenance tasks are successfully initiated.
+    #
+    def db_maintenance(clean_up = false, compress = false, reindex = false)
+      return unless compress || clean_up || reindex
+      parameters = { 'cmd' => 'startMaintenance',
+                     'targetTask' => 'dbMaintenance' }
+      parameters['cleanup'] = 1 if clean_up
+      parameters['compress'] = 1 if compress
+      parameters['reindex'] = 1 if reindex
+      xml = AJAX.form_post(self, '/admin/global/maintenance/maintCmd.txml', parameters)
+      if !!(xml =~ /succeded="true"/)
+        _maintenance_restart
+      end
+    end
+
     def _maintenance_restart
       parameters = { 'cancelAllTasks' => false,
                      'cmd' => 'restartServer',
