@@ -5,9 +5,6 @@ module Nexpose
     attr_reader :http
     attr_reader :uri
     attr_reader :headers
-    attr_reader :retry_count
-    attr_reader :time_out
-    attr_reader :pause
 
     attr_reader :req
     attr_reader :res
@@ -20,7 +17,7 @@ module Nexpose
     attr_reader :raw_response
     attr_reader :raw_response_data
 
-    def initialize(req, url, api_version='1.1')
+    def initialize(req, url, api_version = '1.1')
       @url = url
       @req = req
       @api_version = api_version
@@ -29,10 +26,6 @@ module Nexpose
     end
 
     def prepare_http_client
-      @retry_count = 0
-      @retry_count_max = 10
-      @time_out = 30
-      @pause = 2
       @uri = URI.parse(@url)
       @http = Net::HTTP.new(@uri.host, @uri.port)
       @http.use_ssl = true
@@ -46,11 +39,12 @@ module Nexpose
       @success = false
     end
 
-    def execute
+    def execute(options = {})
       @conn_tries = 0
 
       begin
         prepare_http_client
+        @http.read_timeout = options[:timeout] if options.key? :timeout
         @raw_response = @http.post(@uri.path, @req, @headers)
         @raw_response_data = @raw_response.read_body
         @res = parse_xml(@raw_response_data)
@@ -93,7 +87,7 @@ module Nexpose
           @conn_tries += 1
           retry
         end
-      rescue ::ArgumentError, ::NoMethodError
+      rescue ::ArgumentError, ::NoMethodError => e
         if @conn_tries < 5
           @conn_tries += 1
           retry
@@ -101,9 +95,10 @@ module Nexpose
       rescue ::Timeout::Error
         if @conn_tries < 5
           @conn_tries += 1
-          retry
+          # If an explicit timeout is set, don't retry.
+          retry unless options.key? :timeout
         end
-        @error = 'Nexpose host did not respond.'
+        @error = "Nexpose did not respond within #{@http.read_timeout} seconds."
       rescue ::Errno::EHOSTUNREACH, ::Errno::ENETDOWN, ::Errno::ENETUNREACH, ::Errno::ENETRESET, ::Errno::EHOSTDOWN, ::Errno::EACCES, ::Errno::EINVAL, ::Errno::EADDRNOTAVAIL
         @error = 'Nexpose host is unreachable.'
         # Handle console-level interrupts
@@ -127,12 +122,11 @@ module Nexpose
       @res.root.attributes(*args)
     end
 
-    def self.execute(url, req, api_version='1.1')
+    def self.execute(url, req, api_version='1.1', options = {})
       obj = self.new(req, url, api_version)
-      obj.execute
+      obj.execute(options)
       raise APIError.new(obj, "Action failed: #{obj.error}") unless obj.success
       obj
     end
-
   end
 end

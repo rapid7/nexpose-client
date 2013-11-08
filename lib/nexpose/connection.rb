@@ -84,10 +84,10 @@ module Nexpose
     end
 
     # Execute an API request
-    def execute(xml, version = '1.1')
+    def execute(xml, version = '1.1', options = {})
       @request_xml = xml.to_s
       @api_version = version
-      response = APIRequest.execute(@url, @request_xml, @api_version)
+      response = APIRequest.execute(@url, @request_xml, @api_version, options)
       @response_xml = response.raw_response_data
       response
     end

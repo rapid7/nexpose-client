@@ -226,13 +226,15 @@ module Nexpose
     # For XML-based reports, only the raw report is returned and not any images.
     #
     # @param [Connection] connection Nexpose connection.
+    # @param [Fixnum] timeout How long, in seconds, to wait for the report to
+    #   generate. Larger reports can take a significant amount of time.
     # @return Report in text format except for PDF, which returns binary data.
     #
-    def generate(connection)
+    def generate(connection, timeout = 300)
       xml = %(<ReportAdhocGenerateRequest session-id='#{connection.session_id}'>)
       xml << to_xml
       xml << '</ReportAdhocGenerateRequest>'
-      response = connection.execute(xml)
+      response = connection.execute(xml, '1.1', timeout: timeout)
       if response.success
         content_type_response = response.raw_response.header['Content-Type']
         if content_type_response =~ /multipart\/mixed;\s*boundary=([^\s]+)/
