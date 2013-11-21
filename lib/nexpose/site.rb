@@ -245,7 +245,7 @@ module Nexpose
                            'site-id' => @id,
                            'sync-id' => sync_id })
 
-      response = connection.execute(xml)
+      response = connection.execute(xml, '1.1', timeout: 60)
       Scan.parse(response.res) if response.success
     end
 

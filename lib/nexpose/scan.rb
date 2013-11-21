@@ -126,7 +126,7 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def _scan_ad_hoc(xml)
-      r = execute(xml)
+      r = execute(xml, '1.1', timeout: 60)
       Scan.parse(r.res)
     end
 
@@ -165,7 +165,7 @@ module Nexpose
     # @param [Fixnum] scan_id The scan ID.
     #
     def resume_scan(scan_id)
-      r = execute(make_xml('ScanResumeRequest', { 'scan-id' => scan_id }))
+      r = execute(make_xml('ScanResumeRequest', { 'scan-id' => scan_id }), '1.1', timeout: 60)
       r.success ? r.attributes['success'] : nil
     end
 
