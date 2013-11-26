@@ -14,6 +14,8 @@ module Nexpose
       r.success
     end
 
+    alias_method :delete_group, :delete_asset_group
+
     # Retrieve an array of all asset groups the user is authorized to view or
     # manage.
     #
