@@ -246,8 +246,10 @@ module Nexpose
   #
   class VulnFinding
 
-    # Unique, console-specific identifier of the vulnerability.
+    # Unique identifier of the vulnerability.
     attr_reader :id
+    # Unique, console-specific identifier of the vulnerability.
+    attr_reader :console_id
     # Vulnerability title.
     attr_reader :title
     attr_reader :cvss_score
@@ -262,9 +264,12 @@ module Nexpose
     attr_reader :exploit
     # Whether known malware kits exploit this vulnerability.
     attr_reader :malware
+    # Date that a vuln was verified, if validation has been carried out.
+    attr_reader :verified
 
     def initialize(json)
-      @id = json['vulnID']
+      @id = json['nexVulnID']
+      @console_id = json['vulnID']
       @title = json['title']
       @cvss_vector = json['cvssBase']
       @cvss_score = json['cvssScore']
@@ -274,6 +279,7 @@ module Nexpose
       @instances = json['vulnInstanceCount']
       @exploit = json['mainExploit']
       @malware = json['malwareCount']
+      @verfied = Time.parse(json['verifiedDate']) if json['verifiedDate']
     end
   end
 
