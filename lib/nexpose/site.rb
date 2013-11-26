@@ -113,6 +113,9 @@ module Nexpose
     # @see SyslogAlert
     attr_accessor :alerts
 
+    # [Array] List of user IDs for users who have access to the site.
+    attr_accessor :users
+
     # Configuration version. Default: 3
     attr_accessor :config_version
 
@@ -138,6 +141,7 @@ module Nexpose
       @credentials = []
       @alerts = []
       @exclude = []
+      @users = []
     end
 
     # Returns true when the site is dynamic.
@@ -258,6 +262,12 @@ module Nexpose
     def to_xml
       xml = %(<Site id='#{id}' name='#{replace_entities(name)}' description='#{description}' riskfactor='#{risk_factor}'>)
 
+      unless @users.empty?
+        xml << '<Users>'
+        @users.each { |user| xml << "<user id='#{user}'/>" }
+        xml << '</Users>'
+      end
+
       xml << '<Hosts>'
       xml << assets.reduce('') { |a, e| a << e.to_xml }
       xml << '</Hosts>'
@@ -308,6 +318,10 @@ module Nexpose
         site.description = s.attributes['description']
         site.risk_factor = s.attributes['riskfactor'] || 1.0
         site.is_dynamic = true if s.attributes['isDynamic'] == '1'
+
+        s.elements.each('Users/user') do |user|
+          site.users << user.attributes['id'].to_i
+        end
 
         s.elements.each('Hosts/range') do |r|
           site.assets << IPRange.new(r.attributes['from'], r.attributes['to'])
