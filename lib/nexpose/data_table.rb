@@ -99,23 +99,6 @@ module Nexpose
       record
     end
 
-    # Clean up the 'type-safe' IDs returned by many table requests.
-    # This is a destructive operation, changing the values in the underlying
-    # hash.
-    #
-    # @param [Array[Hash]] arr Array of hashes representing a data table.
-    # @param [String] id Key value of a type-safe ID to clean up.
-    #
-    # Example usage:
-    #   # For data like: {"assetID"=>{"ID"=>2818}, "assetIP"=>"10.4.16.1", ...}
-    #   _clean_data_table!(data, 'assetID')
-    #
-    def _clean_data_table!(arr, id)
-      arr.reduce([]) do |acc, hash|
-        acc << _clean_id!(hash, id)
-      end
-    end
-
     # Convert a type-safe ID into a regular ID inside a hash.
     #
     # @param [Hash] hash Hash map containing a type-safe ID as one key.
