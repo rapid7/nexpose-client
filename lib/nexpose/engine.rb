@@ -150,11 +150,13 @@ module Nexpose
       sites << SiteSummary.new(site_id, nil)
     end
 
+    include Sanitize
+
     def to_xml
       xml = '<EngineConfig'
       xml << %( id="#{id}")
       xml << %( address="#{address}")
-      xml << %( name="#{name}")
+      xml << %( name="#{replace_entities(name)}")
       xml << %( port="#{port}")
       xml << %( scope="#{scope}") if scope
       xml << %( priority="#{priority}") if priority
