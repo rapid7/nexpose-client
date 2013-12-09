@@ -279,7 +279,7 @@ module Nexpose
       @instances = json['vulnInstanceCount']
       @exploit = json['mainExploit']
       @malware = json['malwareCount']
-      @verified = Time.parse(json['verifiedDate']) if json['verifiedDate']
+      @verified = DateTime.iso8601(json['verifiedDate'].slice(0, 15)).to_time if json['verifiedDate']
     end
   end
 
