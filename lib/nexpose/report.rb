@@ -204,18 +204,17 @@ module Nexpose
     end
 
     def to_xml
-      xml = %(<AdhocReportConfig format='#{@format}' template-id='#{@template_id}')
-      xml << %( owner='#{@owner}') if @owner
-      xml << %( timezone='#{@time_zone}') if @time_zone
-      xml << %( language='#{@language}') if @language
+      xml = %(<AdhocReportConfig format="#{@format}" template-id="#{@template_id}")
+      xml << %( owner="#{@owner}") if @owner
+      xml << %( timezone="#{@time_zone}") if @time_zone
+      xml << %( language="#{@language}") if @language
       xml << '>'
 
       xml << '<Filters>'
       @filters.each { |filter| xml << filter.to_xml }
       xml << '</Filters>'
 
-      xml << %(<Baseline compareTo='#{@baseline}' />) if @baseline
-
+      xml << %(<Baseline compareTo="#{@baseline}"/>) if @baseline
       xml << '</AdhocReportConfig>'
     end
 
@@ -231,7 +230,7 @@ module Nexpose
     # @return Report in text format except for PDF, which returns binary data.
     #
     def generate(connection, timeout = 300)
-      xml = %(<ReportAdhocGenerateRequest session-id='#{connection.session_id}'>)
+      xml = %(<ReportAdhocGenerateRequest session-id="#{connection.session_id}">)
       xml << to_xml
       xml << '</ReportAdhocGenerateRequest>'
       response = connection.execute(xml, '1.1', timeout: timeout)
@@ -317,7 +316,7 @@ module Nexpose
 
     # Save the configuration of this report definition.
     def save(connection, generate_now = false)
-      xml = %(<ReportSaveRequest session-id='#{connection.session_id}' generate-now='#{generate_now ? 1 : 0}'>)
+      xml = %(<ReportSaveRequest session-id="#{connection.session_id}" generate-now="#{generate_now ? 1 : 0}">)
       xml << to_xml
       xml << '</ReportSaveRequest>'
       response = connection.execute(xml)
@@ -341,10 +340,10 @@ module Nexpose
     include Sanitize
 
     def to_xml
-      xml = %(<ReportConfig format='#{@format}' id='#{@id}' name='#{replace_entities(@name)}' template-id='#{@template_id}')
-      xml << %( owner='#{@owner}') if @owner
-      xml << %( timezone='#{@time_zone}') if @time_zone
-      xml << %( language='#{@language}') if @language
+      xml = %(<ReportConfig format="#{@format}" id="#{@id}" name="#{replace_entities(@name)}" template-id="#{@template_id}")
+      xml << %( owner="#{@owner}") if @owner
+      xml << %( timezone="#{@time_zone}") if @time_zone
+      xml << %( language="#{@language}") if @language
       xml << '>'
       xml << %(<description>#{@description}</description>) if @description
 
@@ -353,10 +352,10 @@ module Nexpose
       xml << '</Filters>'
 
       xml << '<Users>'
-      @users.each { |user| xml << %(<user id='#{user}' />) }
+      @users.each { |user| xml << %(<user id="#{user}"/>) }
       xml << '</Users>'
 
-      xml << %(<Baseline compareTo='#{@baseline}' />) if @baseline
+      xml << %(<Baseline compareTo="#{@baseline}"/>) if @baseline
       xml << @frequency.to_xml if @frequency
       xml << @delivery.to_xml if @delivery
       xml << @db_export.to_xml if @db_export
@@ -427,7 +426,14 @@ module Nexpose
     end
 
     def to_xml
-      %(<filter id='#{replace_entities(@id)}' type='#{@type}' />)
+      %(<filter id="#{replace_entities(@id)}" type="#{@type}" />)
+    end
+
+    def ==(object)
+      object.equal?(self) ||
+      (object.instance_of?(self.class) &&
+       object.type == @type &&
+       object.id == @id)
     end
 
     def self.parse(xml)
@@ -458,7 +464,7 @@ module Nexpose
     end
 
     def to_xml
-      xml = %(<Generate after-scan='#{@after_scan ? 1 : 0}' schedule='#{@scheduled ? 1 : 0}'>)
+      xml = %(<Generate after-scan="#{@after_scan ? 1 : 0}" schedule="#{@scheduled ? 1 : 0}">)
       xml << @schedule.to_xml if @schedule
       xml << '</Generate>'
     end
@@ -500,7 +506,7 @@ module Nexpose
 
     def to_xml
       xml = '<Delivery>'
-      xml << %(<Storage storeOnServer='#{@store_on_server ? 1 : 0}'>)
+      xml << %(<Storage storeOnServer="#{@store_on_server ? 1 : 0}">)
       xml << %(<location>#{@location}</location>) if @location
       xml << '</Storage>'
       xml << @email.to_xml if @email
@@ -543,10 +549,10 @@ module Nexpose
     end
 
     def to_xml
-      xml = %(<DBExport type='#{@type}'>)
+      xml = %(<DBExport type="#{@type}">)
       xml << @credentials.to_xml if @credentials
       @parameters.each_pair do |name, value|
-        xml << %(<param name='#{name}'>#{value}</param>)
+        xml << %(<param name="#{name}">#{value}</param>)
       end
       xml << '</DBExport>'
     end
@@ -585,9 +591,9 @@ module Nexpose
 
     def to_xml
       xml = '<credentials'
-      xml << %( userid='#{@user_id}') if @user_id
-      xml << %( password='#{@password}') if @password
-      xml << %( realm='#{@realm}') if @realm
+      xml << %( userid="#{@user_id}") if @user_id
+      xml << %( password="#{@password}") if @password
+      xml << %( realm="#{@realm}") if @realm
       xml << '>'
       xml << @credential if @credential
       xml << '</credentials>'
