@@ -7,8 +7,8 @@ module Nexpose
     # @return [Array[String]] list of scan templates IDs.
     #
     def list_scan_templates
-      templates = JSON.parse(AJAX.get(self, '/data/scan/templates'))
-      templates['valueList']
+      templates = JSON.parse(AJAX.get(self, '/api/2.0/scan_templates'))
+      templates['resources'].map { |t| ScanTemplateSummary.new(t) }
     end
 
     alias_method :scan_templates, :list_scan_templates
@@ -20,6 +20,18 @@ module Nexpose
     #
     def delete_scan_template(id)
       AJAX.delete(self, "/data/scan/templates/#{URI.encode(id)}")
+    end
+  end
+
+  # Scan Template summary information. Used when retrieving basic information about
+  # all scan templates.
+  #
+  class ScanTemplateSummary
+    attr_reader :name, :id
+
+    def initialize(json)
+      @name = json['name']
+      @id = json['id']
     end
   end
 
