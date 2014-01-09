@@ -98,20 +98,5 @@ module Nexpose
       end
       record
     end
-
-    # Convert a type-safe ID into a regular ID inside a hash.
-    #
-    # @param [Hash] hash Hash map containing a type-safe ID as one key.
-    # @param [String] id Key value of a type-safe ID to clean up.
-    #
-    def _clean_id!(hash, id)
-      hash.each_pair do |key, value|
-        if key == id
-          hash[key] = value['ID']
-        else
-          hash[key] = value
-        end
-      end
-    end
   end
 end

@@ -326,7 +326,7 @@ module Nexpose
     attr_reader :last_scan
 
     def initialize(json)
-      @id = json['assetID']['ID'].to_i
+      @id = json['assetID']
       @ip = json['assetIP']
       @name = json['assetName']
       @os = json['assetOSName']
