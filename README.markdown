@@ -2,11 +2,15 @@
 
 This is the official gem package for the Ruby Nexpose API.
 
-For assistance with using the gem, to share your scripts, or to discuss different approaches, please visit the Rapid7 forums for Nexpose: https://community.rapid7.com/community/nexpose
+For assistance with using the gem, to share your scripts, or to discuss different approaches, please visit the Rapid7 forums for Nexpose: https://community.rapid7.com/community/nexpose/nexpose-apis
+
+This gem is heavily used for internal, automated testing of the Nexpose product. It provides calls to the Nexpose XML APIs version 1.1 and 1.2 (except for multi-tenant operations). It also includes a number of helper methods which are not currently exposed through alternate means.
 
 ## Contributions
 
-This package is currently a work in progress. Most of the Nexpose API is exposed, but there are some operations missing. Also, there are stylistic differences between different calls that we hope to eliminate over time. We welcome contributions to this package. We ask only that pull requests and patches adhere to our coding standards.
+We welcome contributions to this package.
+
+Our coding standards include:
 
 * Favor returning classes over key-value maps. Classes tend to be easier for users to manipulate and use.
 * Unless otherwise noted, code should adhere to the Ruby Style Guide: https://github.com/bbatsov/ruby-style-guide
