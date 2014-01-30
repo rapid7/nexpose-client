@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name                  = 'nexpose'
-  s.version               = '0.6.1'
+  s.version               = '0.6.2'
   s.homepage              = 'https://github.com/rapid7/nexpose-client'
   s.summary               = 'Ruby API for Rapid7 Nexpose'
   s.description           = 'This gem provides a Ruby API to the Nexpose vulnerability management product by Rapid7.'
