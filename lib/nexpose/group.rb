@@ -110,9 +110,9 @@ module Nexpose
     def rescan_assets(connection)
       sites_ids = @assets.map { |d| d.site_id }.uniq
       scans = {}
-      sites_ids.each do |id|
-        to_scan = @assets.select { |d| d.site_id == id }
-        scans[id] = connection.scan_assets(to_scan)
+      sites_ids.each do |site_id|
+        to_scan = @assets.select { |d| d.site_id == site_id }
+        scans[site_id] = connection.scan_devices(to_scan)
       end
       scans
     end
