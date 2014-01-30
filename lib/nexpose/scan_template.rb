@@ -58,8 +58,13 @@ module Nexpose
 
     # @return [String] Unique identifier of the scan template.
     def id
-      root = REXML::XPath.first(xml, 'ScanTemplate')
+      root = REXML::XPath.first(@xml, 'ScanTemplate')
       root.attributes['id']
+    end
+
+    def id=(value)
+      root = REXML::XPath.first(@xml, 'ScanTemplate')
+      root.attributes['id'] = value
     end
 
     # @return [String] Name or title of this scan template.
@@ -349,7 +354,7 @@ module Nexpose
     def self.copy(nsc, id)
       dupe = load(nsc, id)
       dupe.id = '#NewScanTemplate#'
-      dupe.title = "#{dupe.title} Copy"
+      dupe.name = "#{dupe.name} Copy"
       dupe
     end
 
