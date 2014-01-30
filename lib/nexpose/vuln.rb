@@ -217,8 +217,8 @@ module Nexpose
     def self.parse(xml)
       vuln = parse_attributes(xml)
 
-      vuln.description = REXML::XPath.first(xml, 'description').text
-      vuln.solution = REXML::XPath.first(xml, 'solution').text
+      vuln.description = REXML::XPath.first(xml, 'description').to_s
+      vuln.solution = REXML::XPath.first(xml, 'solution').to_s
 
       xml.elements.each('references/reference') do |ref|
         vuln.references << Reference.new(ref.attributes['source'], ref.text)
