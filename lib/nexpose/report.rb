@@ -308,7 +308,7 @@ module Nexpose
     def self.build(connection, site_id, site_name, type, format, generate_now = false)
       name = %(#{site_name} #{type} report in #{format})
       config = ReportConfig.new(name, type, format)
-      config.frequency = Frequency.new(true, false)
+      config.frequency = Frequency.new(true, false) unless generate_now
       config.filters << Filter.new('site', site_id)
       config.save(connection, generate_now)
       config
