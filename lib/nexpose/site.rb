@@ -260,7 +260,7 @@ module Nexpose
     # @return [String] XML valid for submission as part of other requests.
     #
     def to_xml
-      xml = %(<Site id='#{id}' name='#{replace_entities(name)}' description='#{description}' riskfactor='#{risk_factor}'>)
+      xml = %(<Site id='#{id}' name='#{replace_entities(name)}' description='#{replace_entities(description)}' riskfactor='#{risk_factor}'>)
 
       unless @users.empty?
         xml << '<Users>'
