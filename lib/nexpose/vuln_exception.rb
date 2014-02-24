@@ -157,9 +157,9 @@ module Nexpose
 
       @submitter_comment = comment if comment
       if @submitter_comment
-        comment = REXML::Element.new('comment')
-        comment.add_text(comment)
-        xml.add_element(comment)
+        comment_elem = REXML::Element.new('comment')
+        comment_elem.add_text(@submitter_comment)
+        xml.add_element(comment_elem)
       end
 
       response = connection.execute(xml, '1.2')
