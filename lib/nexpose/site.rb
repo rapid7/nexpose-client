@@ -259,50 +259,55 @@ module Nexpose
     #
     # @return [String] XML valid for submission as part of other requests.
     #
-    def to_xml
-      xml = %(<Site id='#{id}' name='#{replace_entities(name)}' description='#{replace_entities(description)}' riskfactor='#{risk_factor}'>)
+    def as_xml
+      xml = REXML::Element.new('Site')
+      xml.attributes['id'] = @id
+      xml.attributes['name'] = @name
+      xml.attributes['description'] = @description
+      xml.attributes['riskfactor'] = @risk_factor
 
       unless @users.empty?
-        xml << '<Users>'
-        @users.each { |user| xml << "<user id='#{user}'/>" }
-        xml << '</Users>'
+        elem = REXML::Element.new('Users')
+        @users.each { |user| elem.add_element('user', { 'id' => user }) }
+        xml.add_element(elem)
       end
 
-      xml << '<Hosts>'
-      xml << assets.reduce('') { |a, e| a << e.to_xml }
-      xml << '</Hosts>'
+      elem = REXML::Element.new('Hosts')
+      @assets.each { |a| elem.add_element(a.as_xml) }
+      xml.add_element(elem)
 
-      unless exclude.empty?
-        xml << '<ExcludedHosts>'
-        xml << exclude.reduce('') { |a, e| a << e.to_xml }
-        xml << '</ExcludedHosts>'
-      end
+      elem = REXML::Element.new('ExcludedHosts')
+      @exclude.each { |e| elem.add_element(e.as_xml) }
+      xml.add_element(elem)
 
       unless credentials.empty?
-        xml << '<Credentials>'
-        credentials.each do |c|
-          xml << c.to_xml if c.respond_to? :to_xml
-        end
-        xml << '</Credentials>'
+        elem = REXML::Element.new('Credentials')
+        @credentials.each { |c| elem.add_element(c.as_xml) }
+        xml.add_element(elem)
       end
 
       unless alerts.empty?
-        xml << '<Alerting>'
-        alerts.each do |a|
-          xml << a.to_xml if a.respond_to? :to_xml
-        end
-        xml << '</Alerting>'
+        elem = REXML::Element.new('Alerting')
+        alerts.each { |a| elem.add_element(a.as_xml) }
+        xml.add_element(elem)
       end
 
-      xml << %(<ScanConfig configID="#{@id}" name="#{@scan_template_name || @scan_template}" templateID="#{@scan_template}" configVersion="#{@config_version || 3}" engineID="#{@engine}">)
+      elem = REXML::Element.new('ScanConfig')
+      elem.add_attributes({ 'configID' => @id,
+                            'name' => @scan_template_name || @scan_template,
+                            'templateID' => @scan_template,
+                            'configVersion' => @config_version || 3,
+                            'engineID' => @engine })
+      sched = REXML::Element.new('Schedules')
+      @schedules.each { |s| sched.add_element(s.as_xml) }
+      elem.add_element(sched)
+      xml.add_element(elem)
 
-      xml << '<Schedules>'
-      @schedules.each do |schedule|
-        xml << schedule.to_xml
-      end
-      xml << '</Schedules>'
-      xml << '</ScanConfig>'
-      xml << '</Site>'
+      xml
+    end
+
+    def to_xml
+      as_xml.to_s
     end
 
     # Parse a response from a Nexpose console into a valid Site object.
@@ -412,11 +417,12 @@ module Nexpose
       to_xml.hash
     end
 
-    def to_xml_elem
+    def as_xml
       xml = REXML::Element.new('host')
       xml.text = @host
       xml
     end
+    alias_method :to_xml_elem, :as_xml
 
     def to_xml
       to_xml_elem.to_s
@@ -495,14 +501,15 @@ module Nexpose
       to_xml.hash
     end
 
-    def to_xml_elem
+    def as_xml
       xml = REXML::Element.new('range')
       xml.add_attributes({ 'from' => @from, 'to' => @to })
       xml
     end
+    alias_method :to_xml_elem, :as_xml
 
     def to_xml
-      to_xml_elem.to_s
+      as_xml.to_s
     end
   end
 end

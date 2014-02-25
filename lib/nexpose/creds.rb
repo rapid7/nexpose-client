@@ -67,7 +67,7 @@ module Nexpose
       to_xml_elem.to_s
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
 
       attributes['service'] = @service
@@ -86,6 +86,7 @@ module Nexpose
       xml.add_element(@html_forms.to_xml_elem) if @html_forms
       xml
     end
+    alias_method :to_xml_elem, :as_xml
 
     include Comparable
 
@@ -172,13 +173,14 @@ module Nexpose
       @value = value
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
       attributes['name'] = @name
       attributes['value'] = @value
 
       make_xml('Header', attributes)
     end
+    alias_method :to_xml_elem, :as_xml
   end
 
   # Object that represents Headers, associated with Web Session Authentication.
@@ -203,7 +205,7 @@ module Nexpose
       @headers.push(header)
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
       attributes['webapproot'] = @webapproot
       attributes['soft403'] = @soft403
@@ -214,6 +216,7 @@ module Nexpose
       end
       xml
     end
+    alias_method :to_xml_elem, :as_xml
 
   end
 
@@ -244,7 +247,7 @@ module Nexpose
       @checked = checked
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
       attributes['name'] = @name
       attributes['value'] = @value
@@ -254,6 +257,7 @@ module Nexpose
 
       make_xml('Field', attributes)
     end
+    alias_method :to_xml_elem, :as_xml
   end
 
   # When using htmlform, this represents the login form information.
@@ -284,7 +288,7 @@ module Nexpose
       @fields << field
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
       attributes['name'] = @name
       attributes['action'] = @action
@@ -298,6 +302,7 @@ module Nexpose
       end
       xml
     end
+    alias_method :to_xml_elem, :as_xml
   end
 
   # When using htmlform, this represents the login form information.
@@ -326,7 +331,7 @@ module Nexpose
       @html_forms << html_form
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
       attributes['parentpage'] = @parentpage
       attributes['soft403'] = @soft403
@@ -339,6 +344,7 @@ module Nexpose
       end
       xml
     end
+    alias_method :to_xml_elem, :as_xml
   end
 
   # When using ssh-key, this represents the PEM-format keypair information.

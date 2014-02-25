@@ -121,13 +121,21 @@ module Nexpose
       @enabled = enabled
     end
 
+    def as_xml
+      xml = REXML::Element.new('Schedule')
+      xml.attributes['enabled'] = @enabled ? 1 : 0
+      xml.attributes['type'] = @type
+      xml.attributes['interval'] = @interval
+      xml.attributes['start'] = @start
+      xml.attributes['maxDuration'] = @max_duration if @max_duration
+      xml.attributes['notValidAfter'] = @not_valid_after if @not_valid_after
+      xml.attributes['incremental'] = @incremental ? 1 : 0 if @incremental
+      xml.attributes['repeaterType'] = @repeater_type if @repeater_type
+      xml
+    end
+
     def to_xml
-      xml = %(<Schedule enabled='#{@enabled ? 1 : 0}' type='#{@type}' interval='#{@interval}' start='#{@start}')
-      xml << %( maxDuration='#{@max_duration}') if @max_duration
-      xml << %( notValidAfter='#{@not_valid_after}') if @not_valid_after
-      xml << %( incremental='#{@incremental ? 1 : 0}') if @incremental
-      xml << %( repeaterType='#{@repeater_type}') if @repeater_type
-      xml << '/>'
+      as_xml.to_s
     end
 
     def self.parse(xml)
