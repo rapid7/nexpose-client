@@ -2,6 +2,7 @@ module Nexpose
 
   class Connection
     include XMLUtils
+
     def list_silo_users
       r = execute(make_xml('MultiTenantUserListingRequest'), '1.2')
       arr = []
