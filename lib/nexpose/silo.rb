@@ -3,9 +3,9 @@ module Nexpose
   class Connection
     include XMLUtils
 
-    # Retrieve a list of all sites the user is authorized to view or manage.
+    # Retrieve a list of all silos the user is authorized to view or manage.
     #
-    # @return [Array[SiloSummary]] Array of SiteSummary objects.
+    # @return [Array[SiloSummary]] Array of SiloSummary objects.
     #
     def list_silos
       r = execute(make_xml('SiloListingRequest'), '1.2')
@@ -55,7 +55,7 @@ module Nexpose
 
     # Updates this silo on a Nexpose console.
     #
-    # @param [Connection] connection Connection to console where this site will be saved.
+    # @param [Connection] connection Connection to console where this silo will be saved.
     # @return [String] Silo ID assigned to this configuration, if successful.
     #
     def update(connection)
@@ -65,7 +65,7 @@ module Nexpose
 
     # Saves this silo to a Nexpose console.
     #
-    # @param [Connection] connection Connection to console where this site will be saved.
+    # @param [Connection] connection Connection to console where this silo will be saved.
     # @return [String] Silo ID assigned to this configuration, if successful.
     #
     def create(connection)
