@@ -89,7 +89,7 @@ module Nexpose
     # @return [Hash] The parametrized URI.
 
     def parametrize_uri(uri, parameters)
-      uri = uri.concat(('?').concat(parameters.map { |k, v| "#{k}=#{CGI.escape(v[0].to_s)}" }.join('&'))) if parameters
+      uri = uri.concat(('?').concat(parameters.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&'))) if parameters
     end
 
     ###

@@ -31,9 +31,8 @@ module Nexpose
       # load includes admin users, but save will fail if they are included.
       admins = nsc.users.select { |u| u.is_admin }.map { |u| u.id }
       @users.reject! { |id| admins.member? id }
-      data = JSON.parse(AJAX.form_post(nsc,
-                                       '/data/assetGroup/saveAssetGroup',
-                                       to_map))
+      uri = AJAX.parametrize_uri('/data/assetGroup/saveAssetGroup', to_map)
+      data = JSON.parse(AJAX.post(nsc, uri, to_entityDetails, 'application/json; charset-utf-8'))
       data['response'] == 'success.'
     end
 
@@ -54,12 +53,7 @@ module Nexpose
     end
 
     def to_map
-      obj = { 'searchCriteria' => @criteria.to_map,
-              'name' => @name,
-              'tag' => @description.nil? ? '' : @description,
-              'dynamic' => true,
-              'users' => @users }
-      map = { 'entityDetails' => JSON.generate(obj) }
+      map = Hash.new
       if @id
         map['entityid'] = @id
         map['mode'] = 'edit'
@@ -68,6 +62,16 @@ module Nexpose
         map['mode'] = false
       end
       map
+    end
+
+    def to_entityDetails
+      obj = { 'searchCriteria' => @criteria.to_map,
+              'name' => @name,
+              'tag' => @description.nil? ? '' : @description,
+              'dynamic' => true,
+              'users' => @users }
+      entityDetails = JSON.generate(obj)
+      entityDetails
     end
   end
 end
