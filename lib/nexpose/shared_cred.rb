@@ -111,46 +111,93 @@ module Nexpose
       !!(response =~ /success="1"/)
     end
 
-    def to_xml
-      xml = '<Credential '
-      xml << %( id="#{@id}">)
+    def as_xml
+      xml = REXML::Element.new('Credential')
+      xml.add_attribute('id', @id)
 
-      xml << %(<Name>#{@name}</Name>)
-      xml << %(<Description>#{@description}</Description>)
+      name = xml.add_element('Name').add_text(@name)
 
-      xml << %(<Services><Service type="#{@type}"></Service></Services>)
+      desc = xml.add_element('Description').add_text(@description)
 
-      xml << '<Account type="nexpose">'
-      xml << %(<Field name="database">#{@database}</Field>)
-      xml << %(<Field name="domain">#{@domain}</Field>)
-      xml << %(<Field name="username">#{@username}</Field>)
-      xml << %(<Field name="ntlmhash">#{@ntlm_hash}</Field>) if @ntlm_hash
-      xml << %(<Field name="password">#{@password}</Field>) if @password
-      xml << %(<Field name="pemkey">#{@pem_key}</Field>) if @pem_key
-      xml << %(<Field name="privilegeelevationusername">#{@privilege_username}</Field>)
-      xml << %(<Field name="privilegeelevationpassword">#{@privilege_password}</Field>) if @privilege_password
-      xml << %(<Field name="privilegeelevationtype">#{@privilege_type}</Field>) if @privilege_type
-      xml << '</Account>'
+      services = xml.add_element('Services')
+      service = services.add_element('Service').add_attribute('type', @type)
 
-      xml << '<Restrictions>'
-      xml << %(<Restriction type="host">#{@host}</Restriction>) if @host
-      xml << %(<Restriction type="port">#{@port}</Restriction>) if @port
-      xml << '</Restrictions>'
+      (account = xml.add_element('Account')).add_attribute('type', 'nexpose')
+      account.add_element('Field', { 'name' => 'database' }).add_text(@database)
 
-      xml << %(<Sites all="#{@all_sites ? 1 : 0}">)
-      @sites.each do |site|
-        xml << %(<Site id="#{site}")
-        xml << ' enabled="0"' if @disabled.member? site
-        xml << '></Site>'
+      account.add_element('Field', { 'name' => 'domain' }).add_text(@domain)
+      account.add_element('Field', { 'name' => 'username' }).add_text(@username)
+      account.add_element('Field', { 'name' => 'ntlmhash' }).add_text(@ntlm_hash) if @ntlm_hash
+      account.add_element('Field', { 'name' => 'password' }).add_text(@password) if @password
+      account.add_element('Field', { 'name' => 'pemkey' }).add_text(@pem_key) if @pem_key
+      account.add_element('Field', { 'name' => 'privilegeelevationusername' }).add_text(@privilege_username)
+      account.add_element('Field', { 'name' => 'privilegeelevationpassword' }).add_text(@privilege_password) if @privilege_password
+      account.add_element('Field', { 'name' => 'privilegeelevationtype' }).add_text(@privilege_type) if @privilege_type
+
+      restrictions = xml.add_element('Restrictions')
+      restrictions.add_element('Restriction', { 'type' => 'host' }).add_text(@host) if @host
+      restrictions.add_element('Restriction', { 'type' => 'port' }).add_text(@port) if @port
+
+      sites = xml.add_element('Sites')
+      sites.add_attribute('all', @all_sites ? 1 : 0)
+      @sites.each do |s|
+        site = sites.add_element('Site')
+        site.add_attribute('id', s)
+        site.add_attribute('enabled', 0) if @disabled.member? s
       end
       if @sites.empty?
-        @disabled.each do |site|
-          xml << %(<Site id="#{site}" enabled="0"></Site>)
+        @disabled.each do |s|
+          site = sites.add_element('Site')
+          site.add_attribute('id', s)
+          site.add_attribute('enabled', 0)
         end
       end
-      xml << '</Sites>'
 
-      xml << '</Credential>'
+      xml
+    end
+
+    def to_xml
+      as_xml.to_s
+    end
+
+    # Test this credential against a target where the credentials should apply.
+    # Only works for a newly created credential. Loading an existing credential
+    # will likely fail.
+    #
+    # @param [Connection] nsc An active connection to the security console.
+    # @param [String] target Target host to check credentials against.
+    # @param [Fixnum] engine_id ID of the engine to use for testing credentials.
+    #   Will default to the local engine if none is provided.
+    #
+    def test(nsc, target, engine_id = nil)
+      unless engine_id
+        local_engine = nsc.engines.find { |e| e.name == 'Local scan engine' }
+        engine_id = local_engine.id
+      end
+
+      parameters = _to_param(target, engine_id)
+      xml = AJAX.form_post(nsc, '/ajax/test_admin_credentials.txml', parameters)
+      result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
+      result.attributes['success'].to_i == 1
+    end
+
+    def _to_param(target, engine_id)
+      port = @port
+      port = Credential::DEFAULT_PORTS[@type] if port.nil?
+
+      { engineid: engine_id,
+        sc_creds_dev: target,
+        sc_creds_svc: @type,
+        sc_creds_database: @database,
+        sc_creds_domain: @domain,
+        sc_creds_uname: @username,
+        sc_creds_password: @password,
+        sc_creds_pemkey: @pem_key,
+        sc_creds_port: port,
+        sc_creds_privilegeelevationusername: @privilege_username,
+        sc_creds_privilegeelevationpassword: @privilege_password,
+        sc_creds_privilegeelevationtype: @privilege_type,
+        siteid: -1 }
     end
 
     def self.parse(xml)

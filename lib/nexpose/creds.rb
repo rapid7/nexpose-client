@@ -9,6 +9,26 @@ module Nexpose
   class Credential
     include XMLUtils
 
+    DEFAULT_PORTS = { 'cvs' => 2401,
+                      'ftp' => 21,
+                      'http' => 80,
+                      'as400' => 449,
+                      'notes' => 1352,
+                      'tds' => 1433,
+                      'sybase' => 5000,
+                      'cifs' => 445,
+                      'cifshash' => 445,
+                      'oracle' => 1521,
+                      'pop' => 110,
+                      'postgresql' => 5432,
+                      'remote execution' => 512,
+                      'snmp' => 161,
+                      'ssh' => 22,
+                      'ssh-key' => 22,
+                      'telnet' => 23,
+                      'mysql' => 3306,
+                      'db2' => 50000 }
+
     # Security blob for an existing set of credentials
     attr_accessor :blob
     # The service for these credentials. Can be All.
