@@ -146,6 +146,30 @@ module Nexpose
       gen.attributes['disableWebSpider'] = enable ? '0' : '1'
     end
 
+    # Add custom TCP ports to scan for services
+    # @param [Array] ports to scan
+    def tcp_service_ports=(ports)
+      service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/TCPPortScan')
+      service_ports.attributes['mode'] = "custom"
+      service_ports.attributes['method'] = "syn"
+      REXML::XPath.first(service_ports, './portList').text = ports.join(",")
+    end
+
+    # Add custom UDP ports to scan for services
+    # @param [Array] posts to scan
+    def udp_service_ports=(ports)
+      service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/UDPPortScan')
+      service_ports.attributes['mode'] = "custom"
+      REXML::XPath.first(service_ports, './portList').text = ports.join(",")
+    end
+
+    # Disable UDP port scan
+    # @param [Boolean] enable or disable UDP ports
+    def enable_udp_ports=(enable)
+      service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/UDPPortScan')
+      service_ports.attributes['mode'] = 'none' unless enable
+    end
+
     # @return [Boolean] Whether to correlate reliable checks with regular checks.
     def correlate?
       vuln_checks = REXML::XPath.first(@xml, 'ScanTemplate/VulnerabilityChecks')

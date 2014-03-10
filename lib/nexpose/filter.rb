@@ -101,6 +101,10 @@ module Nexpose
       # Valid Operators: IN, NOT_IN
       IP_RANGE = 'IP_RANGE'
 
+      # Valid Operators: IS, IS_NOT, IN_RANGE
+      # Valid Values: Integers from 1 to 65535
+      OPEN_PORT = 'OPEN_PORT'
+
       # Valid Operators: CONTAINS, NOT_CONTAINS, IS_EMPTY, IS_NOT_EMPTY
       OS = 'OS'
 
@@ -130,6 +134,10 @@ module Nexpose
       # Valid Operators: CONTAINS, NOT_CONTAINS
       SOFTWARE = 'SOFTWARE'
 
+      # Valid Operators: ARE
+      # Valid Values: PRESENT, NOT_PRESENT
+      VALIDATED_VULNERABILITIES = 'VULNERABILITY_VALIDATED_STATUS'
+
       # Search against vulnerability titles that an asset contains.
       # Valid Operators: CONTAINS, NOT_CONTAINS
       VULNERABILITY = 'VULNERABILITY'
@@ -146,6 +154,7 @@ module Nexpose
       NOT_CONTAINS = 'NOT_CONTAINS'
       IS = 'IS'
       IS_NOT = 'IS_NOT'
+      ARE = 'ARE'
       IN = 'IN'
       NOT_IN = 'NOT_IN'
       IN_RANGE = 'IN_RANGE'
@@ -212,6 +221,11 @@ module Nexpose
       module ScanDate
         # Pass this format to #strftime() to get expected format for requests.
         FORMAT = '%m/%d/%Y'
+      end
+
+      module ValidatedVulnerability
+        NOT_PRESENT = 1
+        PRESENT = 0
       end
 
       module VulnerabilityExposure

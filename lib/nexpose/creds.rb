@@ -9,6 +9,26 @@ module Nexpose
   class Credential
     include XMLUtils
 
+    DEFAULT_PORTS = { 'cvs' => 2401,
+                      'ftp' => 21,
+                      'http' => 80,
+                      'as400' => 449,
+                      'notes' => 1352,
+                      'tds' => 1433,
+                      'sybase' => 5000,
+                      'cifs' => 445,
+                      'cifshash' => 445,
+                      'oracle' => 1521,
+                      'pop' => 110,
+                      'postgresql' => 5432,
+                      'remote execution' => 512,
+                      'snmp' => 161,
+                      'ssh' => 22,
+                      'ssh-key' => 22,
+                      'telnet' => 23,
+                      'mysql' => 3306,
+                      'db2' => 50000 }
+
     # Security blob for an existing set of credentials
     attr_accessor :blob
     # The service for these credentials. Can be All.
@@ -67,7 +87,7 @@ module Nexpose
       to_xml_elem.to_s
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
 
       attributes['service'] = @service
@@ -86,6 +106,7 @@ module Nexpose
       xml.add_element(@html_forms.to_xml_elem) if @html_forms
       xml
     end
+    alias_method :to_xml_elem, :as_xml
 
     include Comparable
 
@@ -172,13 +193,14 @@ module Nexpose
       @value = value
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
       attributes['name'] = @name
       attributes['value'] = @value
 
       make_xml('Header', attributes)
     end
+    alias_method :to_xml_elem, :as_xml
   end
 
   # Object that represents Headers, associated with Web Session Authentication.
@@ -203,7 +225,7 @@ module Nexpose
       @headers.push(header)
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
       attributes['webapproot'] = @webapproot
       attributes['soft403'] = @soft403
@@ -214,6 +236,7 @@ module Nexpose
       end
       xml
     end
+    alias_method :to_xml_elem, :as_xml
 
   end
 
@@ -244,7 +267,7 @@ module Nexpose
       @checked = checked
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
       attributes['name'] = @name
       attributes['value'] = @value
@@ -254,6 +277,7 @@ module Nexpose
 
       make_xml('Field', attributes)
     end
+    alias_method :to_xml_elem, :as_xml
   end
 
   # When using htmlform, this represents the login form information.
@@ -284,7 +308,7 @@ module Nexpose
       @fields << field
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
       attributes['name'] = @name
       attributes['action'] = @action
@@ -298,6 +322,7 @@ module Nexpose
       end
       xml
     end
+    alias_method :to_xml_elem, :as_xml
   end
 
   # When using htmlform, this represents the login form information.
@@ -326,7 +351,7 @@ module Nexpose
       @html_forms << html_form
     end
 
-    def to_xml_elem
+    def as_xml
       attributes = {}
       attributes['parentpage'] = @parentpage
       attributes['soft403'] = @soft403
@@ -339,6 +364,7 @@ module Nexpose
       end
       xml
     end
+    alias_method :to_xml_elem, :as_xml
   end
 
   # When using ssh-key, this represents the PEM-format keypair information.

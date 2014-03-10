@@ -22,16 +22,19 @@ module Nexpose
       @name, @enabled, @max_alerts = name, enabled, max_alerts
     end
 
+    def as_xml
+      xml = REXML::Element.new('Alert')
+      xml.attributes['name'] = @name
+      xml.attributes['enabled'] = @enabled
+      xml.attributes['maxAlerts'] = @max_alerts
+      xml.add_element(scan_filter.as_xml)
+      xml.add_element(vuln_filter.as_xml)
+      xml.add_element(type.as_xml)
+      xml
+    end
+
     def to_xml
-      xml = '<Alert'
-      xml << %( name="#{@name}")
-      xml << %( enabled="#{@enabled}")
-      xml << %( maxAlerts="#{@max_alerts}")
-      xml << '>'
-      xml << scan_filter.to_xml
-      xml << vuln_filter.to_xml
-      xml << type.to_xml
-      xml << '</Alert>'
+      as_xml.to_s
     end
 
     # Parse a response from a Nexpose console into a valid Alert object.
@@ -71,14 +74,18 @@ module Nexpose
       @start, @stop, @fail, @resume, @pause = start, stop, fail, resume, pause
     end
 
+    def as_xml
+      xml = REXML::Element.new('scanFilter')
+      xml.attributes['scanStart'] = @start
+      xml.attributes['scanStop'] = @stop
+      xml.attributes['scanFailed'] = @fail
+      xml.attributes['scanResumed'] = @resume
+      xml.attributes['scanPaused'] = @pause
+      xml
+    end
+
     def to_xml
-      xml = '<scanFilter'
-      xml << %( scanStart="#{@start}")
-      xml << %( scanStop="#{@stop}")
-      xml << %( scanFailed="#{@fail}")
-      xml << %( scanResumed="#{@resume}")
-      xml << %( scanPaused="#{@pause}")
-      xml << '/>'
+      as_xml.to_s
     end
 
     def self.parse(xml)
@@ -110,13 +117,17 @@ module Nexpose
       @severity, @confirmed, @unconfirmed, @potential = severity, confirmed, unconfirmed, potential
     end
 
+    def as_xml
+      xml = REXML::Element.new('vulnFilter')
+      xml.attributes['severityThreshold'] = @severity
+      xml.attributes['confirmed'] = @confirmed
+      xml.attributes['unconfirmed'] = @unconfirmed
+      xml.attributes['potential'] = @potential
+      xml
+    end
+
     def to_xml
-      xml = '<vulnFilter'
-      xml << %( severityThreshold="#{@severity}")
-      xml << %( confirmed="#{@confirmed}")
-      xml << %( unconfirmed="#{@unconfirmed}")
-      xml << %( potential="#{@potential}")
-      xml << '/>'
+      as_xml.to_s
     end
 
     def self.parse(xml)
@@ -143,12 +154,14 @@ module Nexpose
       new(xml.attributes['server'])
     end
 
-    include Sanitize
+    def as_xml
+      xml = REXML::Element.new('syslogAlert')
+      xml.attributes['server'] = @server
+      xml
+    end
 
     def to_xml
-      xml = '<syslogAlert'
-      xml << %( server="#{replace_entities(server)}">)
-      xml << '</syslogAlert>'
+      as_xml.to_s
     end
   end
 
@@ -172,13 +185,15 @@ module Nexpose
       new(xml.attributes['community'], xml.attributes['server'])
     end
 
-    include Sanitize
+    def as_xml
+      xml = REXML::Element.new('snmpAlert')
+      xml.attributes['community'] = @community
+      xml.attributes['server'] = @server
+      xml
+    end
 
     def to_xml
-      xml = '<snmpAlert'
-      xml << %( community="#{replace_entities(community)}")
-      xml << %( server="#{replace_entities(server)}">)
-      xml << '</snmpAlert>'
+      as_xml.to_s
     end
   end
 
@@ -208,17 +223,21 @@ module Nexpose
       @recipients << recipient
     end
 
-    include Sanitize
+    def as_xml
+      xml = REXML::Element.new('smtpAlert')
+      xml.attributes['sender'] = @sender
+      xml.attributes['server'] = @server
+      xml.attributes['limitText'] = @limit_text
+      recipients.each do |recpt|
+        elem = REXML::Element.new('recipient')
+        elem.text = recpt
+        xml.add_element(elem)
+      end
+      xml
+    end
 
     def to_xml
-      xml = '<smtpAlert'
-      xml << %( sender="#{replace_entities(sender)}")
-      xml << %( server="#{replace_entities(server)}")
-      xml << %( limitText="#{limit_text}">)
-      recipients.each do |recpt|
-        xml << "<recipient>#{replace_entities(recpt)}</recipient>"
-      end
-      xml << '</smtpAlert>'
+      as_xml.to_s
     end
 
     def self.parse(xml)

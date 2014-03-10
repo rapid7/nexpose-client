@@ -15,6 +15,6 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.9'
   s.platform              = 'ruby'
 
-  s.add_dependency('librex', '>= 0.0.68')
-  s.add_dependency('rex', '>= 1.0.2')
+  s.add_runtime_dependency('librex', '~> 0.0', '>= 0.0.68')
+  s.add_runtime_dependency('rex', '~> 1.0', '>= 1.0.2')
 end
