@@ -3,6 +3,10 @@ module Nexpose
   class Connection
     include XMLUtils
 
+    # Retrieve a list of all silos the user is authorized to view or manage.
+    #
+    # @return [Array[SiloProfileSummary]] Array of SiloSummary objects.
+    #
     def list_silo_profiles
       r = execute(make_xml('SiloProfileListingRequest'), '1.2')
       arr = []
@@ -12,6 +16,17 @@ module Nexpose
         end
       end
       arr
+    end
+
+    alias_method :silo_profiles, :list_silo_profiles
+
+    # Delete the specified silo profile
+    #
+    # @return Whether or not the delete request succeeded.
+    #
+    def delete_silo_profile(silo_profile_id)
+      r = execute(make_xml('SiloProfileDeleteRequest', {'silo-profile-id' => silo_profile_id}), '1.2')
+      r.success
     end
   end
 
@@ -30,15 +45,17 @@ module Nexpose
     attr_accessor :restricted_report_formats
     attr_accessor :restricted_report_sections
 
+    def self.copy(connection, id)
+      silo = load(connection, id)
+      silo.id = nil
+      silo.name = nil
+    end
+
     def self.load(connection, id)
-      xml = '<SiloProfileConfigRequest session-id="' + connection.session_id + '"'
-      xml << %( silo-profile-id="#{id}")
-      xml << ' />'
-      r = connection.execute(xml, '1.2')
+      r = connection.execute(connection.make_xml('SiloProfileConfigRequest', {'silo-profile-id' => id}), '1.2')
 
       if r.success
         r.res.elements.each('SiloProfileConfigResponse/SiloProfileConfig') do |config|
-          puts config
           return SiloProfile.parse(config)
         end
       end
@@ -46,54 +63,70 @@ module Nexpose
     end
 
     def self.parse(xml)
-      profile = new
-      profile.id = xml.attributes['id']
-      profile.name = xml.attributes['name']
-      profile.description = xml.attributes['description']
-      profile.all_licensed_modules = xml.attributes['all-licensed-modules']
-      profile.all_global_engines = xml.attributes['all-global-engines']
-      profile.all_global_report_templates = xml.attributes['all-global-report-templates']
-      profile.all_global_scan_templates = xml.attributes['all-global-scan-templates']
+      new do |profile|
+        profile.id = xml.attributes['id']
+        profile.name = xml.attributes['name']
+        profile.description = xml.attributes['description']
+        profile.all_licensed_modules = xml.attributes['all-licensed-modules']
+        profile.all_global_engines = xml.attributes['all-global-engines']
+        profile.all_global_report_templates = xml.attributes['all-global-report-templates']
+        profile.all_global_scan_templates = xml.attributes['all-global-scan-templates']
 
-      profile.global_report_templates = []
-      xml.elements.each('GlobalReportTemplates/GlobalReportTemplate') {|template| profile.global_report_templates << template.attributes['name'] }
+        profile.global_report_templates = []
+        xml.elements.each('GlobalReportTemplates/GlobalReportTemplate') { |template| profile.global_report_templates << template.attributes['name'] }
 
-      profile.global_scan_engines = []
-      xml.elements.each('GlobalScanEngines/GlobalScanEngine') {|engine| profile.global_scan_engines << engine.attributes['name'] }
+        profile.global_scan_engines = []
+        xml.elements.each('GlobalScanEngines/GlobalScanEngine') { |engine| profile.global_scan_engines << engine.attributes['name'] }
 
-      profile.global_scan_templates = []
-      xml.elements.each('GlobalScanTemplates/GlobalScanTemplate') {|template| profile.global_scan_templates << template.attributes['name'] }
+        profile.global_scan_templates = []
+        xml.elements.each('GlobalScanTemplates/GlobalScanTemplate') { |template| profile.global_scan_templates << template.attributes['name'] }
 
-      profile.licensed_modules = []
-      xml.elements.each('LicensedModules/LicensedModule') {|license_module| profile.licensed_modules << license_module.attributes['name'] }
+        profile.licensed_modules = []
+        xml.elements.each('LicensedModules/LicensedModule') { |license_module| profile.licensed_modules << license_module.attributes['name'] }
 
-      profile.restricted_report_formats = []
-      xml.elements.each('RestrictedReportFormats/RestrictedReportFormat') {|format| profile.restricted_report_formats << format.attributes['name'] }
+        profile.restricted_report_formats = []
+        xml.elements.each('RestrictedReportFormats/RestrictedReportFormat') { |format| profile.restricted_report_formats << format.attributes['name'] }
 
-      profile.restricted_report_sections = []
-      xml.elements.each('RestrictedReportSections/RestrictedReportSection') {|section| profile.restricted_report_sections << section.attributes['name'] }
-
-      profile
+        profile.restricted_report_sections = []
+        xml.elements.each('RestrictedReportSections/RestrictedReportSection') { |section| profile.restricted_report_sections << section.attributes['name'] }
+      end
     end
 
-    # Updates this silo profile on a Nexpose console.
+    def save(connection)
+      begin
+        update(connection)
+      rescue APIError => error
+        raise error unless (error.message =~ /A silo profile .* does not exist./)
+        create(connection)
+      end
+    end
+
+    # Updates an existing silo profile on a Nexpose console.
     #
     # @param [Connection] connection Connection to console where this silo profile will be saved.
     # @return [String] Silo Profile ID assigned to this configuration, if successful.
     #
     def update(connection)
-      r = connection.execute('<SiloProfileUpdateRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiloProfileUpdateRequest>', '1.2')
+      xml = connection.make_xml('SiloProfileUpdateRequest')
+      xml.add_element(as_xml)
+      r = connection.execute(xml, '1.2')
       @id = r.attributes['silo-profile-id'] if r.success
     end
 
-    # Saves this silo profile to a Nexpose console.
+    # Saves a new silo profile to a Nexpose console.
     #
     # @param [Connection] connection Connection to console where this silo profile will be saved.
     # @return [String] Silo Profile ID assigned to this configuration, if successful.
     #
     def create(connection)
-      r = connection.execute('<SiloProfileCreateRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiloProfileCreateRequest>', '1.2')
+      xml = connection.make_xml('SiloProfileCreateRequest')
+      xml.add_element(as_xml)
+      r = connection.execute(xml, '1.2')
       @id = r.attributes['silo-profile-id'] if r.success
+    end
+
+    def delete(connection)
+      connection.delete_silo_profile(@id)
     end
 
     def as_xml
@@ -101,7 +134,7 @@ module Nexpose
       xml.add_attributes({'id' => @id,
                           'name' => @name,
                           'description' => @description,
-                          'all-licensed-modules' => @all_licensed_modules,
+                          'alllicensed-modules' => @all_licensed_modules,
                           'all-global-engines' => @all_global_engines,
                           'all-global-report-templates' => @all_global_report_templates,
                           'all-global-scan-templates' => @all_global_scan_templates})
@@ -157,34 +190,34 @@ module Nexpose
   end
 
   class SiloProfileSummary
-    attr_accessor :id
-    attr_accessor :name
-    attr_accessor :description
-    attr_accessor :global_report_template_count
-    attr_accessor :global_scan_engine_count
-    attr_accessor :global_scan_template_count
-    attr_accessor :licensed_module_count
-    attr_accessor :restricted_report_section_count
-    attr_accessor :all_licensed_modules
-    attr_accessor :all_global_engines
-    attr_accessor :all_global_report_templates
-    attr_accessor :all_global_scan_templates
+    attr_reader :id
+    attr_reader :name
+    attr_reader :description
+    attr_reader :global_report_template_count
+    attr_reader :global_scan_engine_count
+    attr_reader :global_scan_template_count
+    attr_reader :licensed_module_count
+    attr_reader :restricted_report_section_count
+    attr_reader :all_licensed_modules
+    attr_reader :all_global_engines
+    attr_reader :all_global_report_templates
+    attr_reader :all_global_scan_templates
 
     def self.parse(xml)
-      profile = new
-      profile.id = xml.attributes['id']
-      profile.name = xml.attributes['name']
-      profile.description = xml.attributes['description']
-      profile.global_report_template_count = xml.attributes['global-report-template-count']
-      profile.global_scan_engine_count = xml.attributes['global-scan-engine-count']
-      profile.global_scan_template_count = xml.attributes['global-scan-template-count']
-      profile.licensed_module_count = xml.attributes['licensed-module-count']
-      profile.restricted_report_section_count = xml.attributes['restricted-report-section-count']
-      profile.all_licensed_modules = xml.attributes['all-licensed-modules']
-      profile.all_global_engines = xml.attributes['all-global-engines']
-      profile.all_global_report_templates = xml.attributes['all-global-report-templates']
-      profile.all_global_scan_templates = xml.attributes['all-global-scan-templates']
-      profile
+      new do |profile|
+        profile.id = xml.attributes['id']
+        profile.name = xml.attributes['name']
+        profile.description = xml.attributes['description']
+        profile.global_report_template_count = xml.attributes['global-report-template-count']
+        profile.global_scan_engine_count = xml.attributes['global-scan-engine-count']
+        profile.global_scan_template_count = xml.attributes['global-scan-template-count']
+        profile.licensed_module_count = xml.attributes['licensed-module-count']
+        profile.restricted_report_section_count = xml.attributes['restricted-report-section-count']
+        profile.all_licensed_modules = xml.attributes['all-licensed-modules']
+        profile.all_global_engines = xml.attributes['all-global-engines']
+        profile.all_global_report_templates = xml.attributes['all-global-report-templates']
+        profile.all_global_scan_templates = xml.attributes['all-global-scan-templates']
+      end
     end
   end
 end

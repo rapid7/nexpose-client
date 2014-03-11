@@ -18,6 +18,8 @@ module Nexpose
       arr
     end
 
+    alias_method :silos, :list_silos
+
     # Delete the specified silo
     #
     # @return Whether or not the delete request succeeded.
@@ -29,21 +31,40 @@ module Nexpose
   end
 
   class Silo
+    # Required fields
     attr_accessor :id
-    attr_accessor :silo_profile_id
+    attr_accessor :profile_id
     attr_accessor :name
-    attr_accessor :description
     attr_accessor :max_assets
     attr_accessor :max_users
     attr_accessor :max_hosted_assets
+
+    #Optional fields
+    attr_accessor :description
     attr_accessor :merchant
     attr_accessor :organization
 
+    # Copy an existing configuration from a Nexpose instance.
+    # Returned object will reset the silo ID and name
+    #
+    # @param [Connection] connection Connection to the security console.
+    # @param [String] id Silo ID of an existing silo.
+    # @return [Silo] Silo configuration loaded from a Nexpose console.
+    #
+    def self.copy(connection, id)
+      silo = load(connection, id)
+      silo.id = nil
+      silo.name = nil
+    end
+
+    # Load an existing configuration from a Nexpose instance.
+    #
+    # @param [Connection] connection Connection to console where site exists.
+    # @param [String] id Silo ID of an existing silo.
+    # @return [Silo] Silo configuration loaded from a Nexpose console.
+    #
     def self.load(connection, id)
-      xml = '<SiloConfigRequest session-id="' + connection.session_id + '"'
-      xml << %( silo-id="#{id}")
-      xml << ' />'
-      r = connection.execute(xml, '1.2')
+      r = connection.execute(connection.make_xml('SiloConfigRequest', {'silo-id' => id}), '1.2')
 
       if r.success
         r.res.elements.each('SiloConfigResponse/SiloConfig') do |config|
@@ -53,29 +74,46 @@ module Nexpose
       nil
     end
 
+    def save(connection)
+      begin
+        update(connection)
+      rescue APIError => error
+        raise error unless (error.message =~ /A silo .* does not exist./)
+        create(connection)
+      end
+    end
+
     # Updates this silo on a Nexpose console.
     #
     # @param [Connection] connection Connection to console where this silo will be saved.
     # @return [String] Silo ID assigned to this configuration, if successful.
     #
     def update(connection)
-      r = connection.execute('<SiloUpdateRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiloUpdateRequest>', '1.2')
+      xml = connection.make_xml('SiloUpdateRequest')
+      xml.add_element(as_xml)
+      r = connection.execute(xml, '1.2')
       @id = r.attributes['id'] if r.success
     end
 
-    # Saves this silo to a Nexpose console.
+    # Saves a new silo to a Nexpose console.
     #
     # @param [Connection] connection Connection to console where this silo will be saved.
     # @return [String] Silo ID assigned to this configuration, if successful.
     #
     def create(connection)
-      r = connection.execute('<SiloCreateRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiloCreateRequest>', '1.2')
+      xml = connection.make_xml('SiloCreateRequest')
+      xml.add_element(as_xml)
+      r = connection.execute(xml, '1.2')
       @id = r.attributes['id'] if r.success
+    end
+
+    def delete(connection)
+      connection.delete_silo(@id)
     end
 
     def as_xml
       xml = REXML::Element.new('SiloConfig')
-      xml.add_attributes({'description' => @description, 'name' => @name, 'id' => @id, 'silo-profile-id' => @silo_profile_id, 'max-assets' => @max_assets, 'max-users' => @max_users, 'max-hosted-assets' => @max_hosted_assets})
+      xml.add_attributes({'description' => @description, 'name' => @name, 'id' => @id, 'silo-profile-id' => @profile_id, 'max-assets' => @max_assets, 'max-users' => @max_users, 'max-hosted-assets' => @max_hosted_assets})
       xml.add(@merchant.as_xml) if @merchant
       xml.add(@organization.as_xml) if @organization
       xml
@@ -86,21 +124,23 @@ module Nexpose
     end
 
     def self.parse(xml)
-      silo = new
-      silo.id = xml.attributes['id']
-      silo.silo_profile_id = xml.attributes['silo-profile-id']
-      silo.name = xml.attributes['name']
-      silo.max_assets = xml.attributes['max-assets']
-      silo.max_users = xml.attributes['max-users']
-      silo.max_hosted_assets = xml.attributes['max-hosted-assets']
-      silo.description = xml.attributes['description'] if xml.attributes['description']
-      xml.elements.each('Merchant') do |merchant|
-        silo.merchant = Merchant.parse(merchant)
+      new do |silo|
+        silo.id = xml.attributes['id']
+        silo.profile_id = xml.attributes['silo-profile-id']
+        silo.name = xml.attributes['name']
+        silo.max_assets = xml.attributes['max-assets']
+        silo.max_users = xml.attributes['max-users']
+        silo.max_hosted_assets = xml.attributes['max-hosted-assets']
+        silo.description = xml.attributes['description']
+
+        xml.elements.each('Merchant') do |merchant|
+          silo.merchant = Merchant.parse(merchant)
+        end
+
+        xml.elements.each('Organization') do |organization|
+          silo.organization = Organization.parse(organization)
+        end
       end
-      xml.elements.each('Organization') do |organization|
-        silo.organization = Organization.parse(organization)
-      end
-      silo
     end
   end
 
@@ -113,14 +153,14 @@ module Nexpose
     attr_accessor :country
 
     def self.parse(xml)
-      address = new
-      address.line1 = xml.attributes['line1']
-      address.line2 = xml.attributes['line2']
-      address.city = xml.attributes['city']
-      address.state = xml.attributes['state']
-      address.zip = xml.attributes['zip']
-      address.country = xml.attributes['country']
-      address
+      new do |address|
+        address.line1 = xml.attributes['line1']
+        address.line2 = xml.attributes['line2']
+        address.city = xml.attributes['city']
+        address.state = xml.attributes['state']
+        address.zip = xml.attributes['zip']
+        address.country = xml.attributes['country']
+      end
     end
 
     def as_xml
@@ -148,15 +188,18 @@ module Nexpose
     end
 
     def self.parse(xml)
-      organization = new
-      organization.company = xml.attributes['company']
-      organization.first_name = xml.attributes['first-name']
-      organization.last_name = xml.attributes['last-name']
-      organization.phone = xml.attributes['phone-number']
-      xml.elements.each('Address') { |address| merchant.address = Address.parse(address) }
-      organization.email = xml.attributes['email']
-      organization.title = xml.attributes['title']
-      organization.url = xml.attributes['url']
+      new do |organization|
+        organization.company = xml.attributes['company']
+        organization.first_name = xml.attributes['first-name']
+        organization.last_name = xml.attributes['last-name']
+        organization.phone = xml.attributes['phone-number']
+        xml.elements.each('Address') do |address|
+          merchant.address = Address.parse(address)
+        end
+        organization.email = xml.attributes['email']
+        organization.title = xml.attributes['title']
+        organization.url = xml.attributes['url']
+      end
     end
   end
 
@@ -177,33 +220,45 @@ module Nexpose
     attr_accessor :qsa
 
     def self.parse(xml)
-      merchant = new
-      merchant.acquirer_relationship = xml.attributes['acquirer-relationship']
-      merchant.agent_relationship = xml.attributes['agent-relationship']
-      merchant.ecommerce = xml.attributes['ecommerce']
-      merchant.grocery = xml.attributes['grocery']
-      merchant.mail_order = xml.attributes['mail-order']
-      merchant.payment_application = xml.attributes['payment-application']
-      merchant.payment_version = xml.attributes['payment-version']
-      merchant.petroleum = xml.attributes['petroleum']
-      merchant.retail = xml.attributes['retail']
-      merchant.telecommunication = xml.attributes['telecommunication']
-      merchant.travel = xml.attributes['travel']
-      merchant.company = xml.attributes['company']
-      merchant.first_name = xml.attributes['first-name']
-      merchant.last_name = xml.attributes['last-name']
-      merchant.phone = xml.attributes['phone-number']
-      xml.elements.each('Address') { |address| merchant.address = Address.parse(address) }
-      merchant.dbas = []
-      xml.elements.each('DBAs/DBA') { |dba| merchant.dbas << dba.attributes['name'] }
-      merchant.industries = []
-      xml.elements.each('OtherIndustries/Industry') { |industry| merchant.industries << industry.attributes['name'] }
-      merchant.qsa = []
-      xml.elements.each('QSA') { |organization| merchant.qsa << Organization.parse(organization) }
-      merchant.email = xml.attributes['email']
-      merchant.title = xml.attributes['title']
-      merchant.url = xml.attributes['url']
-      merchant
+      new do |merchant|
+        merchant.acquirer_relationship = xml.attributes['acquirer-relationship']
+        merchant.agent_relationship = xml.attributes['agent-relationship']
+        merchant.ecommerce = xml.attributes['ecommerce']
+        merchant.grocery = xml.attributes['grocery']
+        merchant.mail_order = xml.attributes['mail-order']
+        merchant.payment_application = xml.attributes['payment-application']
+        merchant.payment_version = xml.attributes['payment-version']
+        merchant.petroleum = xml.attributes['petroleum']
+        merchant.retail = xml.attributes['retail']
+        merchant.telecommunication = xml.attributes['telecommunication']
+        merchant.travel = xml.attributes['travel']
+        merchant.company = xml.attributes['company']
+        merchant.first_name = xml.attributes['first-name']
+        merchant.last_name = xml.attributes['last-name']
+        merchant.phone = xml.attributes['phone-number']
+        merchant.email = xml.attributes['email']
+        merchant.title = xml.attributes['title']
+        merchant.url = xml.attributes['url']
+
+        xml.elements.each('Address') do |address|
+          merchant.address = Address.parse(address)
+        end
+
+        merchant.dbas = []
+        xml.elements.each('DBAs/DBA') do |dba|
+          merchant.dbas << dba.attributes['name']
+        end
+
+        merchant.industries = []
+        xml.elements.each('OtherIndustries/Industry') do |industry|
+          merchant.industries << industry.attributes['name']
+        end
+
+        merchant.qsa = []
+        xml.elements.each('QSA') do |organization|
+          merchant.qsa << Organization.parse(organization)
+        end
+      end
     end
 
     def as_xml
@@ -211,19 +266,23 @@ module Nexpose
       xml.name = 'Merchant'
       xml.add_attributes({'acquirer-relationship' => @acquirer_relationship, 'agent-relationship' => @agent_relationship, 'ecommerce' => @ecommerce, 'grocery' => @grocery, 'mail-order' => @mail_order})
       xml.add_attributes({'payment-application' => @payment_application, 'payment-version' => @payment_version, 'petroleum' => @petroleum, 'retail' => @retail, 'telecommunication' => @telecommunication, 'travel' => @travel})
+
       unless dbas.empty?
         dbas = REXML::Element.new('DBAs')
         @dbas.each do |dba|
           dbas.add_element('DBA', {'name' => dba})
         end
       end
+
       unless @industries.empty?
-        industires = REXML::Element.new('OtherIndustries')
+        industries = REXML::Element.new('OtherIndustries')
         @industries.each do |industry|
-          dbas.add_element('Industry', {'name' => industry})
+          industries.add_element('Industry', {'name' => industry})
         end
       end
+
       xml.add(@qsa.as_xml) unless @qsa.empty?
+
       xml
     end
   end
@@ -232,40 +291,39 @@ module Nexpose
   #
   class SiloSummary
     # The silo ID.
-    attr_accessor :id
+    attr_reader :id
     # The silo name.
-    attr_accessor :name
+    attr_reader :name
     # A description of the silo.
-    attr_accessor :description
+    attr_reader :description
     # The ID of the silo profile being used for this silo.
-    attr_accessor :silo_profile_id
+    attr_reader :profile_id
     # The asset count for this silo
-    attr_accessor :assets
+    attr_reader :assets
     # The asset count limit for this silo.
-    attr_accessor :max_assets
+    attr_reader :max_assets
     # The hosted asset count limit for this silo.
-    attr_accessor :max_hosted_assets
+    attr_reader :max_hosted_assets
     # The user count for this silo
-    attr_accessor :users
+    attr_reader :users
     # The user count limit for this silo.
-    attr_accessor :max_users
+    attr_reader :max_users
 
 
     def self.parse(xml)
-      puts xml
-      summary = new
-      summary.id = xml.attributes['id']
-      summary.name = xml.attributes['name']
-      summary.description = xml.attributes['description']
-      summary.silo_profile_id = xml.attributes['silo-profile-id']
-      xml.elements.each('LicenseSummary') do |license|
-        summary.assets = license.attributes['assets']
-        summary.max_assets = license.attributes['max-assets']
-        summary.max_hosted_assets = license.attributes['max-hosted-assets']
-        summary.users = license.attributes['users']
-        summary.max_users = license.attributes['max-users']
+      new do |summary|
+        summary.id = xml.attributes['id']
+        summary.name = xml.attributes['name']
+        summary.description = xml.attributes['description']
+        summary.profile_id = xml.attributes['silo-profile-id']
+        xml.elements.each('LicenseSummary') do |license|
+          summary.assets = license.attributes['assets']
+          summary.max_assets = license.attributes['max-assets']
+          summary.max_hosted_assets = license.attributes['max-hosted-assets']
+          summary.users = license.attributes['users']
+          summary.max_users = license.attributes['max-users']
+        end
       end
-      summary
     end
   end
 end
