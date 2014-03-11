@@ -113,6 +113,10 @@ module Nexpose
     # @see SyslogAlert
     attr_accessor :alerts
 
+    # Information about the organization that this site belongs to.
+    # Used by some reports.
+    attr_accessor :organization
+
     # [Array] List of user IDs for users who have access to the site.
     attr_accessor :users
 
@@ -272,6 +276,8 @@ module Nexpose
         xml.add_element(elem)
       end
 
+      xml.add_element(@organization.as_xml) if @organization
+
       elem = REXML::Element.new('Hosts')
       @assets.each { |a| elem.add_element(a.as_xml) }
       xml.add_element(elem)
@@ -326,6 +332,10 @@ module Nexpose
 
         s.elements.each('Users/user') do |user|
           site.users << user.attributes['id'].to_i
+        end
+
+        s.elements.each('Organization') do |org|
+          site.organization = Organization.parse(org)
         end
 
         s.elements.each('Hosts/range') do |r|
