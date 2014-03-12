@@ -124,6 +124,9 @@ module Nexpose
     # Modifying their behavior through the API is not recommended.
     attr_accessor :is_dynamic
 
+    # [Array[TagSummary]] Collection of TagSummary
+    attr_accessor :tags
+
     # Site constructor. Both arguments are optional.
     #
     # @param [String] name Unique name of the site.
@@ -142,6 +145,7 @@ module Nexpose
       @alerts = []
       @exclude = []
       @users = []
+      @tags = []
     end
 
     # Returns true when the site is dynamic.
@@ -303,6 +307,11 @@ module Nexpose
       elem.add_element(sched)
       xml.add_element(elem)
 
+      unless tags.empty?
+        tag_xml = xml.add_element(REXML::Element.new('Tags'))
+        @tags.each { |tag| tag_xml.add_element(tag.as_xml) }
+      end
+
       xml
     end
 
@@ -358,6 +367,10 @@ module Nexpose
 
         s.elements.each('Alerting/Alert') do |alert|
           site.alerts << Alert.parse(alert)
+        end
+
+        s.elements.each('Tags/Tag') do |tag|
+          site.tags << TagSummary.parse_xml(tag)
         end
 
         return site

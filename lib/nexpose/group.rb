@@ -63,7 +63,7 @@ module Nexpose
   class AssetGroup < AssetGroupSummary
     include Sanitize
 
-    attr_accessor :name, :description, :id
+    attr_accessor :name, :description, :id , :tags
 
     # Array[Device] of devices associated with this asset group.
     attr_accessor :assets
@@ -73,6 +73,7 @@ module Nexpose
     def initialize(name, desc, id = -1, risk = 0.0)
       @name, @description, @id, @risk_score = name, desc, id, risk
       @assets = []
+      @tags = []
     end
 
     def save(connection)
@@ -98,6 +99,11 @@ module Nexpose
         xml << %(<device id="#{asset.id}"/>)
       end
       xml << '</Devices>'
+      xml << '<Tags>'
+      @tags.each do |tag|
+        xml << tag.as_xml.to_s
+      end
+      xml << '</Tags>'
       xml << '</AssetGroup>'
     end
 
@@ -133,7 +139,6 @@ module Nexpose
 
     def self.parse(xml)
       return nil unless xml
-
       group = REXML::XPath.first(xml, 'AssetGroupConfigResponse/AssetGroup')
       asset_group = new(group.attributes['name'],
                         group.attributes['description'],
@@ -145,6 +150,9 @@ module Nexpose
                                          dev.attributes['site-id'].to_i,
                                          dev.attributes['riskfactor'].to_f,
                                          dev.attributes['riskscore'].to_f)
+      end
+      group.elements.each('Tags/Tag') do |tag|
+        asset_group.tags << TagSummary.parse_xml(tag)
       end
       asset_group
     end
