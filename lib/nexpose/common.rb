@@ -163,4 +163,54 @@ module Nexpose
       MONTHLY_DAY = 'monthly-day'
     end
   end
+
+  class Organization
+    attr_accessor :name
+    attr_accessor :url
+    attr_accessor :primary_contact
+    attr_accessor :job_title
+    attr_accessor :email
+    attr_accessor :telephone
+    attr_accessor :address
+    attr_accessor :state
+    attr_accessor :city
+    attr_accessor :zip
+    attr_accessor :country
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
+
+    def self.parse(xml)
+      new do |org|
+        org.name = xml.attributes['name']
+        org.url = xml.attributes['url']
+        org.primary_contact = xml.attributes['primaryContact']
+        org.job_title = xml.attributes['jobTitle']
+        org.email = xml.attributes['email']
+        org.telephone = xml.attributes['telephone']
+        org.address = xml.attributes['businessAddress']
+        org.state = xml.attributes['state']
+        org.city = xml.attributes['city']
+        org.zip = xml.attributes['zip']
+        org.country = xml.attributes['country']
+      end
+    end
+
+    def as_xml
+      xml = REXML::Element.new('Organization')
+      xml.add_attribute('name', @name)
+      xml.add_attribute('url', @url)
+      xml.add_attribute('primaryContact', @primary_contact)
+      xml.add_attribute('jobTitle', @job_title)
+      xml.add_attribute('email', @email)
+      xml.add_attribute('telephone', @telephone)
+      xml.add_attribute('businessAddress', @address)
+      xml.add_attribute('state', @state)
+      xml.add_attribute('city', @city)
+      xml.add_attribute('zip', @zip)
+      xml.add_attribute('country', @country)
+      xml
+    end
+  end
 end
