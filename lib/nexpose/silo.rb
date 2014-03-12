@@ -133,9 +133,9 @@ module Nexpose
         silo.id = xml.attributes['id']
         silo.profile_id = xml.attributes['silo-profile-id']
         silo.name = xml.attributes['name']
-        silo.max_assets = xml.attributes['max-assets']
-        silo.max_users = xml.attributes['max-users']
-        silo.max_hosted_assets = xml.attributes['max-hosted-assets']
+        silo.max_assets = xml.attributes['max-assets'].to_i
+        silo.max_users = xml.attributes['max-users'].to_i
+        silo.max_hosted_assets = xml.attributes['max-hosted-assets'].to_i
         silo.description = xml.attributes['description']
 
         xml.elements.each('Merchant') do |merchant|
@@ -242,17 +242,17 @@ module Nexpose
 
     def self.parse(xml)
       new do |merchant|
-        merchant.acquirer_relationship = xml.attributes['acquirer-relationship']
-        merchant.agent_relationship = xml.attributes['agent-relationship']
-        merchant.ecommerce = xml.attributes['ecommerce']
-        merchant.grocery = xml.attributes['grocery']
-        merchant.mail_order = xml.attributes['mail-order']
+        merchant.acquirer_relationship = xml.attributes['acquirer-relationship'].to_s.chomp.eql?('true')
+        merchant.agent_relationship = xml.attributes['agent-relationship'].to_s.chomp.eql?('true')
+        merchant.ecommerce = xml.attributes['ecommerce'].to_s.chomp.eql?('true')
+        merchant.grocery = xml.attributes['grocery'].to_s.chomp.eql?('true')
+        merchant.mail_order = xml.attributes['mail-order'].to_s.chomp.eql?('true')
         merchant.payment_application = xml.attributes['payment-application']
         merchant.payment_version = xml.attributes['payment-version']
-        merchant.petroleum = xml.attributes['petroleum']
-        merchant.retail = xml.attributes['retail']
-        merchant.telecommunication = xml.attributes['telecommunication']
-        merchant.travel = xml.attributes['travel']
+        merchant.petroleum = xml.attributes['petroleum'].to_s.chomp.eql?('true')
+        merchant.retail = xml.attributes['retail'].to_s.chomp.eql?('true')
+        merchant.telecommunication = xml.attributes['telecommunication'].to_s.chomp.eql?('true')
+        merchant.travel = xml.attributes['travel'].to_s.chomp.eql?('true')
         merchant.company = xml.attributes['company']
         merchant.first_name = xml.attributes['first-name']
         merchant.last_name = xml.attributes['last-name']

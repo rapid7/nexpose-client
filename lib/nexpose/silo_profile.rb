@@ -78,10 +78,10 @@ module Nexpose
         profile.id = xml.attributes['id']
         profile.name = xml.attributes['name']
         profile.description = xml.attributes['description']
-        profile.all_licensed_modules = xml.attributes['all-licensed-modules']
-        profile.all_global_engines = xml.attributes['all-global-engines']
-        profile.all_global_report_templates = xml.attributes['all-global-report-templates']
-        profile.all_global_scan_templates = xml.attributes['all-global-scan-templates']
+        profile.all_licensed_modules = xml.attributes['all-licensed-modules'].to_s.chomp.eql?('true')
+        profile.all_global_engines = xml.attributes['all-global-engines'].to_s.chomp.eql?('true')
+        profile.all_global_report_templates = xml.attributes['all-global-report-templates'].to_s.chomp.eql?('true')
+        profile.all_global_scan_templates = xml.attributes['all-global-scan-templates'].to_s.chomp.eql?('true')
 
         profile.global_report_templates = []
         xml.elements.each('GlobalReportTemplates/GlobalReportTemplate') { |template| profile.global_report_templates << template.attributes['name'] }

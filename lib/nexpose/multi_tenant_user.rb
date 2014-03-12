@@ -140,7 +140,7 @@ module Nexpose
         user.email = xml.attributes['email']
         user.superuser = xml.attributes['superuser'].to_s.chomp.eql?('true')
         user.enabled = xml.attributes['enabled'].to_s.chomp.eql?('true')
-        user.auth_source_id = xml.attributes['authsrcid']
+        user.auth_source_id = xml.attributes['authsrcid'].to_i
         user.silo_access = []
         xml.elements.each('SiloAccesses/SiloAccess') { |access| user.silo_access << SiloAccess.parse(access) }
       end
@@ -204,8 +204,8 @@ module Nexpose
 
     def self.parse(xml)
       new do |access|
-        access.all_groups = xml.attributes['all-groups']
-        access.all_sites = xml.attributes['all-sites']
+        access.all_groups = xml.attributes['all-groups'].to_s.chomp.eql?('true')
+        access.all_sites = xml.attributes['all-sites'].to_s.chomp.eql?('true')
         access.role_name = xml.attributes['role-name']
         access.silo_id = xml.attributes['silo-id']
         access.default = xml.attributes['default-silo'].to_s.chomp.eql?('true')
