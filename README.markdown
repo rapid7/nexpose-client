@@ -1,4 +1,4 @@
-# Nexpose
+# Nexpose-Client
 
 This is the official gem package for the Ruby Nexpose API.
 
@@ -19,6 +19,10 @@ Our coding standards include:
 * Unless otherwise noted, code should adhere to the Ruby Style Guide: https://github.com/bbatsov/ruby-style-guide
 * Use YARDoc comment style to improve the API documentation of the gem.
 
+## License
+
+The nexpose-client gem is provided under the 3-Clause BSD License. See [COPYING](COPYING) for details.
+ 
 ## Credits
 
-Rapid7 LLC
+Rapid7, Inc.
