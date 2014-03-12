@@ -21,4 +21,4 @@ Our coding standards include:
 
 ## Credits
 
-Rapid7 LLC
+Rapid7, Inc.
