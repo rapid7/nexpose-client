@@ -10,6 +10,12 @@ module Nexpose
   module AJAX
     module_function
 
+    module CONTENT_TYPE
+      XML = 'text/xml; charset=UTF-8'
+      JSON = 'application/json; charset-utf-8'
+      FORM = 'application/x-www-form-urlencoded; charset=UTF-8'
+    end
+
     # GET call to a Nexpose controller.
     #
     # @param [Connection] nsc API connection to a Nexpose console.
@@ -17,7 +23,7 @@ module Nexpose
     # @param [String] content_type Content type to use when issuing the GET.
     # @return [String|REXML::Document|Hash] The response from the call.
     #
-    def get(nsc, uri, content_type = 'text/xml; charset=UTF-8')
+    def get(nsc, uri, content_type = CONTENT_TYPE::XML)
       get = Net::HTTP::Get.new(uri)
       get.set_content_type(content_type)
       _request(nsc, get)
@@ -31,7 +37,7 @@ module Nexpose
     # @param [String] content_type Content type to use when issuing the PUT.
     # @return [String] The response from the call.
     #
-    def put(nsc, uri, payload = nil, content_type = 'text/xml; charset=UTF-8')
+    def put(nsc, uri, payload = nil, content_type = CONTENT_TYPE::XML)
       put = Net::HTTP::Put.new(uri)
       put.set_content_type(content_type)
       put.body = payload.to_s if payload
@@ -46,11 +52,26 @@ module Nexpose
     # @param [String] content_type Content type to use when issuing the POST.
     # @return [String|REXML::Document|Hash] The response from the call.
     #
-    def post(nsc, uri, payload = nil, content_type = 'text/xml')
+    def post(nsc, uri, payload = nil, content_type = CONTENT_TYPE::XML)
       post = Net::HTTP::Post.new(uri)
       post.set_content_type(content_type)
       post.body = payload.to_s if payload
       _request(nsc, post)
+    end
+
+    # PATCH call to a Nexpose controller.
+    #
+    # @param [Connection] nsc API connection to a Nexpose console.
+    # @param [String] uri Controller address relative to https://host:port
+    # @param [String|REXML::Document] payload XML document required by the call.
+    # @param [String] content_type Content type to use when issuing the PATCH.
+    # @return [String] The response from the call.
+    #
+    def patch(nsc, uri, payload = nil, content_type = CONTENT_TYPE::XML)
+      patch = Net::HTTP::Patch.new(uri)
+      patch.set_content_type(content_type)
+      patch.body = payload.to_s if payload
+      _request(nsc, patch)
     end
 
     # POST call to a Nexpose controller that uses a form-post model.
@@ -63,7 +84,7 @@ module Nexpose
     # @param [String] content_type Content type to use when issuing the POST.
     # @return [Hash] The parsed JSON response from the call.
     #
-    def form_post(nsc, uri, parameters, content_type = 'application/x-www-form-urlencoded; charset=UTF-8')
+    def form_post(nsc, uri, parameters, content_type = CONTENT_TYPE::FORM)
       post = Net::HTTP::Post.new(uri)
       post.set_content_type(content_type)
       post.set_form_data(parameters)
@@ -75,7 +96,7 @@ module Nexpose
     # @param [Connection] nsc API connection to a Nexpose console.
     # @param [String] uri Controller address relative to https://host:port
     # @param [String] content_type Content type to use when issuing the DELETE.
-    def delete(nsc, uri, content_type = 'text/xml')
+    def delete(nsc, uri, content_type = CONTENT_TYPE::XML)
       delete = Net::HTTP::Delete.new(uri)
       delete.set_content_type(content_type)
       _request(nsc, delete)

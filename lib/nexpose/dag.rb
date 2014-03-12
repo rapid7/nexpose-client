@@ -33,7 +33,7 @@ module Nexpose
       @users.reject! { |id| admins.member? id }
       params = @id ? { 'entityid' => @id, 'mode' => 'edit' } : { 'entityid' => false, 'mode' => false } 
       uri = AJAX.parametrize_uri('/data/assetGroup/saveAssetGroup', params)
-      data = JSON.parse(AJAX.post(nsc, uri, _to_entity_details, 'application/json; charset-utf-8'))
+      data = JSON.parse(AJAX.post(nsc, uri, _to_entity_details, AJAX::CONTENT_TYPE::JSON))
       data['response'] == 'success.'
     end
 
