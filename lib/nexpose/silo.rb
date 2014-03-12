@@ -3,347 +3,351 @@ module Nexpose
   class Connection
     include XMLUtils
 
-    ###################
-    # SILO MANAGEMENT #
-    ###################
-
-    #########################
-    # MULTI-TENANT USER OPS #
-    #########################
-
-    #-------------------------------------------------------------------------
-    # Creates a multi-tenant user
+    # Retrieve a list of all silos the user is authorized to view or manage.
     #
-    # user_config - A map of the user data.
+    # @return [Array[SiloSummary]] Array of SiloSummary objects.
     #
-    # REQUIRED PARAMS
-    # user-id, authsrcid, user-name, full-name, enabled, superuser
-    #
-    # OPTIONAL PARAMS
-    # email, password
-    #
-    # silo_configs - An array of maps of silo specific data
-    #
-    # REQUIRED PARAMS
-    # silo-id, role-name, all-groups, all-sites, default-silo
-    #
-    # allowed_groups/allowed_sites - An array of ids
-    #-------------------------------------------------------------------------
-    def create_multi_tenant_user(user_config, silo_configs)
-      xml = make_xml('MultiTenantUserCreateRequest')
-      mtu_config_xml = make_xml('MultiTenantUserConfig', user_config, '', false)
-
-      # Add the silo access
-      silo_xml = make_xml('SiloAccesses', {}, '', false)
-      silo_configs.each do |silo_config|
-        silo_config_xml = make_xml('SiloAccess', {}, '', false)
-        silo_config.keys.each do |k|
-          if k == 'allowed_sites'
-            allowed_sites_xml = make_xml('AllowedSites', {}, '', false)
-            silo_config['allowed_sites'].each do |allowed_site|
-              allowed_sites_xml.add_element(make_xml('AllowedSite', {'id' => allowed_site}, '', false))
-            end
-            silo_config_xml.add_element(allowed_sites_xml)
-          elsif k == 'allowed_groups'
-            allowed_groups_xml = make_xml('AllowedGroups', {}, '', false)
-            silo_config['allowed_groups'].each do |allowed_group|
-              allowed_groups_xml.add_element(make_xml('AllowedGroup', {'id' => allowed_group}, '', false))
-            end
-            silo_config_xml.add_element(allowed_groups_xml)
-          else
-            silo_config_xml.attributes[k] = silo_config[k]
-          end
-        end
-        silo_xml.add_element(silo_config_xml)
-      end
-      mtu_config_xml.add_element(silo_xml)
-      xml.add_element(mtu_config_xml)
-      r = execute(xml, '1.2')
-      r.success
-    end
-
-    #-------------------------------------------------------------------------
-    # Lists all the multi-tenant users and their attributes.
-    #-------------------------------------------------------------------------
-    def list_mtu
-      xml = make_xml('MultiTenantUserListingRequest')
-      r = execute xml, '1.2'
-
-      if r.success
-        res = []
-        r.res.elements.each("//MultiTenantUserSummary") do |mtu|
-          res << {
-            :id => mtu.attributes['id'],
-            :full_name => mtu.attributes['full-name'],
-            :user_name => mtu.attributes['user-name'],
-            :email => mtu.attributes['email'],
-            :super_user => mtu.attributes['superuser'],
-            :enabled => mtu.attributes['enabled'],
-            :auth_module => mtu.attributes['auth-module'],
-            :silo_count => mtu.attributes['silo-count'],
-            :locked => mtu.attributes['locked']
-          }
-        end
-        res
-      else
-        false
-      end
-    end
-
-    #-------------------------------------------------------------------------
-    # Delete a multi-tenant user
-    #-------------------------------------------------------------------------
-    def delete_mtu user_name, user_id
-      using_user_name = (user_name and not user_name.empty?)
-      xml = make_xml('MultiTenantUserDeleteRequest', (using_user_name ? {'user-name' => user_name} : {'user-id' => user_id}))
-      r = execute xml, '1.2'
-      r.success
-    end
-
-    ####################
-    # SILO PROFILE OPS #
-    ####################
-
-    #-------------------------------------------------------------------------
-    # Creates a silo profile
-    #
-    # silo_config - A map of the silo data.
-    #
-    # REQUIRED PARAMS
-    # id, name, all‐licensed-modules, all‐global-engines, all-global-report-templates, all‐global-scan‐templates
-    #
-    # OPTIONAL PARAMS
-    # description
-    #
-    # permissions - A map of an array of maps of silo specific data
-    #
-    # REQUIRED PARAMS
-    # silo-id, role-name, all-groups, all-sites, default-silo
-    #
-    # allowed_groups/allowed_sites - An array of ids
-    #-------------------------------------------------------------------------
-    def create_silo_profile silo_profile_config, permissions
-      xml = make_xml 'SiloProfileCreateRequest'
-      spc_xml = make_xml('SiloProfileConfig', silo_profile_config, '', false)
-
-      # Add the permissions
-      if permissions['global_report_templates']
-        grt_xml = make_xml('GlobalReportTemplates', {}, '', false)
-        permissions['global_report_templates'].each do |name|
-          grt_xml.add_element make_xml('GlobalReportTemplate', {'name' => name}, '', false)
-        end
-        spc_xml.add_element grt_xml
-      end
-
-      if permissions['global_scan_engines']
-        gse_xml = make_xml('GlobalScanEngines', {}, '', false)
-        permissions['global_scan_engines'].each do |name|
-          gse_xml.add_element make_xml('GlobalScanEngine', {'name' => name}, '', false)
-        end
-        spc_xml.add_element gse_xml
-      end
-
-      if permissions['global_scan_templates']
-        gst_xml = make_xml('GlobalScanTemplates', {}, '', false)
-        permissions['global_scan_templates'].each do |name|
-          gst_xml.add_element make_xml('GlobalScanTemplate', {'name' => name}, '', false)
-        end
-        spc_xml.add_element gst_xml
-      end
-
-      if permissions['licensed_modules']
-        lm_xml = make_xml('LicensedModules', {}, '', false)
-        permissions['licensed_modules'].each do |name|
-          lm_xml.add_element make_xml('LicensedModule', {'name' => name}, '', false)
-        end
-        spc_xml.add_element lm_xml
-      end
-
-      if permissions['restricted_report_formats']
-        rrf_xml = make_xml('RestrictedReportFormats', {}, '', false)
-        permissions['restricted_report_formats'].each do |name|
-          rrf_xml.add_element make_xml('RestrictedReportFormat', {'name' => name}, '', false)
-        end
-        spc_xml.add_element rrf_xml
-      end
-
-      if permissions['restricted_report_sections']
-        rrs_xml = make_xml('RestrictedReportSections', {}, '', false)
-        permissions['restricted_report_sections'].each do |name|
-          rrs_xml.add_element make_xml('RestrictedReportSection', {'name' => name}, '', false)
-        end
-        spc_xml.add_element rrs_xml
-      end
-
-      xml.add_element spc_xml
-      r = execute xml, '1.2'
-      r.success
-    end
-
-    #-------------------------------------------------------------------------
-    # Lists all the silo profiles and their attributes.
-    #-------------------------------------------------------------------------
-    def list_silo_profiles
-      xml = make_xml('SiloProfileListingRequest')
-      r = execute xml, '1.2'
-
-      if r.success
-        res = []
-        r.res.elements.each("//SiloProfileSummary") do |silo_profile|
-          res << {
-            :id => silo_profile.attributes['id'],
-            :name => silo_profile.attributes['name'],
-            :description => silo_profile.attributes['description'],
-            :global_report_template_count => silo_profile.attributes['global-report-template-count'],
-            :global_scan_engine_count => silo_profile.attributes['global-scan-engine-count'],
-            :global_scan_template_count => silo_profile.attributes['global-scan-template-count'],
-            :licensed_module_count => silo_profile.attributes['licensed-module-count'],
-            :restricted_report_section_count => silo_profile.attributes['restricted-report-section-count'],
-            :all_licensed_modules => silo_profile.attributes['all-licensed-modules'],
-            :all_global_engines => silo_profile.attributes['all-global-engines'],
-            :all_global_report_templates => silo_profile.attributes['all-global-report-templates'],
-            :all_global_scan_templates => silo_profile.attributes['all-global-scan-templates']
-          }
-        end
-        res
-      else
-        false
-      end
-    end
-
-    #-------------------------------------------------------------------------
-    # Delete a silo profile
-    #-------------------------------------------------------------------------
-    def delete_silo_profile name, id
-      using_name = (name and not name.empty?)
-      xml = make_xml('SiloProfileDeleteRequest', (using_name ? {'name' => name} : {'silo-profile-id' => id}))
-      r = execute xml, '1.2'
-      r.success
-    end
-
-    ####################
-    # SILO OPS #
-    ####################
-
-    #-------------------------------------------------------------------------
-    # Creates a silo
-    #
-    # silo_config - A map of the silo creation data.
-    #
-    # REQUIRED PARAMS
-    # id, name, silo-profile-id, max-assets, max-hosted-assets, max-users
-    #
-    # OPTIONAL PARAMS
-    # description
-    #-------------------------------------------------------------------------
-    def create_silo silo_config
-      xml = make_xml 'SiloCreateRequest'
-      silo_config_xml = make_xml 'SiloConfig', {}, '', false
-
-      # Add the attributes
-      silo_config.keys.each do |key|
-        if not 'merchant'.eql? key and not 'organization'.eql? key
-          silo_config_xml.attributes[key] = silo_config[key]
-        end
-      end
-
-      # Add Organization info
-      if silo_config['organization']
-        org_xml = make_xml 'Organization', {}, '', false
-        silo_config['organization'].keys.each do |key|
-          if not 'address'.eql? key
-            org_xml.attributes[key] = silo_config['organization'][key]
-          end
-        end
-
-        address_xml = make_xml 'Address', silo_config['organization']['address'], '', false
-        org_xml.add_element address_xml
-        silo_config_xml.add_element org_xml
-      end
-
-      # Add Merchant info
-      if silo_config['merchant']
-        merchant_xml = make_xml 'Merchant', {}, '', false
-
-        silo_config['merchant'].keys.each do |key|
-          if not 'dba'.eql? key and not 'other_industries'.eql? key and not 'qsa'.eql? key and not 'address'.eql? key
-            merchant_xml.attributes[key] = silo_config['merchant'][key]
-          end
-        end
-
-        # Add the merchant address
-        merchant_address_xml = make_xml 'Address', silo_config['merchant']['address'], '', false
-        merchant_xml.add_element merchant_address_xml
-
-        #Now add the complex data types
-        if silo_config['merchant']['dba']
-          dba_xml = make_xml 'DBAs', {}, '', false
-          silo_config['merchant']['dba'].each do |name|
-            dba_xml.add_element make_xml('DBA', {'name' => name}, '', false)
-          end
-          merchant_xml.add_element dba_xml
-        end
-
-        if silo_config['merchant']['other_industries']
-          ois_xml = make_xml 'OtherIndustries', {}, '', false
-          silo_config['merchant']['other_industries'].each do |name|
-            ois_xml.add_element make_xml('Industry', {'name' => name}, '', false)
-          end
-          merchant_xml.add_element ois_xml
-        end
-
-        if silo_config['merchant']['qsa']
-          qsa_xml = make_xml 'QSA', {}, '', false
-          silo_config['merchant']['qsa'].keys.each do |key|
-            if not 'address'.eql? key
-              qsa_xml.attributes[key] = silo_config['merchant']['qsa'][key]
-            end
-          end
-
-          # Add the address for this QSA
-          address_xml = make_xml 'Address', silo_config['merchant']['qsa']['address'], '', false
-
-          qsa_xml.add_element address_xml
-          merchant_xml.add_element qsa_xml
-        end
-        silo_config_xml.add_element merchant_xml
-      end
-
-      xml.add_element silo_config_xml
-      r = execute xml, '1.2'
-      r.success
-    end
-
-    #-------------------------------------------------------------------------
-    # Lists all the silos and their attributes.
-    #-------------------------------------------------------------------------
     def list_silos
-      xml = make_xml('SiloListingRequest')
-      r = execute xml, '1.2'
+      r = execute(make_xml('SiloListingRequest'), '1.2')
+      arr = []
+      if r.success
+        r.res.elements.each('SiloListingResponse/SiloSummaries/SiloSummary') do |silo|
+          arr << SiloSummary.parse(silo)
+        end
+      end
+      arr
+    end
+
+    alias_method :silos, :list_silos
+
+    # Delete the specified silo
+    #
+    # @return Whether or not the delete request succeeded.
+    #
+    def delete_silo(silo_id)
+      r = execute(make_xml('SiloDeleteRequest', {'silo-id' => silo_id}), '1.2')
+      r.success
+    end
+  end
+
+  class Silo
+    # Required fields
+    attr_accessor :id
+    attr_accessor :profile_id
+    attr_accessor :name
+    attr_accessor :max_assets
+    attr_accessor :max_users
+    attr_accessor :max_hosted_assets
+
+    #Optional fields
+    attr_accessor :description
+    attr_accessor :merchant
+    attr_accessor :organization
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
+
+    # Copy an existing configuration from a Nexpose instance.
+    # Returned object will reset the silo ID and name
+    #
+    # @param [Connection] connection Connection to the security console.
+    # @param [String] id Silo ID of an existing silo.
+    # @return [Silo] Silo configuration loaded from a Nexpose console.
+    #
+    def self.copy(connection, id)
+      silo = load(connection, id)
+      silo.id = nil
+      silo.name = nil
+      silo
+    end
+
+    # Load an existing configuration from a Nexpose instance.
+    #
+    # @param [Connection] connection Connection to console where site exists.
+    # @param [String] id Silo ID of an existing silo.
+    # @return [Silo] Silo configuration loaded from a Nexpose console.
+    #
+    def self.load(connection, id)
+      r = connection.execute(connection.make_xml('SiloConfigRequest', {'silo-id' => id}), '1.2')
 
       if r.success
-        res = []
-        r.res.elements.each("//SiloSummary") do |silo_profile|
-          res << {
-            :id => silo_profile.attributes['id'],
-            :name => silo_profile.attributes['name'],
-            :description => silo_profile.attributes['description']
-          }
+        r.res.elements.each('SiloConfigResponse/SiloConfig') do |config|
+          return Silo.parse(config)
         end
-        res
-      else
-        false
+      end
+      nil
+    end
+
+    def save(connection)
+      begin
+        update(connection)
+      rescue APIError => error
+        raise error unless (error.message =~ /A silo .* does not exist./)
+        create(connection)
       end
     end
 
-    #-------------------------------------------------------------------------
-    # Delete a silo
-    #-------------------------------------------------------------------------
-    def delete_silo name, id
-      using_name = (name and not name.empty?)
-      xml = make_xml('SiloDeleteRequest', (using_name ? {'silo-name' => name} : {'silo-id' => id}))
-      r = execute xml, '1.2'
-      r.success
+    # Updates this silo on a Nexpose console.
+    #
+    # @param [Connection] connection Connection to console where this silo will be saved.
+    # @return [String] Silo ID assigned to this configuration, if successful.
+    #
+    def update(connection)
+      xml = connection.make_xml('SiloUpdateRequest')
+      xml.add_element(as_xml)
+      r = connection.execute(xml, '1.2')
+      @id = r.attributes['id'] if r.success
+    end
+
+    # Saves a new silo to a Nexpose console.
+    #
+    # @param [Connection] connection Connection to console where this silo will be saved.
+    # @return [String] Silo ID assigned to this configuration, if successful.
+    #
+    def create(connection)
+      xml = connection.make_xml('SiloCreateRequest')
+      xml.add_element(as_xml)
+      r = connection.execute(xml, '1.2')
+      @id = r.attributes['id'] if r.success
+    end
+
+    def delete(connection)
+      connection.delete_silo(@id)
+    end
+
+    def as_xml
+      xml = REXML::Element.new('SiloConfig')
+      xml.add_attributes({'description' => @description, 'name' => @name, 'id' => @id, 'silo-profile-id' => @profile_id, 'max-assets' => @max_assets, 'max-users' => @max_users, 'max-hosted-assets' => @max_hosted_assets})
+      xml.add(@merchant.as_xml) if @merchant
+      xml.add(@organization.as_xml) if @organization
+      xml
+    end
+
+    def to_xml
+      as_xml.to_s
+    end
+
+    def self.parse(xml)
+      new do |silo|
+        silo.id = xml.attributes['id']
+        silo.profile_id = xml.attributes['silo-profile-id']
+        silo.name = xml.attributes['name']
+        silo.max_assets = xml.attributes['max-assets'].to_i
+        silo.max_users = xml.attributes['max-users'].to_i
+        silo.max_hosted_assets = xml.attributes['max-hosted-assets'].to_i
+        silo.description = xml.attributes['description']
+
+        xml.elements.each('Merchant') do |merchant|
+          silo.merchant = Merchant.parse(merchant)
+        end
+
+        xml.elements.each('Organization') do |organization|
+          silo.organization = Organization.parse(organization)
+        end
+      end
+    end
+  end
+
+  class Address
+    attr_accessor :line1
+    attr_accessor :line2
+    attr_accessor :city
+    attr_accessor :state
+    attr_accessor :zip
+    attr_accessor :country
+
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
+
+    def self.parse(xml)
+      new do |address|
+        address.line1 = xml.attributes['line1']
+        address.line2 = xml.attributes['line2']
+        address.city = xml.attributes['city']
+        address.state = xml.attributes['state']
+        address.zip = xml.attributes['zip']
+        address.country = xml.attributes['country']
+      end
+    end
+
+    def as_xml
+      xml = REXML::Element.new('Address')
+      xml.add_attributes({'city' => @city, 'country' => @country, 'line1' => @line1, 'line2' => @line2, 'state' => @state, 'zip' => @zip})
+      xml
+    end
+  end
+
+  class Organization
+    attr_accessor :company
+    attr_accessor :first_name
+    attr_accessor :last_name
+    attr_accessor :phone
+    attr_accessor :address
+    attr_accessor :email
+    attr_accessor :title
+    attr_accessor :url
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
+
+    def as_xml
+      xml = REXML::Element.new('Organization')
+      xml.add_attributes({'company' => @company, 'email-address' => @email, 'first-name' => @first_name, 'last-name' => @last_name, 'phone-number' => @phone, 'title' => @title, 'url' => @url})
+      xml.add(@address.as_xml)
+      xml
+    end
+
+    def self.parse(xml)
+      new do |organization|
+        organization.company = xml.attributes['company']
+        organization.first_name = xml.attributes['first-name']
+        organization.last_name = xml.attributes['last-name']
+        organization.phone = xml.attributes['phone-number']
+        xml.elements.each('Address') do |address|
+          organization.address = Address.parse(address)
+        end
+        organization.email = xml.attributes['email']
+        organization.title = xml.attributes['title']
+        organization.url = xml.attributes['url']
+      end
+    end
+  end
+
+  class Merchant < Organization
+    attr_accessor :acquirer_relationship
+    attr_accessor :agent_relationship
+    attr_accessor :ecommerce
+    attr_accessor :grocery
+    attr_accessor :mail_order
+    attr_accessor :payment_application
+    attr_accessor :payment_version
+    attr_accessor :petroleum
+    attr_accessor :retail
+    attr_accessor :telecommunication
+    attr_accessor :travel
+    attr_accessor :dbas
+    attr_accessor :industries
+    attr_accessor :qsa
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+      @dbas = Array(@dbas)
+      @industries = Array(@industries)
+      @qsa = Array(@qsa)
+    end
+
+    def self.parse(xml)
+      new do |merchant|
+        merchant.acquirer_relationship = xml.attributes['acquirer-relationship'].to_s.chomp.eql?('true')
+        merchant.agent_relationship = xml.attributes['agent-relationship'].to_s.chomp.eql?('true')
+        merchant.ecommerce = xml.attributes['ecommerce'].to_s.chomp.eql?('true')
+        merchant.grocery = xml.attributes['grocery'].to_s.chomp.eql?('true')
+        merchant.mail_order = xml.attributes['mail-order'].to_s.chomp.eql?('true')
+        merchant.payment_application = xml.attributes['payment-application']
+        merchant.payment_version = xml.attributes['payment-version']
+        merchant.petroleum = xml.attributes['petroleum'].to_s.chomp.eql?('true')
+        merchant.retail = xml.attributes['retail'].to_s.chomp.eql?('true')
+        merchant.telecommunication = xml.attributes['telecommunication'].to_s.chomp.eql?('true')
+        merchant.travel = xml.attributes['travel'].to_s.chomp.eql?('true')
+        merchant.company = xml.attributes['company']
+        merchant.first_name = xml.attributes['first-name']
+        merchant.last_name = xml.attributes['last-name']
+        merchant.phone = xml.attributes['phone-number']
+        merchant.email = xml.attributes['email']
+        merchant.title = xml.attributes['title']
+        merchant.url = xml.attributes['url']
+
+        xml.elements.each('Address') do |address|
+          merchant.address = Address.parse(address)
+        end
+
+        merchant.dbas = []
+        xml.elements.each('DBAs/DBA') do |dba|
+          merchant.dbas << dba.attributes['name']
+        end
+
+        merchant.industries = []
+        xml.elements.each('OtherIndustries/Industry') do |industry|
+          merchant.industries << industry.attributes['name']
+        end
+
+        merchant.qsa = []
+        xml.elements.each('QSA') do |organization|
+          merchant.qsa << Organization.parse(organization)
+        end
+      end
+    end
+
+    def as_xml
+      xml = super
+      xml.name = 'Merchant'
+      xml.add_attributes({'acquirer-relationship' => @acquirer_relationship, 'agent-relationship' => @agent_relationship, 'ecommerce' => @ecommerce, 'grocery' => @grocery, 'mail-order' => @mail_order})
+      xml.add_attributes({'payment-application' => @payment_application, 'payment-version' => @payment_version, 'petroleum' => @petroleum, 'retail' => @retail, 'telecommunication' => @telecommunication, 'travel' => @travel})
+
+      unless dbas.empty?
+        dbas = REXML::Element.new('DBAs')
+        @dbas.each do |dba|
+          dbas.add_element('DBA', {'name' => dba})
+        end
+      end
+
+      unless @industries.empty?
+        industries = REXML::Element.new('OtherIndustries')
+        @industries.each do |industry|
+          industries.add_element('Industry', {'name' => industry})
+        end
+      end
+
+      xml.add(@qsa.as_xml) unless @qsa.empty?
+
+      xml
+    end
+  end
+
+  # Object that represents the summary of a Nexpose Site.
+  #
+  class SiloSummary
+    # The silo ID.
+    attr_reader :id
+    # The silo name.
+    attr_reader :name
+    # A description of the silo.
+    attr_reader :description
+    # The ID of the silo profile being used for this silo.
+    attr_reader :profile_id
+    # The asset count for this silo
+    attr_reader :assets
+    # The asset count limit for this silo.
+    attr_reader :max_assets
+    # The hosted asset count limit for this silo.
+    attr_reader :max_hosted_assets
+    # The user count for this silo
+    attr_reader :users
+    # The user count limit for this silo.
+    attr_reader :max_users
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
+
+    def self.parse(xml)
+      new do
+        @id = xml.attributes['id']
+        @name = xml.attributes['name']
+        @description = xml.attributes['description']
+        @profile_id = xml.attributes['silo-profile-id']
+        xml.elements.each('LicenseSummary') do |license|
+          @assets = license.attributes['assets']
+          @max_assets = license.attributes['max-assets']
+          @max_hosted_assets = license.attributes['max-hosted-assets']
+          @users = license.attributes['users']
+          @max_users = license.attributes['max-users']
+        end
+      end
     end
   end
 end
