@@ -45,10 +45,21 @@ module Nexpose
     attr_accessor :restricted_report_formats
     attr_accessor :restricted_report_sections
 
+    def initialize(&block)
+      instance_eval &block if block_given?
+      @global_report_templates = Array(@global_report_templates)
+      @global_scan_engines = Array(@global_scan_engines)
+      @global_scan_templates = Array(@global_scan_templates)
+      @licensed_modules = Array(@licensed_modules)
+      @restricted_report_formats = Array(@restricted_report_formats)
+      @restricted_report_sections = Array(@restricted_report_sections)
+    end
+
     def self.copy(connection, id)
-      silo = load(connection, id)
-      silo.id = nil
-      silo.name = nil
+      profile = load(connection, id)
+      profile.id = nil
+      profile.name = nil
+      profile
     end
 
     def self.load(connection, id)
@@ -134,7 +145,7 @@ module Nexpose
       xml.add_attributes({'id' => @id,
                           'name' => @name,
                           'description' => @description,
-                          'alllicensed-modules' => @all_licensed_modules,
+                          'all-licensed-modules' => @all_licensed_modules,
                           'all-global-engines' => @all_global_engines,
                           'all-global-report-templates' => @all_global_report_templates,
                           'all-global-scan-templates' => @all_global_scan_templates})
@@ -203,20 +214,25 @@ module Nexpose
     attr_reader :all_global_report_templates
     attr_reader :all_global_scan_templates
 
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
+
     def self.parse(xml)
-      new do |profile|
-        profile.id = xml.attributes['id']
-        profile.name = xml.attributes['name']
-        profile.description = xml.attributes['description']
-        profile.global_report_template_count = xml.attributes['global-report-template-count']
-        profile.global_scan_engine_count = xml.attributes['global-scan-engine-count']
-        profile.global_scan_template_count = xml.attributes['global-scan-template-count']
-        profile.licensed_module_count = xml.attributes['licensed-module-count']
-        profile.restricted_report_section_count = xml.attributes['restricted-report-section-count']
-        profile.all_licensed_modules = xml.attributes['all-licensed-modules']
-        profile.all_global_engines = xml.attributes['all-global-engines']
-        profile.all_global_report_templates = xml.attributes['all-global-report-templates']
-        profile.all_global_scan_templates = xml.attributes['all-global-scan-templates']
+      new do
+        @id = xml.attributes['id']
+        @name = xml.attributes['name']
+        @description = xml.attributes['description']
+        @global_report_template_count = xml.attributes['global-report-template-count']
+        @global_scan_engine_count = xml.attributes['global-scan-engine-count']
+        @global_scan_template_count = xml.attributes['global-scan-template-count']
+        @licensed_module_count = xml.attributes['licensed-module-count']
+        @restricted_report_section_count = xml.attributes['restricted-report-section-count']
+        @all_licensed_modules = xml.attributes['all-licensed-modules']
+        @all_global_engines = xml.attributes['all-global-engines']
+        @all_global_report_templates = xml.attributes['all-global-report-templates']
+        @all_global_scan_templates = xml.attributes['all-global-scan-templates']
       end
     end
   end

@@ -3,9 +3,9 @@ module Nexpose
   class Connection
     include XMLUtils
 
-    # Retrieve a list of all silos the user is authorized to view or manage.
+    # Retrieve a list of all users the user is authorized to view or manage.
     #
-    # @return [Array[MultiTenantUserSummary]] Array of SiloSummary objects.
+    # @return [Array[MultiTenantUserSummary]] Array of MultiTenantUserSummary objects.
     #
     def list_silo_users
       r = execute(make_xml('MultiTenantUserListingRequest'), '1.2')
@@ -40,18 +40,22 @@ module Nexpose
     attr_reader :silo_count
     attr_reader :locked
 
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
+
     def self.parse(xml)
-      new do |user|
-        user.id = xml.attributes['id'].to_i
-        user.full_name = xml.attributes['full-name']
-        user.user_name = xml.attributes['user-name']
-        user.email = xml.attributes['email']
-        user.superuser = xml.attributes['superuser']
-        user.enabled = xml.attributes['enabled']
-        user.auth_module = xml.attributes['auth-module']
-        user.auth_source = xml.attributes['auth-source']
-        user.silo_count = xml.attributes['silo-count']
-        user.locked = xml.attributes['locked']
+      new do
+        @id = xml.attributes['id'].to_i
+        @full_name = xml.attributes['full-name']
+        @user_name = xml.attributes['user-name']
+        @email = xml.attributes['email']
+        @superuser = xml.attributes['superuser'].to_s.chomp.eql?('true')
+        @enabled = xml.attributes['enabled'].to_s.chomp.eql?('true')
+        @auth_module = xml.attributes['auth-module']
+        @auth_source = xml.attributes['auth-source']
+        @silo_count = xml.attributes['silo-count'].to_i
+        @locked = xml.attributes['locked'].to_s.chomp.eql?('true')
       end
     end
   end
@@ -66,6 +70,12 @@ module Nexpose
     attr_accessor :superuser
     attr_accessor :enabled
     attr_accessor :silo_access
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+
+      @silo_access = Array(@silo_access)
+    end
 
     def save(connection)
       if (@id)
@@ -128,8 +138,8 @@ module Nexpose
         user.full_name = xml.attributes['full-name']
         user.user_name = xml.attributes['user-name']
         user.email = xml.attributes['email']
-        user.superuser = xml.attributes['superuser']
-        user.enabled = xml.attributes['enabled']
+        user.superuser = xml.attributes['superuser'].to_s.chomp.eql?('true')
+        user.enabled = xml.attributes['enabled'].to_s.chomp.eql?('true')
         user.auth_source_id = xml.attributes['authsrcid']
         user.silo_access = []
         xml.elements.each('SiloAccesses/SiloAccess') { |access| user.silo_access << SiloAccess.parse(access) }
@@ -156,6 +166,12 @@ module Nexpose
     attr_accessor :default
     attr_accessor :sites
     attr_accessor :groups
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+      @sites = Array(@sites)
+      @groups = Array(@groups)
+    end
 
     def as_xml
       xml = REXML::Element.new('SiloAccess')
@@ -192,7 +208,7 @@ module Nexpose
         access.all_sites = xml.attributes['all-sites']
         access.role_name = xml.attributes['role-name']
         access.silo_id = xml.attributes['silo-id']
-        access.default = xml.attributes['default-silo']
+        access.default = xml.attributes['default-silo'].to_s.chomp.eql?('true')
         access.sites = []
         xml.elements.each('AllowedSites/AllowedSite') { |site| access.sites << site.attributes['id'].to_i }
         access.groups = []

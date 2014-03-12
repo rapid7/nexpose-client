@@ -44,6 +44,10 @@ module Nexpose
     attr_accessor :merchant
     attr_accessor :organization
 
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
+
     # Copy an existing configuration from a Nexpose instance.
     # Returned object will reset the silo ID and name
     #
@@ -55,6 +59,7 @@ module Nexpose
       silo = load(connection, id)
       silo.id = nil
       silo.name = nil
+      silo
     end
 
     # Load an existing configuration from a Nexpose instance.
@@ -152,6 +157,11 @@ module Nexpose
     attr_accessor :zip
     attr_accessor :country
 
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
+
     def self.parse(xml)
       new do |address|
         address.line1 = xml.attributes['line1']
@@ -180,6 +190,10 @@ module Nexpose
     attr_accessor :title
     attr_accessor :url
 
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
+
     def as_xml
       xml = REXML::Element.new('Organization')
       xml.add_attributes({'company' => @company, 'email-address' => @email, 'first-name' => @first_name, 'last-name' => @last_name, 'phone-number' => @phone, 'title' => @title, 'url' => @url})
@@ -194,7 +208,7 @@ module Nexpose
         organization.last_name = xml.attributes['last-name']
         organization.phone = xml.attributes['phone-number']
         xml.elements.each('Address') do |address|
-          merchant.address = Address.parse(address)
+          organization.address = Address.parse(address)
         end
         organization.email = xml.attributes['email']
         organization.title = xml.attributes['title']
@@ -218,6 +232,13 @@ module Nexpose
     attr_accessor :dbas
     attr_accessor :industries
     attr_accessor :qsa
+
+    def initialize(&block)
+      instance_eval &block if block_given?
+      @dbas = Array(@dbas)
+      @industries = Array(@industries)
+      @qsa = Array(@qsa)
+    end
 
     def self.parse(xml)
       new do |merchant|
@@ -309,19 +330,22 @@ module Nexpose
     # The user count limit for this silo.
     attr_reader :max_users
 
+    def initialize(&block)
+      instance_eval &block if block_given?
+    end
 
     def self.parse(xml)
-      new do |summary|
-        summary.id = xml.attributes['id']
-        summary.name = xml.attributes['name']
-        summary.description = xml.attributes['description']
-        summary.profile_id = xml.attributes['silo-profile-id']
+      new do
+        @id = xml.attributes['id']
+        @name = xml.attributes['name']
+        @description = xml.attributes['description']
+        @profile_id = xml.attributes['silo-profile-id']
         xml.elements.each('LicenseSummary') do |license|
-          summary.assets = license.attributes['assets']
-          summary.max_assets = license.attributes['max-assets']
-          summary.max_hosted_assets = license.attributes['max-hosted-assets']
-          summary.users = license.attributes['users']
-          summary.max_users = license.attributes['max-users']
+          @assets = license.attributes['assets']
+          @max_assets = license.attributes['max-assets']
+          @max_hosted_assets = license.attributes['max-hosted-assets']
+          @users = license.attributes['users']
+          @max_users = license.attributes['max-users']
         end
       end
     end
