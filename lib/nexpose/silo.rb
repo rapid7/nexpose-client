@@ -147,164 +147,164 @@ module Nexpose
         end
       end
     end
-  end
 
-  class Address
-    attr_accessor :line1
-    attr_accessor :line2
-    attr_accessor :city
-    attr_accessor :state
-    attr_accessor :zip
-    attr_accessor :country
+    class Address
+      attr_accessor :line1
+      attr_accessor :line2
+      attr_accessor :city
+      attr_accessor :state
+      attr_accessor :zip
+      attr_accessor :country
 
 
-    def initialize(&block)
-      instance_eval &block if block_given?
-    end
+      def initialize(&block)
+        instance_eval &block if block_given?
+      end
 
-    def self.parse(xml)
-      new do |address|
-        address.line1 = xml.attributes['line1']
-        address.line2 = xml.attributes['line2']
-        address.city = xml.attributes['city']
-        address.state = xml.attributes['state']
-        address.zip = xml.attributes['zip']
-        address.country = xml.attributes['country']
+      def self.parse(xml)
+        new do |address|
+          address.line1 = xml.attributes['line1']
+          address.line2 = xml.attributes['line2']
+          address.city = xml.attributes['city']
+          address.state = xml.attributes['state']
+          address.zip = xml.attributes['zip']
+          address.country = xml.attributes['country']
+        end
+      end
+
+      def as_xml
+        xml = REXML::Element.new('Address')
+        xml.add_attributes({'city' => @city, 'country' => @country, 'line1' => @line1, 'line2' => @line2, 'state' => @state, 'zip' => @zip})
+        xml
       end
     end
 
-    def as_xml
-      xml = REXML::Element.new('Address')
-      xml.add_attributes({'city' => @city, 'country' => @country, 'line1' => @line1, 'line2' => @line2, 'state' => @state, 'zip' => @zip})
-      xml
-    end
-  end
+    class Organization
+      attr_accessor :company
+      attr_accessor :first_name
+      attr_accessor :last_name
+      attr_accessor :phone
+      attr_accessor :address
+      attr_accessor :email
+      attr_accessor :title
+      attr_accessor :url
 
-  class Organization
-    attr_accessor :company
-    attr_accessor :first_name
-    attr_accessor :last_name
-    attr_accessor :phone
-    attr_accessor :address
-    attr_accessor :email
-    attr_accessor :title
-    attr_accessor :url
-
-    def initialize(&block)
-      instance_eval &block if block_given?
-    end
-
-    def as_xml
-      xml = REXML::Element.new('Organization')
-      xml.add_attributes({'company' => @company, 'email-address' => @email, 'first-name' => @first_name, 'last-name' => @last_name, 'phone-number' => @phone, 'title' => @title, 'url' => @url})
-      xml.add(@address.as_xml)
-      xml
-    end
-
-    def self.parse(xml)
-      new do |organization|
-        organization.company = xml.attributes['company']
-        organization.first_name = xml.attributes['first-name']
-        organization.last_name = xml.attributes['last-name']
-        organization.phone = xml.attributes['phone-number']
-        xml.elements.each('Address') do |address|
-          organization.address = Address.parse(address)
-        end
-        organization.email = xml.attributes['email']
-        organization.title = xml.attributes['title']
-        organization.url = xml.attributes['url']
+      def initialize(&block)
+        instance_eval &block if block_given?
       end
-    end
-  end
 
-  class Merchant < Organization
-    attr_accessor :acquirer_relationship
-    attr_accessor :agent_relationship
-    attr_accessor :ecommerce
-    attr_accessor :grocery
-    attr_accessor :mail_order
-    attr_accessor :payment_application
-    attr_accessor :payment_version
-    attr_accessor :petroleum
-    attr_accessor :retail
-    attr_accessor :telecommunication
-    attr_accessor :travel
-    attr_accessor :dbas
-    attr_accessor :industries
-    attr_accessor :qsa
+      def as_xml
+        xml = REXML::Element.new('Organization')
+        xml.add_attributes({'company' => @company, 'email-address' => @email, 'first-name' => @first_name, 'last-name' => @last_name, 'phone-number' => @phone, 'title' => @title, 'url' => @url})
+        xml.add(@address.as_xml)
+        xml
+      end
 
-    def initialize(&block)
-      instance_eval &block if block_given?
-      @dbas = Array(@dbas)
-      @industries = Array(@industries)
-      @qsa = Array(@qsa)
-    end
-
-    def self.parse(xml)
-      new do |merchant|
-        merchant.acquirer_relationship = xml.attributes['acquirer-relationship'].to_s.chomp.eql?('true')
-        merchant.agent_relationship = xml.attributes['agent-relationship'].to_s.chomp.eql?('true')
-        merchant.ecommerce = xml.attributes['ecommerce'].to_s.chomp.eql?('true')
-        merchant.grocery = xml.attributes['grocery'].to_s.chomp.eql?('true')
-        merchant.mail_order = xml.attributes['mail-order'].to_s.chomp.eql?('true')
-        merchant.payment_application = xml.attributes['payment-application']
-        merchant.payment_version = xml.attributes['payment-version']
-        merchant.petroleum = xml.attributes['petroleum'].to_s.chomp.eql?('true')
-        merchant.retail = xml.attributes['retail'].to_s.chomp.eql?('true')
-        merchant.telecommunication = xml.attributes['telecommunication'].to_s.chomp.eql?('true')
-        merchant.travel = xml.attributes['travel'].to_s.chomp.eql?('true')
-        merchant.company = xml.attributes['company']
-        merchant.first_name = xml.attributes['first-name']
-        merchant.last_name = xml.attributes['last-name']
-        merchant.phone = xml.attributes['phone-number']
-        merchant.email = xml.attributes['email']
-        merchant.title = xml.attributes['title']
-        merchant.url = xml.attributes['url']
-
-        xml.elements.each('Address') do |address|
-          merchant.address = Address.parse(address)
-        end
-
-        merchant.dbas = []
-        xml.elements.each('DBAs/DBA') do |dba|
-          merchant.dbas << dba.attributes['name']
-        end
-
-        merchant.industries = []
-        xml.elements.each('OtherIndustries/Industry') do |industry|
-          merchant.industries << industry.attributes['name']
-        end
-
-        merchant.qsa = []
-        xml.elements.each('QSA') do |organization|
-          merchant.qsa << Organization.parse(organization)
+      def self.parse(xml)
+        new do |organization|
+          organization.company = xml.attributes['company']
+          organization.first_name = xml.attributes['first-name']
+          organization.last_name = xml.attributes['last-name']
+          organization.phone = xml.attributes['phone-number']
+          xml.elements.each('Address') do |address|
+            organization.address = Address.parse(address)
+          end
+          organization.email = xml.attributes['email']
+          organization.title = xml.attributes['title']
+          organization.url = xml.attributes['url']
         end
       end
     end
 
-    def as_xml
-      xml = super
-      xml.name = 'Merchant'
-      xml.add_attributes({'acquirer-relationship' => @acquirer_relationship, 'agent-relationship' => @agent_relationship, 'ecommerce' => @ecommerce, 'grocery' => @grocery, 'mail-order' => @mail_order})
-      xml.add_attributes({'payment-application' => @payment_application, 'payment-version' => @payment_version, 'petroleum' => @petroleum, 'retail' => @retail, 'telecommunication' => @telecommunication, 'travel' => @travel})
+    class Merchant < Organization
+      attr_accessor :acquirer_relationship
+      attr_accessor :agent_relationship
+      attr_accessor :ecommerce
+      attr_accessor :grocery
+      attr_accessor :mail_order
+      attr_accessor :payment_application
+      attr_accessor :payment_version
+      attr_accessor :petroleum
+      attr_accessor :retail
+      attr_accessor :telecommunication
+      attr_accessor :travel
+      attr_accessor :dbas
+      attr_accessor :industries
+      attr_accessor :qsa
 
-      unless dbas.empty?
-        dbas = REXML::Element.new('DBAs')
-        @dbas.each do |dba|
-          dbas.add_element('DBA', {'name' => dba})
+      def initialize(&block)
+        instance_eval &block if block_given?
+        @dbas = Array(@dbas)
+        @industries = Array(@industries)
+        @qsa = Array(@qsa)
+      end
+
+      def self.parse(xml)
+        new do |merchant|
+          merchant.acquirer_relationship = xml.attributes['acquirer-relationship'].to_s.chomp.eql?('true')
+          merchant.agent_relationship = xml.attributes['agent-relationship'].to_s.chomp.eql?('true')
+          merchant.ecommerce = xml.attributes['ecommerce'].to_s.chomp.eql?('true')
+          merchant.grocery = xml.attributes['grocery'].to_s.chomp.eql?('true')
+          merchant.mail_order = xml.attributes['mail-order'].to_s.chomp.eql?('true')
+          merchant.payment_application = xml.attributes['payment-application']
+          merchant.payment_version = xml.attributes['payment-version']
+          merchant.petroleum = xml.attributes['petroleum'].to_s.chomp.eql?('true')
+          merchant.retail = xml.attributes['retail'].to_s.chomp.eql?('true')
+          merchant.telecommunication = xml.attributes['telecommunication'].to_s.chomp.eql?('true')
+          merchant.travel = xml.attributes['travel'].to_s.chomp.eql?('true')
+          merchant.company = xml.attributes['company']
+          merchant.first_name = xml.attributes['first-name']
+          merchant.last_name = xml.attributes['last-name']
+          merchant.phone = xml.attributes['phone-number']
+          merchant.email = xml.attributes['email']
+          merchant.title = xml.attributes['title']
+          merchant.url = xml.attributes['url']
+
+          xml.elements.each('Address') do |address|
+            merchant.address = Address.parse(address)
+          end
+
+          merchant.dbas = []
+          xml.elements.each('DBAs/DBA') do |dba|
+            merchant.dbas << dba.attributes['name']
+          end
+
+          merchant.industries = []
+          xml.elements.each('OtherIndustries/Industry') do |industry|
+            merchant.industries << industry.attributes['name']
+          end
+
+          merchant.qsa = []
+          xml.elements.each('QSA') do |organization|
+            merchant.qsa << Organization.parse(organization)
+          end
         end
       end
 
-      unless @industries.empty?
-        industries = REXML::Element.new('OtherIndustries')
-        @industries.each do |industry|
-          industries.add_element('Industry', {'name' => industry})
+      def as_xml
+        xml = super
+        xml.name = 'Merchant'
+        xml.add_attributes({'acquirer-relationship' => @acquirer_relationship, 'agent-relationship' => @agent_relationship, 'ecommerce' => @ecommerce, 'grocery' => @grocery, 'mail-order' => @mail_order})
+        xml.add_attributes({'payment-application' => @payment_application, 'payment-version' => @payment_version, 'petroleum' => @petroleum, 'retail' => @retail, 'telecommunication' => @telecommunication, 'travel' => @travel})
+
+        unless dbas.empty?
+          dbas = REXML::Element.new('DBAs')
+          @dbas.each do |dba|
+            dbas.add_element('DBA', {'name' => dba})
+          end
         end
+
+        unless @industries.empty?
+          industries = REXML::Element.new('OtherIndustries')
+          @industries.each do |industry|
+            industries.add_element('Industry', {'name' => industry})
+          end
+        end
+
+        xml.add(@qsa.as_xml) unless @qsa.empty?
+
+        xml
       end
-
-      xml.add(@qsa.as_xml) unless @qsa.empty?
-
-      xml
     end
   end
 
