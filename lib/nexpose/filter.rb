@@ -278,7 +278,7 @@ module Nexpose
     def to_map
       { 'metadata' => { 'fieldName' => field },
         'operator' => operator,
-        'values' => value.kind_of?(Array) ? value : [value] }
+        'values' => Array(value) }
     end
 
     def self.parse(json)
@@ -298,11 +298,7 @@ module Nexpose
     attr_accessor :criteria
 
     def initialize(criteria = [], match = 'AND')
-      if criteria.kind_of?(Array)
-        @criteria = criteria
-      else
-        @criteria = [criteria]
-      end
+      @criteria = Array(criteria)
       @match = match.upcase
     end
 
