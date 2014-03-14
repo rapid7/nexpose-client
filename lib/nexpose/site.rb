@@ -125,8 +125,13 @@ module Nexpose
 
     # Whether or not this site is dynamic.
     # Dynamic sites are created through Asset Discovery Connections.
-    # Modifying their behavior through the API is not recommended.
     attr_accessor :is_dynamic
+
+    # Asset filter criteria if this site is dynamic.
+    attr_accessor :criteria
+
+    # ID of the discovery connection associated with this site if it is dynamic.
+    attr_accessor :discovery_connection_id
 
     # [Array[TagSummary]] Collection of TagSummary
     attr_accessor :tags
@@ -135,7 +140,7 @@ module Nexpose
     #
     # @param [String] name Unique name of the site.
     # @param [String] scan_template ID of the scan template to use.
-    def initialize(name = nil, scan_template = 'full-audit')
+    def initialize(name = nil, scan_template = 'full-audit-without-web-spider')
       @name = name
       @scan_template = scan_template
 
@@ -155,6 +160,11 @@ module Nexpose
     # Returns true when the site is dynamic.
     def dynamic?
       is_dynamic
+    end
+
+    def discovery_connection_id=(value)
+      @is_dynamic = true
+      @discovery_connection_id = value.to_i
     end
 
     # Adds an asset to this site by host name.
@@ -207,7 +217,9 @@ module Nexpose
     def self.load(connection, id)
       r = APIRequest.execute(connection.url,
                              %(<SiteConfigRequest session-id="#{connection.session_id}" site-id="#{id}"/>))
-      parse(r.res)
+      site = parse(r.res)
+      site.load_dynamic_attributes(connection) if site.dynamic?
+      site
     end
 
     # Copy an existing configuration from a Nexpose instance.
@@ -226,13 +238,31 @@ module Nexpose
     end
 
     # Saves this site to a Nexpose console.
+    # If the site is dynamic, connection and asset filter changes must be
+    # saved through the DiscoveryConnection#update_site call.
     #
     # @param [Connection] connection Connection to console where this site will be saved.
     # @return [Fixnum] Site ID assigned to this configuration, if successful.
     #
     def save(connection)
-      r = connection.execute('<SiteSaveRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiteSaveRequest>')
-      @id = r.attributes['site-id'].to_i if r.success
+      if dynamic?
+        raise APIError.new(nil, 'Cannot save a dynamic site without a discovery connection configured.') unless @discovery_connection_id
+
+        new_site = @id == -1
+        save_dynamic_criteria(connection) if new_site
+
+        # Have to retrieve and attach shared creds, or saving will fail.
+        xml = _append_shared_creds_to_xml(connection, as_xml)
+        response = AJAX.post(connection, '/ajax/save_site_config.txml', xml)
+        saved = REXML::XPath.first(REXML::Document.new(response), 'SaveConfig')
+        raise APIError.new(response, 'Failed to save dynamic site.') if saved.nil? || saved.attributes['success'].to_i != 1
+
+        save_dynamic_criteria(connection) unless new_site
+      else
+        r = connection.execute('<SiteSaveRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiteSaveRequest>')
+        @id = r.attributes['site-id'].to_i if r.success
+      end
+      @id
     end
 
     # Delete this site from a Nexpose console.
@@ -261,6 +291,38 @@ module Nexpose
       Scan.parse(response.res) if response.success
     end
 
+    # Save only the criteria of a dynamic site.
+    #
+    # @param [Connection] nsc Connection to a console.
+    # @return [Fixnum] Site ID.
+    #
+    def save_dynamic_criteria(nsc)
+      params = to_dynamic_map
+      response = AJAX.form_post(nsc, '/data/site/saveSite', params)
+      json = JSON.parse(response)
+      if json['response'] =~ /success/
+        if @id < 1
+          @id = json['entityID'].to_i
+        end
+      else
+        raise APIError.new(response, json['message'])
+      end
+      @id
+    end
+
+    # Retrieve the currrent filter criteria used by a dynamic site.
+    #
+    # @param [Connection] nsc Connection to a console.
+    # @param [Fixnum] site_id ID of an existing site.
+    # @return [Criteria] Current criteria for the site.
+    #
+    def load_dynamic_attributes(nsc)
+      response = AJAX.get(nsc, "/data/site/loadDynamicSite?entityid=#{@id}")
+      json = JSON.parse(response)
+      @discovery_connection_id = json['discoveryConfigs']['id']
+      @criteria = Criteria.parse(json['searchCriteria'])
+    end
+
     include Sanitize
 
     # Generate an XML representation of this site configuration
@@ -273,6 +335,7 @@ module Nexpose
       xml.attributes['name'] = @name
       xml.attributes['description'] = @description
       xml.attributes['riskfactor'] = @risk_factor
+      xml.attributes['isDynamic'] == '1' if dynamic?
 
       unless @users.empty?
         elem = REXML::Element.new('Users')
@@ -323,6 +386,19 @@ module Nexpose
 
     def to_xml
       as_xml.to_s
+    end
+
+    def to_dynamic_map
+      details = { 'dynamic' => true,
+                  'name' => @name,
+                  'tag' => @description.nil? ? '' : @description,
+                  'riskFactor' => @risk_factor,
+                  # 'vCenter' => @discovery_connection_id,
+                  'searchCriteria' => @criteria.nil? ? { 'operator' => 'AND' } : @criteria.to_map }
+      params = { 'configID' => @discovery_connection_id,
+                 'entityid' => @id > 0 ? @id : false,
+                 'mode' => @id > 0 ? 'edit' : false,
+                 'entityDetails' => details }
     end
 
     # Parse a response from a Nexpose console into a valid Site object.
@@ -386,6 +462,24 @@ module Nexpose
         return site
       end
       nil
+    end
+
+    def _append_shared_creds_to_xml(connection, xml)
+      xml_w_creds = AJAX.get(connection, "/ajax/site_config.txml?siteid=#{@id}")
+      cred_xml = REXML::XPath.first(REXML::Document.new(xml_w_creds), 'Site/Credentials')
+      unless cred_xml.nil?
+        creds = REXML::XPath.first(xml, 'Credentials')
+        if creds.nil?
+          xml.add_element(cred_xml)
+        else
+          cred_xml.elements.each do |cred|
+            if cred.attributes['shared'].to_i == 1
+              creds.add_element(cred)
+            end
+          end
+        end
+      end
+      xml
     end
   end
 
