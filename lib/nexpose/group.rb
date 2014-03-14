@@ -28,9 +28,10 @@ module Nexpose
       if r.success
         r.res.elements.each('AssetGroupListingResponse/AssetGroupSummary') do |group|
           groups << AssetGroupSummary.new(group.attributes['id'].to_i,
-                                       group.attributes['name'],
-                                       group.attributes['description'],
-                                       group.attributes['riskscore'].to_f)
+                                          group.attributes['name'],
+                                          group.attributes['description'],
+                                          group.attributes['riskscore'].to_f,
+                                          group.attributes['dynamic'].to_i == 1)
         end
       end
       groups
@@ -43,10 +44,14 @@ module Nexpose
   # Summary value object for asset group information.
   #
   class AssetGroupSummary
-    attr_reader :id, :name, :description, :risk_score
+    attr_reader :id, :name, :description, :risk_score, :dynamic
 
-    def initialize(id, name, desc, risk)
-      @id, @name, @description, @risk_score = id, name, desc, risk
+    def initialize(id, name, desc, risk, dynamic)
+      @id, @name, @description, @risk_score, @dyanmic = id, name, desc, risk, dynamic
+    end
+
+    def dynamic?
+      dynamic
     end
 
     # Delete this asset group and all associated data.
