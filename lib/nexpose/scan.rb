@@ -208,6 +208,17 @@ module Nexpose
         false
       end
     end
+
+    # Delete a scan and all its data from a console.
+    # Warning, this method is destructive and not guaranteed to leave a site
+    # in a valid state. DBCC may need to be run to correct missing or empty
+    # assets.
+    #
+    # @param [Fixnum] scan_id Scan ID to remove data for.
+    #
+    def delete_scan(scan_id)
+      AJAX.delete(self, "/data/scan/#{scan_id}")
+    end
   end
 
   # Object that represents a summary of a scan.
