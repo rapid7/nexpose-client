@@ -161,7 +161,7 @@ module Nexpose
 
       # Tag types
       module Generic
-        GENERAL = 'GENERAL'
+        CUSTOM = 'CUSTOM'
         OWNER = 'OWNER'
         LOCATION = 'LOCATION'
         CRITICALITY = 'CRITICALITY'
@@ -199,7 +199,7 @@ module Nexpose
     def initialize(name, type, id = -1)
       @name, @type, @id = name, type, id
       @source = 'nexpose-client'
-      @color = @type == Type::Generic::GENERAL ? DEFAULT_COLOR : nil
+      @color = @type == Type::Generic::CUSTOM ? DEFAULT_COLOR : nil
     end
 
     # Creates and saves a tag to Nexpose console
@@ -239,15 +239,13 @@ module Nexpose
                               'tag_attribute_value' => @source }
                           ],
           'tag_config' => { 'site_ids' => @site_ids,
-                            'tag_associated_asset_ids' => @asset_ids,
+                            'tag_associated_asset_ids' => @associated_asset_ids,
                             'asset_group_ids' => @asset_group_ids,
                             'search_criteria' => @search_criteria ? @search_criteria.to_map : nil
           }
       }
-      if @type == Type::Generic::GENERAL
+      if @type == Type::Generic::CUSTOM
         json['attributes'] << { 'tag_attribute_name' => 'COLOR', 'tag_attribute_value' => @color }
-      elsif @type == Type::Generic::CRITICALITY
-        json['attributes'] << { 'tag_attribute_name' => 'RISK_MODIFIER', 'tag_attribute_value' => 5.0 }
       end
       JSON.generate(json)
     end
@@ -290,7 +288,7 @@ module Nexpose
     # @return [Fixnum] ID of applied tag
     #
     def add_to_asset(connection, asset_id)
-      params = to_json_for_add
+      params = _to_json_for_add
       uri = AJAX.post(connection, "/api/2.0/assets/#{asset_id}/tags", params, AJAX::CONTENT_TYPE::JSON)
       @id = uri.split('/').last.to_i
     end
@@ -302,7 +300,7 @@ module Nexpose
     # @return [Fixnum] ID of applied tag
     #
     def add_to_site(connection, site_id)
-      params = to_json_for_add
+      params = _to_json_for_add
       uri = AJAX.post(connection, "/api/2.0/sites/#{site_id}/tags", params, AJAX::CONTENT_TYPE::JSON)
       @id = uri.split('/').last.to_i
     end
@@ -314,7 +312,7 @@ module Nexpose
     # @return [Fixnum] ID of applied tag
     #
     def add_to_group(connection, group_id)
-      params = to_json_for_add
+      params = _to_json_for_add
       uri = AJAX.post(connection, "/api/2.0/asset_groups/#{group_id}/tags", params, AJAX::CONTENT_TYPE::JSON)
       @id = uri.split('/').last.to_i
     end
@@ -322,7 +320,7 @@ module Nexpose
 
     private
 
-    def to_json_for_add
+    def _to_json_for_add
       if @id == -1
         json = {
             'tag_name' => @name,
@@ -332,7 +330,7 @@ module Nexpose
                   'tag_attribute_value' => @source }
             ],
         }
-        if @type == Tag::Type::Generic::GENERAL
+        if @type == Tag::Type::Generic::CUSTOM
           json['attributes'] << { 'tag_attribute_name' => 'COLOR', 'tag_attribute_value' => @color }
         end
         params = JSON.generate(json)
