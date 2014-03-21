@@ -27,7 +27,7 @@ module Nexpose
     # @param [String] template_id Unique identifier of the report template to remove.
     #
     def delete_report_template(template_id)
-      AJAX.delete(self, "/data/report/templates/#{template_id}")
+      AJAX.delete(self, "/data/report/templates/#{URI.escape(template_id)}")
     end
   end
 
