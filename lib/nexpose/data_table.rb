@@ -28,7 +28,7 @@ module Nexpose
     #                               'table-id' => 'site-assets',
     #                               'siteID' => site_id })
     #
-    def _get_json_table(console, address, parameters, page_size = 500, records = nil)
+    def _get_json_table(console, address, parameters = {}, page_size = 500, records = nil)
       parameters['dir'] = 'DESC'
       parameters['startIndex'] = -1
       parameters['results'] = -1
