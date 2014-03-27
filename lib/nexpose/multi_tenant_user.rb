@@ -17,6 +17,7 @@ module Nexpose
       end
       arr
     end
+    alias_method :silo_users, :list_silo_users
 
     # Delete the specified silo user
     #
