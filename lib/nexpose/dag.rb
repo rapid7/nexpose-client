@@ -32,7 +32,7 @@ module Nexpose
       admins = nsc.users.select { |u| u.is_admin }.map { |u| u.id }
       @users.reject! { |id| admins.member? id }
       params = @id ? { 'entityid' => @id, 'mode' => 'edit' } : { 'entityid' => false, 'mode' => false } 
-      uri = AJAX.parametrize_uri('/data/assetGroup/saveAssetGroup', params)
+      uri = AJAX.parameterize_uri('/data/assetGroup/saveAssetGroup', params)
       data = JSON.parse(AJAX.post(nsc, uri, _to_entity_details, AJAX::CONTENT_TYPE::JSON))
       data['response'] == 'success.'
     end

@@ -107,9 +107,9 @@ module Nexpose
     # @param [String] uri Controller address relative to https://host:port
     # @param [Hash] parameters Hash of attributes that need to be sent
     #    to the controller.
-    # @return [Hash] The parametrized URI.
+    # @return [Hash] The parameterized URI.
 
-    def parametrize_uri(uri, parameters)
+    def parameterize_uri(uri, parameters)
       uri = uri.concat(('?').concat(parameters.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&'))) if parameters
     end
 
