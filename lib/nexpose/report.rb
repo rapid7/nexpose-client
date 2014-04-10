@@ -85,6 +85,8 @@ module Nexpose
 
     # The report definition (config) ID.
     attr_reader :config_id
+    # The report config name.
+    attr_reader :name
     # The ID of the report template.
     attr_reader :template_id
     # The current status of the report.
@@ -98,8 +100,9 @@ module Nexpose
     # One of: (global|silo).
     attr_reader :scope
 
-    def initialize(config_id, template_id, status, generated_on, uri, scope)
+    def initialize(config_id, name, template_id, status, generated_on, uri, scope)
       @config_id = config_id.to_i
+      @name = name
       @template_id = template_id
       @status = status
       @generated_on = generated_on
@@ -109,6 +112,7 @@ module Nexpose
 
     def self.parse(xml)
       ReportConfigSummary.new(xml.attributes['cfg-id'].to_i,
+                              xml.attributes['name'],
                               xml.attributes['template-id'],
                               xml.attributes['status'],
                               xml.attributes['generated-on'],
