@@ -81,7 +81,7 @@ module Nexpose
 
     # user id, set to -1 to create a new user
     attr_reader :id
-    # valid roles: global-admin|security-manager|site-admin|system-admin|user|custom
+    # valid roles: global-admin|security-manager|site-admin|system-admin|user|custom|controls-insight-only
     attr_accessor :role_name
     # Required fields
     attr_reader :name

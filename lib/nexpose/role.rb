@@ -30,8 +30,8 @@ module Nexpose
       CONFIGURE_ALERTS = 'ConfigureAlerts'
       CONFIGURE_CREDENTIALS = 'ConfigureCredentials'
       CONFIGURE_ENGINES = 'ConfigureEngines'
-      CONFIGURE_SCAN_TEMPLATES = 'ConfigureScanTemplates' 
-      CONFIGURE_SCHEDULE_SCANS = 'ConfigureScheduleScans' 
+      CONFIGURE_SCAN_TEMPLATES = 'ConfigureScanTemplates'
+      CONFIGURE_SCHEDULE_SCANS = 'ConfigureScheduleScans'
       CONFIGURE_SITE_SETTINGS = 'ConfigureSiteSettings'
       CONFIGURE_TARGETS = 'ConfigureTargets'
       MANUAL_SCANS = 'ManualScans'
@@ -66,7 +66,7 @@ module Nexpose
     def role_delete(role, scope = Scope::SILO)
       xml = %Q(<RoleDeleteRequest session-id="#{@session_id}">)
       xml << %Q(<Role name="#{role}" scope="#{scope}"/>)
-      xml << '</RoleDeleteRequest>' 
+      xml << '</RoleDeleteRequest>'
       response = execute(xml, '1.2')
       response.success
     end
@@ -118,6 +118,7 @@ module Nexpose
 
     GLOBAL_ADMINISTRATOR = 'global-admin'
     ASSET_OWNER = 'system-admin'
+    CONTOLSINSIGHT_ONLY = 'controls-insight-only'
     SECURITY_MANAGER = 'security-manager'
     SITE_OWNER = 'site-admin'
     USER = 'user'
@@ -203,7 +204,7 @@ module Nexpose
     def delete(nsc)
       xml = %Q(<RoleDeleteRequest session-id="#{nsc.session_id}">)
       xml << %Q(<Role name="#{@name}" scope="#{@scope}"/>)
-      xml << '</RoleDeleteRequest>' 
+      xml << '</RoleDeleteRequest>'
       response = APIRequest.execute(nsc.url, xml, '1.2')
       response.success
     end
