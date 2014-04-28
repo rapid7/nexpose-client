@@ -118,7 +118,7 @@ module Nexpose
 
     GLOBAL_ADMINISTRATOR = 'global-admin'
     ASSET_OWNER = 'system-admin'
-    CONTOLSINSIGHT_ONLY = 'controls-insight-only'
+    CONTROLS_INSIGHT_ONLY = 'controls-insight-only'
     SECURITY_MANAGER = 'security-manager'
     SITE_OWNER = 'site-admin'
     USER = 'user'
