@@ -132,7 +132,7 @@ module Nexpose
     # Flag determines behavior of #save method.
     attr_accessor :existing
 
-    def initialize(name, full_name, id, enabled = true, scope = Scope::SILO)
+    def initialize(name, full_name, id = -1, enabled = true, scope = Scope::SILO)
       @name, @full_name, @id, @enabled, @scope = name, full_name, id, enabled, scope
       @privileges = []
     end
