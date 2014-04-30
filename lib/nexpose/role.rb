@@ -176,7 +176,7 @@ module Nexpose
 
       response = APIRequest.execute(nsc.url, xml, '1.2')
       xml = REXML::XPath.first(response.res, 'RoleCreateResponse')
-      @id = xml.attributes['id'].to_i
+      @id = xml.attributes['id'].to_i unless @existing
       @existing = true
       response.success
     end
@@ -235,6 +235,7 @@ module Nexpose
     def to_xml
       xml = %Q(<Role name="#{replace_entities(@name)}" full-name="#{replace_entities(@full_name)}")
       xml << %Q( enabled="#{(enabled ? 'true' : 'false')}")
+      xml << %Q( id="#{@id}") if @id > 0
       xml << %Q( scope="#{@scope}">)
       xml << %Q(<Description>#{replace_entities(@description)}</Description>)
 
