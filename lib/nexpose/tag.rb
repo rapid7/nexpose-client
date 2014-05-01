@@ -168,7 +168,7 @@ module Nexpose
       end
     end
 
-    DEFAULT_COLOR = '#F6F6F6'
+    DEFAULT_COLOR = '#f6f6f6'
 
     # Creation source
     attr_accessor :source
