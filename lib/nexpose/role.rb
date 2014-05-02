@@ -98,7 +98,7 @@ module Nexpose
     attr_accessor :scope
 
     def initialize(name, full_name, id, description, enabled = true, scope = Scope::SILO)
-      @name, @full_name, @id, @description, @enabled, @scope = name, full_name, id, description, enabled, scope
+      @name, @full_name, @id, @description, @enabled, @scope = name, full_name, id.to_i, description, enabled, scope
     end
 
     def self.parse(xml)
@@ -133,7 +133,7 @@ module Nexpose
     attr_accessor :existing
 
     def initialize(name, full_name, id = -1, enabled = true, scope = Scope::SILO)
-      @name, @full_name, @id, @enabled, @scope = name, full_name, id, enabled, scope
+      @name, @full_name, @id, @enabled, @scope = name, full_name, id.to_i, enabled, scope
       @privileges = []
     end
 
