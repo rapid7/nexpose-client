@@ -163,14 +163,11 @@ module Nexpose
     #
     def save(nsc)
       if @existing
-        xml = %Q(<RoleUpdateRequest session-id="#{nsc.session_id}">)
-        xml << to_xml
-        xml << '</RoleUpdateRequest>'
+        xml = nsc.make_xml('RoleUpdateRequest')
       else
-        xml = %Q(<RoleCreateRequest session-id="#{nsc.session_id}">)
-        xml << to_xml
-        xml << '</RoleCreateRequest>'
+        xml = nsc.make_xml('RoleCreateRequest')
       end
+      xml.add_element(as_xml)
 
       response = APIRequest.execute(nsc.url, xml, '1.2')
       xml = REXML::XPath.first(response.res, 'RoleCreateResponse')
@@ -200,10 +197,7 @@ module Nexpose
     # @param [Connection] nsc Nexpose connection.
     #
     def delete(nsc)
-      xml = nsc.make_xml('RoleDeleteRequest')
-      xml.add_element('Role', {'name' => name, 'scope' => scope})
-      response = APIRequest.execute(nsc.url, xml, '1.2')
-      response.success
+      nsc.role_delete(name, scope)
     end
 
     def self.parse(xml)
@@ -230,37 +224,36 @@ module Nexpose
     end
 
     def to_xml
-      xml = %Q(<Role name="#{replace_entities(@name)}" full-name="#{replace_entities(@full_name)}")
-      xml << %Q( enabled="#{(enabled ? 'true' : 'false')}")
-      xml << %Q( id="#{@id}") if @id > 0
-      xml << %Q( scope="#{@scope}">)
-      xml << %Q(<Description>#{replace_entities(@description)}</Description>)
+      as_xml.to_s
+    end
 
-      xml << '<SitePrivileges>'
+    def as_xml
+      xml = REXML::Element.new('Role')
+      xml.add_attributes({'name' => @name, 'full-name' => @full_name, 'enabled' => enabled , 'scope' => @scope})
+      xml.add_attribute('id', @id) if @id > 0
+      xml.add_element('Description').text = @description
+
+      site_privileges = xml.add_element('SitePrivileges')
       Privilege::Site::constants.each do |field|
         as_s = Privilege::Site.const_get(field)
-        enabled = (privileges.member? as_s) ? 'true' : 'false'
-        xml << %Q(<#{as_s} enabled="#{enabled}"/>)
+        enabled = privileges.member? as_s
+        site_privileges.add_element( as_s, {'enabled' => enabled})
       end
-      xml << '</SitePrivileges>'
 
-      xml << '<AssetGroupPrivileges>'
+      asset_group_privileges = xml.add_element('AssetGroupPrivileges')
       Privilege::AssetGroup::constants.each do |field|
         as_s = Privilege::AssetGroup.const_get(field)
-        enabled = (privileges.member? as_s) ? 'true' : 'false'
-        xml << %Q(<#{as_s} enabled="#{enabled}"/>)
+        enabled = privileges.member? as_s
+        asset_group_privileges.add_element( as_s, {'enabled' => enabled})
       end
-      xml << '</AssetGroupPrivileges>'
 
-      xml << '<GlobalPrivileges>'
+      global_privileges = xml.add_element('GlobalPrivileges')
       Privilege::Global::constants.each do |field|
         as_s = Privilege::Global.const_get(field)
-        enabled = (privileges.member? as_s) ? 'true' : 'false'
-        xml << %Q(<#{as_s} enabled="#{enabled}"/>)
+        enabled = privileges.member? as_s
+        global_privileges.add_element( as_s, {'enabled' => enabled})
       end
-      xml << '</GlobalPrivileges>'
 
-      xml << '</Role>'
       xml
     end
   end
