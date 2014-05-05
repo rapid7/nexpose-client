@@ -64,9 +64,8 @@ module Nexpose
     alias_method :roles, :role_listing
 
     def role_delete(role, scope = Scope::SILO)
-      xml = %Q(<RoleDeleteRequest session-id="#{@session_id}">)
-      xml << %Q(<Role name="#{role}" scope="#{scope}"/>)
-      xml << '</RoleDeleteRequest>'
+      xml = make_xml('RoleDeleteRequest')
+      xml.add_element('Role', {'name' => role, 'scope' => scope})
       response = execute(xml, '1.2')
       response.success
     end
@@ -146,11 +145,10 @@ module Nexpose
     # @return [Role] requested role.
     #
     def self.load(nsc, name, scope = Scope::SILO)
-      xml = %Q(<RoleDetailsRequest session-id="#{nsc.session_id}">)
-      xml << %Q(<Role name="#{name}" scope="#{scope}"/>)
-      xml << '</RoleDetailsRequest>'
-
+      xml = nsc.make_xml('RoleDetailsRequest')
+      xml.add_element('Role', {'name' => name, 'scope' => scope})
       response = APIRequest.execute(nsc.url, xml, '1.2')
+
       if response.success
         elem = REXML::XPath.first(response.res, 'RoleDetailsResponse/Role/')
         parse(elem)
@@ -202,9 +200,8 @@ module Nexpose
     # @param [Connection] nsc Nexpose connection.
     #
     def delete(nsc)
-      xml = %Q(<RoleDeleteRequest session-id="#{nsc.session_id}">)
-      xml << %Q(<Role name="#{@name}" scope="#{@scope}"/>)
-      xml << '</RoleDeleteRequest>'
+      xml = nsc.make_xml('RoleDeleteRequest')
+      xml.add_element('Role', {'name' => name, 'scope' => scope})
       response = APIRequest.execute(nsc.url, xml, '1.2')
       response.success
     end

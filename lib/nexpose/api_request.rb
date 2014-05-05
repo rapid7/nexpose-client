@@ -123,7 +123,7 @@ module Nexpose
     end
 
     def self.execute(url, req, api_version='1.1', options = {})
-      obj = self.new(req, url, api_version)
+      obj = self.new(req.to_s, url, api_version)
       obj.execute(options)
       raise APIError.new(obj, "Action failed: #{obj.error}") unless obj.success
       obj
