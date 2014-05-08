@@ -6,7 +6,7 @@ module Nexpose
     #
     # @return [Array[TagSummary]] List of current tags.
     #
-    def list_tags
+    def tags
       tag_summary = []
       tags = JSON.parse(AJAX.get(self, '/api/2.0/tags'))
       tags['resources'].each do |json|
@@ -14,7 +14,7 @@ module Nexpose
       end
       tag_summary
     end
-    alias_method :tags, :list_tags
+    alias_method :list_tags, :tags
 
     # Deletes a tag by ID
     #
@@ -29,7 +29,7 @@ module Nexpose
     # @param [Fixnum] asset_id of the asset to list the applied tags for
     # @return [Array[TagSummary]] list of tags on asset
     #
-    def list_asset_tags(asset_id)
+    def asset_tags(asset_id)
       tag_summary = []
       asset_tag = JSON.parse(AJAX.get(self, "/api/2.0/assets/#{asset_id}/tags"))
       asset_tag['resources'].select { |r| r['asset_ids'].find { |i| i == asset_id } }.each do |json|
@@ -37,7 +37,7 @@ module Nexpose
       end
       tag_summary
     end
-    alias_method :asset_tags, :list_asset_tags
+    alias_method :list_asset_tags, :asset_tags
 
     # Removes a tag from an asset
     #
@@ -53,7 +53,7 @@ module Nexpose
     # @param [Fixnum] site_id id of the site to get the applied tags
     # @return [Array[TagSummary]] list of tags on site
     #
-    def list_site_tags(site_id)
+    def site_tags(site_id)
       tag_summary = []
       site_tag = JSON.parse(AJAX.get(self, "/api/2.0/sites/#{site_id}/tags"))
       site_tag['resources'].each do |json|
@@ -61,6 +61,7 @@ module Nexpose
       end
       tag_summary
     end
+    alias_method :list_site_tags, :site_tags
 
     # Removes a tag from a site
     #
@@ -76,7 +77,7 @@ module Nexpose
     # @param [Fixnum] asset_group_id id of the group on which tags are listed
     # @return [Array[TagSummary]] list of tags on asset group
     #
-    def list_asset_group_tags(asset_group_id)
+    def asset_group_tags(asset_group_id)
       tag_summary = []
       asset_group_tag = JSON.parse(AJAX.get(self, "/api/2.0/asset_groups/#{asset_group_id}/tags"))
       asset_group_tag['resources'].each do |json|
@@ -84,8 +85,8 @@ module Nexpose
       end
       tag_summary
     end
-    alias_method :group_tags, :list_asset_group_tags
-    alias_method :asset_group_tags, :list_asset_group_tags
+    alias_method :group_tags, :asset_group_tags
+    alias_method :list_asset_group_tags, :asset_group_tags
 
     # Removes a tag from an asset_group
     #
