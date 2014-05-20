@@ -417,7 +417,7 @@ module Nexpose
     # 3. potential (The check for a potential vulnerability was positive.)
     # These values are supported for CSV and XML formats.
     attr_reader :id
-    # One of: site|group|device|scan|vuln-categories|vuln-severity|vuln-status|cyberscope-component|cyberscope-bureau|cyberscope-enclave
+    # One of: site|group|device|scan|vuln-categories|vuln-severity|vuln-status|cyberscope-component|cyberscope-bureau|cyberscope-enclave|tag
     attr_reader :type
 
     def initialize(type, id)
