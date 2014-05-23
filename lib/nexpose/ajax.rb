@@ -21,9 +21,11 @@ module Nexpose
     # @param [Connection] nsc API connection to a Nexpose console.
     # @param [String] uri Controller address relative to https://host:port
     # @param [String] content_type Content type to use when issuing the GET.
+    # @param [Hash] options Parameter options to the call.
     # @return [String|REXML::Document|Hash] The response from the call.
     #
-    def get(nsc, uri, content_type = CONTENT_TYPE::XML)
+    def get(nsc, uri, content_type = CONTENT_TYPE::XML, options = {})
+      parameterize_uri(uri, options)
       get = Net::HTTP::Get.new(uri)
       get.set_content_type(content_type)
       _request(nsc, get)
@@ -110,7 +112,7 @@ module Nexpose
     # @return [Hash] The parameterized URI.
 
     def parameterize_uri(uri, parameters)
-      uri = uri.concat(('?').concat(parameters.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&'))) if parameters
+      uri = uri.concat(('?').concat(parameters.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&'))) unless Hash(parameters).empty?
     end
 
     ###

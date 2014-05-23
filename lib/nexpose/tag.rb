@@ -8,7 +8,7 @@ module Nexpose
     #
     def tags
       tag_summary = []
-      tags = JSON.parse(AJAX.get(self, '/api/2.0/tags'))
+      tags = JSON.parse(AJAX.get(self, '/api/2.0/tags', AJAX::CONTENT_TYPE::JSON, { per_page: 2147483647 }))
       tags['resources'].each do |json|
         tag_summary << TagSummary.parse(json)
       end
@@ -31,7 +31,7 @@ module Nexpose
     #
     def asset_tags(asset_id)
       tag_summary = []
-      asset_tag = JSON.parse(AJAX.get(self, "/api/2.0/assets/#{asset_id}/tags"))
+      asset_tag = JSON.parse(AJAX.get(self, "/api/2.0/assets/#{asset_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2147483647 }))
       asset_tag['resources'].select { |r| r['asset_ids'].find { |i| i == asset_id } }.each do |json|
         tag_summary << TagSummary.parse(json)
       end
@@ -55,7 +55,7 @@ module Nexpose
     #
     def site_tags(site_id)
       tag_summary = []
-      site_tag = JSON.parse(AJAX.get(self, "/api/2.0/sites/#{site_id}/tags"))
+      site_tag = JSON.parse(AJAX.get(self, "/api/2.0/sites/#{site_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2147483647 }))
       site_tag['resources'].each do |json|
         tag_summary << TagSummary.parse(json)
       end
@@ -79,7 +79,7 @@ module Nexpose
     #
     def asset_group_tags(asset_group_id)
       tag_summary = []
-      asset_group_tag = JSON.parse(AJAX.get(self, "/api/2.0/asset_groups/#{asset_group_id}/tags"))
+      asset_group_tag = JSON.parse(AJAX.get(self, "/api/2.0/asset_groups/#{asset_group_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2147483647 }))
       asset_group_tag['resources'].each do |json|
         tag_summary << TagSummary.parse(json)
       end
