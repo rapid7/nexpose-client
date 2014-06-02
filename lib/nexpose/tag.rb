@@ -213,7 +213,7 @@ module Nexpose
 
     # Set the color but validate it
     def color=(hex)
-      unless VALID_COLORS.include?(hex.to_s.downcase)
+      unless Type::Color::VALID_COLORS.include?(hex.to_s.downcase)
         raise ArgumentError, "Unable to set color to an invalid color.\nUse one of #{Type::Color::VALID_COLORS}"
       end
 
