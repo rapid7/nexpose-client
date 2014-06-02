@@ -175,7 +175,6 @@ module Nexpose
         ORANGE = "#de7200"
         PURPLE = "#844f7d"
         RED = "#a0392e"
-        VALID_COLORS = [BLUE, DEFAULT, GREEN, ORANGE, PURPLE, RED]
       end
     end
 
@@ -213,8 +212,8 @@ module Nexpose
 
     # Set the color but validate it
     def color=(hex)
-      unless Type::Color::VALID_COLORS.include?(hex.to_s.downcase)
-        raise ArgumentError, "Unable to set color to an invalid color.\nUse one of #{Type::Color::VALID_COLORS}"
+      unless Type::Color::constants.include?(hex.to_s.downcase)
+        raise ArgumentError, "Unable to set color to an invalid color.\nUse one of #{Type::Color::constants}"
       end
 
       @color = hex
