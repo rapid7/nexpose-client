@@ -183,7 +183,7 @@ module Nexpose
     attr_accessor :source
 
     # HEX color code of tag
-    attr_accessor :color
+    attr_reader :color
 
     # Risk modifier
     attr_accessor :risk_modifier
@@ -209,6 +209,15 @@ module Nexpose
       @name, @type, @id = name, type, id
       @source = 'nexpose-client'
       @color = @type == Type::Generic::CUSTOM ? Type::Color::DEFAULT : nil
+    end
+
+    # Set the color but validate it
+    def color=(hex)
+      unless VALID_COLORS.include?(hex.to_s.downcase)
+        raise ArgumentError, "Unable to set color to an invalid color.\nUse one of #{Type::Color::VALID_COLORS}"
+      end
+
+      @color = hex
     end
 
     # Creates and saves a tag to Nexpose console
