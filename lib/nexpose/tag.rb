@@ -212,12 +212,13 @@ module Nexpose
 
     # Set the color but validate it
     def color=(hex)
-      unless Type::Color::constants.include?(hex.to_s.downcase)
-        raise ArgumentError, "Unable to set color to an invalid color.\nUse one of #{Type::Color::constants}"
-      end
+      valid_colors = Type::Color::constants.map { |c| Type::Color.const_get(c) }
+      unless valid_colors.include?(hex.to_s.downcase)
+        raise ArgumentError, "Unable to set color to an invalid color.\nUse one of #{valid_colors}"
+      end 
 
-      @color = hex
-    end
+      @color = hex 
+    end 
 
     # Creates and saves a tag to Nexpose console
     #
