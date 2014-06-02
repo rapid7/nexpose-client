@@ -167,9 +167,17 @@ module Nexpose
         LOCATION = 'LOCATION'
         CRITICALITY = 'CRITICALITY'
       end
-    end
 
-    DEFAULT_COLOR = '#f6f6f6'
+      module Color
+        BLUE = "#496a77"
+        DEFAULT = "#f6f6f6"
+        GREEN = "#7d8a58"
+        ORANGE = "#de7200"
+        PURPLE = "#844f7d"
+        RED = "#a0392e"
+        VALID_COLORS = [BLUE, DEFAULT, GREEN, ORANGE, PURPLE, RED]
+      end
+    end
 
     # Creation source
     attr_accessor :source
@@ -200,7 +208,7 @@ module Nexpose
     def initialize(name, type, id = -1)
       @name, @type, @id = name, type, id
       @source = 'nexpose-client'
-      @color = @type == Type::Generic::CUSTOM ? DEFAULT_COLOR : nil
+      @color = @type == Type::Generic::CUSTOM ? Type::Color::DEFAULT : nil
     end
 
     # Creates and saves a tag to Nexpose console
