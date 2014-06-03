@@ -213,7 +213,7 @@ module Nexpose
     # Set the color but validate it
     def color=(hex)
       valid_colors = Type::Color::constants.map { |c| Type::Color.const_get(c) }
-      unless valid_colors.include?(hex.to_s.downcase)
+      unless hex.nil? || valid_colors.include?(hex.to_s.downcase)
         raise ArgumentError, "Unable to set color to an invalid color.\nUse one of #{valid_colors}"
       end 
 
