@@ -167,15 +167,22 @@ module Nexpose
         LOCATION = 'LOCATION'
         CRITICALITY = 'CRITICALITY'
       end
-    end
 
-    DEFAULT_COLOR = '#f6f6f6'
+      module Color
+        BLUE = "#496a77"
+        DEFAULT = "#f6f6f6"
+        GREEN = "#7d8a58"
+        ORANGE = "#de7200"
+        PURPLE = "#844f7d"
+        RED = "#a0392e"
+      end
+    end
 
     # Creation source
     attr_accessor :source
 
     # HEX color code of tag
-    attr_accessor :color
+    attr_reader :color
 
     # Risk modifier
     attr_accessor :risk_modifier
@@ -200,8 +207,18 @@ module Nexpose
     def initialize(name, type, id = -1)
       @name, @type, @id = name, type, id
       @source = 'nexpose-client'
-      @color = @type == Type::Generic::CUSTOM ? DEFAULT_COLOR : nil
+      @color = @type == Type::Generic::CUSTOM ? Type::Color::DEFAULT : nil
     end
+
+    # Set the color but validate it
+    def color=(hex)
+      valid_colors = Type::Color::constants.map { |c| Type::Color.const_get(c) }
+      unless hex.nil? || valid_colors.include?(hex.to_s.downcase)
+        raise ArgumentError, "Unable to set color to an invalid color.\nUse one of #{valid_colors}"
+      end 
+
+      @color = hex 
+    end 
 
     # Creates and saves a tag to Nexpose console
     #
