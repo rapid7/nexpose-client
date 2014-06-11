@@ -362,7 +362,7 @@ module Nexpose
       @vuln_count = json['vulnCount'].to_i
       @risk_score = json['riskScore'].to_f
       @site_id = json['siteID']
-      @last_scan = Time.at(json['lastScanDate'] / 1000)
+      @last_scan = Time.at(json['lastScanDate'].to_i / 1000)
     end
   end
 end
