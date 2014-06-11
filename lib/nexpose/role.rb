@@ -23,6 +23,7 @@ module Nexpose
       ADD_USERS_TO_GROUP = 'AddUsersToGroup'
       ADD_USERS_TO_REPORT = 'AddUsersToReport'
       MANAGE_POLICIES = 'ManagePolicies'
+      MANAGE_TAGS = 'ManageTags'
     end
 
     module Site
