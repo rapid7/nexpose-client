@@ -223,6 +223,7 @@ module Nexpose
     end
 
     include XMLUtils
+    include HTMLUtils
 
     # Generate a report once using a simple configuration.
     #
@@ -252,8 +253,10 @@ module Nexpose
           doc.parts.each do |part|
             if /.*base64.*/ =~ part.header.to_s
               if @format =~ /(?:ht|x)ml/
-                if part.header.to_s =~ %r(text/(?:ht|x)ml)
+                if part.header.to_s =~ %r(text/xml)
                   return parse_xml(part.content.unpack('m*')[0]).to_s
+                elsif part.header.to_s =~ %r(text/html)
+                  return parse_html(part.content.unpack('m*')[0]).to_s
                 end
               else # text|pdf|csv|rtf
                 return part.content.unpack('m*')[0]
