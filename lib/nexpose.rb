@@ -49,6 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 require 'date'
 require 'rexml/document'
+require 'nokogiri'
 require 'net/https'
 require 'net/http'
 require 'uri'
