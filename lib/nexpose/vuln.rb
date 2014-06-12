@@ -76,9 +76,7 @@ module Nexpose
     # @return [Array[VulnCheck]] List of matching Vulnerability Checks.
     #
     def find_vuln_check(search_term, partial_words = true, all_words = true)
-      uri = "/ajax/vulnck_synopsis.txml?phrase=#{URI.encode(search_term)}"
-      uri += '&wholeWords=1' unless partial_words
-      uri += '&allWords=1' if all_words
+      uri = "/data/vulnerability/vulnerabilities/dyntable.xml?tableID=VulnCheckSynopsis&phrase=#{URI.encode(search_term)}&allWords=#{all_words}"
       data = DataTable._get_dyn_table(self, uri)
       data.map do |vuln|
         VulnCheck.new(vuln)
