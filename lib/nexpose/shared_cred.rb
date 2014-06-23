@@ -50,6 +50,8 @@ module Nexpose
       cred.privilege_username = json['privilegeElevationUsername']
       cred.all_sites = json['scope'] == 'ALL_SITES_ENABLED_DEFAULT'
       cred.last_modified = Time.at(json['lastModified']['time'] / 1000)
+      cred.auth_type = json['snmpv3authtype']
+      cred.privacy_type = json['snmpv3privtype']
       cred
     end
 
@@ -79,6 +81,12 @@ module Nexpose
     attr_accessor :privilege_password
     # Permission elevation type. See Nexpose::Credential::ElevationType.
     attr_accessor :privilege_type
+    # Authentication type of SNMP v3 credential
+    attr_accessor :auth_type
+    # Privacy type of SNMP v3 credential
+    attr_accessor :privacy_type
+    # Privacty password of SNMP v3 credential
+    attr_accessor :privacy_password
 
     # IP address or host name to restrict this credential to.
     attr_accessor :host
@@ -133,6 +141,9 @@ module Nexpose
       account.add_element('Field', { 'name' => 'privilegeelevationusername' }).add_text(@privilege_username)
       account.add_element('Field', { 'name' => 'privilegeelevationpassword' }).add_text(@privilege_password) if @privilege_password
       account.add_element('Field', { 'name' => 'privilegeelevationtype' }).add_text(@privilege_type) if @privilege_type
+      account.add_element('Field', { 'name' => 'snmpv3authtype' }).add_text(@auth_type) if @auth_type
+      account.add_element('Field', { 'name' => 'snmpv3privtype' }).add_text(@privacy_type) if @privacy_type
+      account.add_element('Field', { 'name' => 'snmpv3privpassword' }).add_text(@privacy_password) if @privacy_password
 
       restrictions = xml.add_element('Restrictions')
       restrictions.add_element('Restriction', { 'type' => 'host' }).add_text(@host) if @host
@@ -197,6 +208,9 @@ module Nexpose
         sc_creds_privilegeelevationusername: @privilege_username,
         sc_creds_privilegeelevationpassword: @privilege_password,
         sc_creds_privilegeelevationtype: @privilege_type,
+        sc_creds_snmpv3authtype: @auth_type,
+        sc_creds_snmpv3privtype: @privacy_type,
+        sc_creds_snmpv3privpassword: @privacy_password,
         siteid: -1 }
     end
 
@@ -228,6 +242,12 @@ module Nexpose
             cred.privilege_password = field.text
           when 'privilegeelevationtype'
             cred.privilege_type = field.text
+          when 'snmpv3authtype'
+            cred.auth_type = field.text
+          when 'snmpv3privtype'
+            cred.privacy_type = field.text
+          when 'snmpv3privpassword'
+            cred.privacy_password = field.text
           end
         end
 

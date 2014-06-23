@@ -23,6 +23,7 @@ module Nexpose
                       'postgresql' => 5432,
                       'remote execution' => 512,
                       'snmp' => 161,
+                      'snmpv3' => 161,
                       'ssh' => 22,
                       'ssh-key' => 22,
                       'telnet' => 23,
@@ -55,6 +56,12 @@ module Nexpose
     attr_accessor :priv_username
     # The password to use when escalating privileges (optional)
     attr_accessor :priv_password
+    # The authentication type to use with SNMP v3 credentials
+    attr_accessor :auth_type
+    # The privacy/encryption type to use with SNMP v3 credentials
+    attr_accessor :privacy_type
+    # The privacy/encryption passphrase to use with SNMP v3 credentials
+    attr_accessor :privacy_password
 
     def self.for_service(service, user, password, realm = nil, host = nil, port = nil)
       cred = new
@@ -72,6 +79,12 @@ module Nexpose
       @priv_type = type
       @priv_username = username
       @priv_password = password
+    end
+    
+    def add_snmpv3_credentials(auth_type, privacy_type, privacy_password)
+      @auth_type = auth_type
+      @privacy_type = privacy_type
+      @privacy_password = privacy_password
     end
 
     def self.parse(xml)
@@ -100,6 +113,10 @@ module Nexpose
       attributes['privilegeelevationtype'] = @priv_type if @priv_type
       attributes['privilegeelevationusername'] = @priv_username if @priv_username
       attributes['privilegeelevationpassword'] = @priv_password if @priv_password
+      
+      attributes['snmpv3authtype'] = @auth_type if @auth_type
+      attributes['snmpv3privtype'] = @privacy_type if @privacy_type
+      attributes['snmpv3privpassword'] = @privacy_password if @privacy_password
 
       xml = make_xml('adminCredentials', attributes, blob)
       xml.add_element(@headers.to_xml_elem) if @headers
@@ -154,6 +171,8 @@ module Nexpose
       REMOTE_EXECUTION = 'remote execution'
       # Simple Network Management Protocol
       SNMP = 'snmp'
+      # Simple Network Management Protocol v3
+      SNMPV3 = 'snmpv3'
       # Secure Shell (SSH)
       SSH = 'ssh'
       # Secure Shell (SSH) Public Key
