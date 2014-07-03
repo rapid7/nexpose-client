@@ -32,9 +32,9 @@ module Nexpose
 
     # Security blob for an existing set of credentials
     attr_accessor :blob
-    # The service for these credentials. Can be All.
+    # The service for these credentials.
     attr_accessor :service
-    # The host for these credentials. Can be Any.
+    # The host for these credentials.
     attr_accessor :host
     # The port on which to use these credentials.
     attr_accessor :port
