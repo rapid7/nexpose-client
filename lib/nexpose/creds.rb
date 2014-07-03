@@ -60,7 +60,7 @@ module Nexpose
     attr_accessor :auth_type
     # The privacy/encryption type to use with SNMP v3 credentials
     attr_accessor :privacy_type
-    # The privacy/encryption passphrase to use with SNMP v3 credentials
+    # The privacy/encryption pass phrase to use with SNMP v3 credentials
     attr_accessor :privacy_password
 
     def self.for_service(service, user, password, realm = nil, host = nil, port = nil)
@@ -231,7 +231,7 @@ module Nexpose
     attr_reader :soft403
     # Base URL of the application for which the form authentication applies.
     attr_reader :webapproot
-    # When using httpheaders, this represents the set of headers to pass with the authentication request.
+    # When using HTTP headers, this represents the set of headers to pass with the authentication request.
     attr_reader :headers
 
     def initialize(webapproot, soft403)
@@ -259,7 +259,7 @@ module Nexpose
 
   end
 
-  # When using htmlform, this represents the login form information.
+  # When using HTML form, this represents the login form information.
   #
   class Field
     include XMLUtils
@@ -299,7 +299,7 @@ module Nexpose
     alias_method :to_xml_elem, :as_xml
   end
 
-  # When using htmlform, this represents the login form information.
+  # When using HTML form, this represents the login form information.
   #
   class HTMLForm
     include XMLUtils
@@ -344,7 +344,7 @@ module Nexpose
     alias_method :to_xml_elem, :as_xml
   end
 
-  # When using htmlform, this represents the login form information.
+  # When using HTML form, this represents the login form information.
   #
   class HTMLForms
     include XMLUtils
@@ -386,7 +386,7 @@ module Nexpose
     alias_method :to_xml_elem, :as_xml
   end
 
-  # When using ssh-key, this represents the PEM-format keypair information.
+  # When using ssh-key, this represents the PEM-format key-pair information.
   class PEMKey
     # TODO
   end
