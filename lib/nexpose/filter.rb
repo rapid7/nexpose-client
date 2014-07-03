@@ -324,6 +324,10 @@ module Nexpose
         'searchCriteria' => to_json }
     end
 
+    def <<(criterion)
+      criteria << criterion
+    end
+
     def self.parse(json)
       ret = Criteria.new([], json['operator'])
       json['criteria'].each do |c|
