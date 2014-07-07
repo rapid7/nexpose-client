@@ -99,7 +99,7 @@ module Nexpose
       xml = %(<AssetGroup id="#{@id}" name="#{replace_entities(@name)}")
       xml << %( description="#{replace_entities(@description)}") if @description
       xml << '>'
-      xml << "<Description>#{replace_entities(@description)}</Description>"
+      xml << "<Description>#{replace_entities(@description)}</Description>" if @description
       xml << '<Devices>'
       @assets.each do |asset|
         xml << %(<device id="#{asset.id}"/>)
