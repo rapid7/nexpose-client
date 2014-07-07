@@ -99,6 +99,7 @@ module Nexpose
       xml = %(<AssetGroup id="#{@id}" name="#{replace_entities(@name)}")
       xml << %( description="#{replace_entities(@description)}") if @description
       xml << '>'
+      xml << "<Description>#{replace_entities(@description)}</Description>"
       xml << '<Devices>'
       @assets.each do |asset|
         xml << %(<device id="#{asset.id}"/>)
@@ -149,6 +150,11 @@ module Nexpose
                         group.attributes['description'],
                         group.attributes['id'].to_i,
                         group.attributes['riskscore'].to_f)
+
+      group.elements.each('Description') do |desc|
+        asset_group.description = desc
+      end
+
       group.elements.each('Devices/device') do |dev|
         asset_group.assets << Device.new(dev.attributes['id'].to_i,
                                          dev.attributes['address'],
