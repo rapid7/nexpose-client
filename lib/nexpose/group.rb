@@ -152,7 +152,7 @@ module Nexpose
                         group.attributes['riskscore'].to_f)
 
       group.elements.each('Description') do |desc|
-        asset_group.description = desc
+        asset_group.description = desc.text
       end
 
       group.elements.each('Devices/device') do |dev|
