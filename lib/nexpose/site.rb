@@ -337,7 +337,7 @@ module Nexpose
       xml.attributes['riskfactor'] = @risk_factor
       xml.attributes['isDynamic'] == '1' if dynamic?
 
-      unless @description.empty?
+      if @description && !@description.empty?
         elem = REXML::Element.new('Description')
         elem.add_text(@description)
         xml.add_element(elem)

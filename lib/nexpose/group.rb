@@ -99,7 +99,7 @@ module Nexpose
       xml.attributes['name'] = @name
       xml.attributes['description'] = @description
 
-      unless @description.empty?
+      if @description && !@description.empty?
         elem = REXML::Element.new('Description')
         elem.add_text(@description)
         xml.add_element(elem)
