@@ -47,7 +47,7 @@ module Nexpose
     attr_reader :id, :name, :description, :risk_score, :dynamic
 
     def initialize(id, name, desc, risk, dynamic)
-      @id, @name, @description, @risk_score, @dyanmic = id, name, desc, risk, dynamic
+      @id, @name, @description, @risk_score, @dynamic = id, name, desc, risk, dynamic
     end
 
     def dynamic?
