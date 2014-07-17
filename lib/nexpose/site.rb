@@ -337,6 +337,12 @@ module Nexpose
       xml.attributes['riskfactor'] = @risk_factor
       xml.attributes['isDynamic'] == '1' if dynamic?
 
+      if @description && !@description.empty?
+        elem = REXML::Element.new('Description')
+        elem.add_text(@description)
+        xml.add_element(elem)
+      end
+
       unless @users.empty?
         elem = REXML::Element.new('Users')
         @users.each { |user| elem.add_element('user', { 'id' => user }) }
@@ -414,6 +420,10 @@ module Nexpose
         site.description = s.attributes['description']
         site.risk_factor = s.attributes['riskfactor'] || 1.0
         site.is_dynamic = true if s.attributes['isDynamic'] == '1'
+
+        s.elements.each('Description') do |desc|
+          site.description = desc.text
+        end
 
         s.elements.each('Users/user') do |user|
           site.users << user.attributes['id'].to_i

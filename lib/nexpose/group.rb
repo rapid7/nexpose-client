@@ -89,6 +89,34 @@ module Nexpose
       @id = res.attributes['group-id'].to_i if res.success and @id < 1
     end
 
+    # Generate an XML representation of this group configuration
+    #
+    # @return [String] XML valid for submission as part of other requests.
+    #
+    def as_xml
+      xml = REXML::Element.new('AssetGroup')
+      xml.attributes['id'] = @id
+      xml.attributes['name'] = @name
+      xml.attributes['description'] = @description
+
+      if @description && !@description.empty?
+        elem = REXML::Element.new('Description')
+        elem.add_text(@description)
+        xml.add_element(elem)
+      end
+
+      elem = REXML::Element.new('Devices')
+      @assets.each { |a| elem.add_element('device', {'id' => a.id}) }
+      xml.add_element(elem)
+
+      unless tags.empty?
+        tag_xml = xml.add_element(REXML::Element.new('Tags'))
+        @tags.each { |tag| tag_xml.add_element(tag.as_xml) }
+      end
+
+      xml
+    end
+
     # Get an XML representation of the group that is valid for a save request.
     # Note that only name, description, and asset ID information is accepted
     # by a save request.
@@ -96,20 +124,7 @@ module Nexpose
     # @return [String] XML representation of the asset group.
     #
     def to_xml
-      xml = %(<AssetGroup id="#{@id}" name="#{replace_entities(@name)}")
-      xml << %( description="#{replace_entities(@description)}") if @description
-      xml << '>'
-      xml << '<Devices>'
-      @assets.each do |asset|
-        xml << %(<device id="#{asset.id}"/>)
-      end
-      xml << '</Devices>'
-      xml << '<Tags>'
-      @tags.each do |tag|
-        xml << tag.as_xml.to_s
-      end
-      xml << '</Tags>'
-      xml << '</AssetGroup>'
+      as_xml.to_s
     end
 
     # Launch ad hoc scans against each group of assets per site.
@@ -149,6 +164,11 @@ module Nexpose
                         group.attributes['description'],
                         group.attributes['id'].to_i,
                         group.attributes['riskscore'].to_f)
+
+      group.elements.each('Description') do |desc|
+        asset_group.description = desc.text
+      end
+
       group.elements.each('Devices/device') do |dev|
         asset_group.assets << Device.new(dev.attributes['id'].to_i,
                                          dev.attributes['address'],
