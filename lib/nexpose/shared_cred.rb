@@ -54,8 +54,6 @@ module Nexpose
       cred.privilege_username = json['privilegeElevationUsername']
       cred.all_sites = json['scope'] == 'ALL_SITES_ENABLED_DEFAULT'
       cred.last_modified = Time.at(json['lastModified']['time'] / 1000)
-      cred.auth_type = json['snmpv3authtype']
-      cred.privacy_type = json['snmpv3privtype']
       cred
     end
 
