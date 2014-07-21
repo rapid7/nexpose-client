@@ -39,6 +39,10 @@ module Nexpose
     attr_accessor :all_sites
     # When this credential was last modified.
     attr_accessor :last_modified
+    # Authentication type of SNMP v3 credential
+    attr_accessor :auth_type
+    # Privacy type of SNMP v3 credential
+    attr_accessor :privacy_type
 
     def self.from_json(json)
       cred = new
@@ -81,10 +85,6 @@ module Nexpose
     attr_accessor :privilege_password
     # Permission elevation type. See Nexpose::Credential::ElevationType.
     attr_accessor :privilege_type
-    # Authentication type of SNMP v3 credential
-    attr_accessor :auth_type
-    # Privacy type of SNMP v3 credential
-    attr_accessor :privacy_type
     # Privacty password of SNMP v3 credential
     attr_accessor :privacy_password
 
