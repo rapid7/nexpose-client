@@ -47,7 +47,8 @@ module Nexpose
                                    engine.attributes['name'],
                                    engine.attributes['address'],
                                    engine.attributes['port'].to_i,
-                                   engine.attributes['status'])
+                                   engine.attributes['status'],
+                                   engine.attributes['scope'])
         end
       end
       arr
