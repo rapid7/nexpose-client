@@ -50,8 +50,6 @@ module Nexpose
       cred.privilege_username = json['privilegeElevationUsername']
       cred.all_sites = json['scope'] == 'ALL_SITES_ENABLED_DEFAULT'
       cred.last_modified = Time.at(json['lastModified']['time'] / 1000)
-      cred.auth_type = json['snmpv3authtype']
-      cred.privacy_type = json['snmpv3privtype']
       cred
     end
 
@@ -81,13 +79,12 @@ module Nexpose
     attr_accessor :privilege_password
     # Permission elevation type. See Nexpose::Credential::ElevationType.
     attr_accessor :privilege_type
+    # Privacty password of SNMP v3 credential
+    attr_accessor :privacy_password
     # Authentication type of SNMP v3 credential
     attr_accessor :auth_type
     # Privacy type of SNMP v3 credential
     attr_accessor :privacy_type
-    # Privacty password of SNMP v3 credential
-    attr_accessor :privacy_password
-
     # IP address or host name to restrict this credential to.
     attr_accessor :host
     # Single port to restrict this credential to.
