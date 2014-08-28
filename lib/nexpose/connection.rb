@@ -134,13 +134,15 @@ module Nexpose
           when Net::HTTPOK then
             return
           when Net::HTTPRedirection then
-            if response['location'].downcase.include? 'starting.html'
-              sleep 5 if wait
-              next if wait
-            elsif response['location'].downcase.include? 'maintenance-login.html'
-              restarting = true
-              sleep 5 if wait
-              next if wait
+            if wait
+              if response['location'].downcase.include? 'starting.html'
+                sleep 5
+                next
+              elsif response['location'].downcase.include? 'maintenance-login.html'
+                restarting = true
+                sleep 5
+                next
+              end
             end
           end
         end
