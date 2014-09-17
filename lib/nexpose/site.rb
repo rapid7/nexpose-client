@@ -16,7 +16,8 @@ module Nexpose
                                  site.attributes['name'],
                                  site.attributes['description'],
                                  site.attributes['riskfactor'].to_f,
-                                 site.attributes['riskscore'].to_f)
+                                 site.attributes['riskscore'].to_f,
+                                 site.attributes['scan_template'])
         end
       end
       arr
@@ -546,6 +547,8 @@ module Nexpose
     # The Site Name.
     attr_reader :name
     # A Description of the Site.
+    attr_reader :scan_template
+    # A Description of the Site.
     attr_reader :description
     # User assigned risk multiplier.
     attr_reader :risk_factor
@@ -554,12 +557,13 @@ module Nexpose
 
     # Constructor
     # SiteSummary(id, name, description, riskfactor = 1)
-    def initialize(id, name, description = nil, risk_factor = 1.0, risk_score = 0.0)
+    def initialize(id, name, description = nil, risk_factor = 1.0, risk_score = 0.0, scan_template = nil)
       @id = id
       @name = name
       @description = description
       @risk_factor = risk_factor
       @risk_score = risk_score
+      @scan_template = scan_template
     end
   end
 
