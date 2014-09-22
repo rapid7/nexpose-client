@@ -159,7 +159,7 @@ module Nexpose
 
       unless @global_scan_engines.empty?
         engines = xml.add_element('GlobalScanEngines')
-        @global_report_templates.each do |engine|
+        @global_scan_engines.each do |engine|
           engines.add_element('GlobalScanEngine', {'name' => engine})
         end
       end
