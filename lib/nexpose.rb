@@ -3,7 +3,7 @@
 #
 =begin
 
-Copyright (C) 2009-2013, Rapid7 LLC
+Copyright (C) 2009-2014, Rapid7 LLC
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
