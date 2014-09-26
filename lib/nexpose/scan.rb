@@ -209,6 +209,25 @@ module Nexpose
       end
     end
 
+    # Export the data associated with a single scan, and optionally store it in
+    # a zip-compressed file under the provided name.
+    #
+    # @param [Fixnum] scan_id Scan ID to remove data for.
+    # @param [String] zip_file Filename to export scan data to.
+    #
+    def export_scan(scan_id, zip_file = nil)
+      http = AJAX._https(self)
+      headers = { 'Cookie' => "nexposeCCSessionID=#{@session_id}",
+                  'Accept-Encoding' => 'identity' }
+      resp = http.get("/data/scan/#{scan_id}/export", headers)
+
+      if zip_file
+        File.open(zip_file, 'wb') { |file| file.write(resp.body) }
+      else
+        resp.body
+      end
+    end
+
     # Delete a scan and all its data from a console.
     # Warning, this method is destructive and not guaranteed to leave a site
     # in a valid state. DBCC may need to be run to correct missing or empty
