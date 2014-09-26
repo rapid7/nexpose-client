@@ -110,7 +110,7 @@ module Nexpose
     # @param [Hash] parameters Hash of attributes that need to be sent
     #    to the controller.
     # @return [Hash] The parameterized URI.
-
+    #
     def parameterize_uri(uri, parameters)
       params = Hash.try_convert(parameters)
       unless params.nil? || params.empty?
