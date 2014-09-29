@@ -245,8 +245,7 @@ module Nexpose
     #
     # This method is designed to work with export_scan to migrate scan data
     # from one console to another. This method will import the data as if run
-    # from a local scan engine. An importing scan can block shutdown of a
-    # console until completed.
+    # from a local scan engine.
     #
     # Scan importing is restricted to only importing scans in chronological
     # order. It assumes that it is the latest scan for a given site, and will
@@ -254,6 +253,7 @@ module Nexpose
     #
     # @param [Fixnum] site_id Site ID of the site to import the scan into.
     # @param [String] zip_file Path to a previously exported scan archive.
+    # @return [String] An empty string on success.
     #
     def import_scan(site_id, zip_file)
 
@@ -295,7 +295,13 @@ module Nexpose
                                         :payload    => payload,
                                         :cookies    => { 'nexposeCCSessionID' => self.session_id })
 
-      request.execute
+      begin
+        request.execute
+      rescue RestClient::Forbidden => fourOhThree
+        raise Nexpose::PermissionError.new(fourOhThree)
+      rescue RestClient::InternalServerError => e
+        raise Nexpose::APIError.new(request, e)
+      end
     end
 
     # Delete a scan and all its data from a console.
