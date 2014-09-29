@@ -214,6 +214,8 @@ module Nexpose
     #
     # @param [Fixnum] scan_id Scan ID to remove data for.
     # @param [String] zip_file Filename to export scan data to.
+    # @return [Fixnum] On success, returned the number of bytes written to
+    #   zip_file, if provided. Otherwise, returns raw ZIP binary data.
     #
     def export_scan(scan_id, zip_file = nil)
       http = AJAX._https(self)
@@ -221,10 +223,17 @@ module Nexpose
                   'Accept-Encoding' => 'identity' }
       resp = http.get("/data/scan/#{scan_id}/export", headers)
 
-      if zip_file
-        File.open(zip_file, 'wb') { |file| file.write(resp.body) }
+      case resp
+      when Net::HTTPSuccess
+        if zip_file
+          File.open(zip_file, 'wb') { |file| file.write(resp.body) }
+        else
+          resp.body
+        end
+      when Net::HTTPForbidden
+        raise Nexpose::PermissionError.new(resp)
       else
-        resp.body
+        raise Nexpose::APIError.new(resp, "#{resp.class}: Unrecognized response.")
       end
     end
 
