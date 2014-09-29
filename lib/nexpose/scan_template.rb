@@ -146,6 +146,20 @@ module Nexpose
       gen.attributes['disableWebSpider'] = enable ? '0' : '1'
     end
 
+    # Adjust the number of threads to use per scan engine for this template
+    # @param [Integer] threads the number of threads to use per engine
+    def scan_threads=(threads)
+      scan_threads = REXML::XPath.first(@xml, 'ScanTemplate/General/scanThreads')
+      scan_threads.text = threads.to_s
+    end
+
+    # Adjust the number of threads to use per asset for this template
+    # @param [Integer] threads the number of threads to use per asset
+    def host_threads=(threads)
+      host_threads = REXML::XPath.first(@xml, 'ScanTemplate/General/hostThreads')
+      host_threads.text = threads.to_s
+    end
+
     # Add custom TCP ports to scan for services
     # @param [Array] ports to scan
     def tcp_service_ports=(ports)
