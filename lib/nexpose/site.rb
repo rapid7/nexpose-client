@@ -414,7 +414,7 @@ module Nexpose
     #  ## TODO What is returned on failure?
     #
     def self.parse(rexml)
-      rexml.elements.each('SiteConfigResponse/Site') do |s|
+      rexml.elements.each('//Site') do |s|
         site = Site.new(s.attributes['name'])
         site.id = s.attributes['id'].to_i
         site.description = s.attributes['description']
