@@ -253,8 +253,8 @@ module Nexpose
 
         # Have to retrieve and attach shared creds, or saving will fail.
         xml = _append_shared_creds_to_xml(connection, as_xml)
-        response = AJAX.post(connection, '/ajax/save_site_config.txml', xml)
-        saved = REXML::XPath.first(REXML::Document.new(response), 'SaveConfig')
+        response = AJAX.post(connection, '/data/site/config', xml)
+        saved = REXML::XPath.first(REXML::Document.new(response), 'ajaxResponse')
         raise APIError.new(response, 'Failed to save dynamic site.') if saved.nil? || saved.attributes['success'].to_i != 1
 
         save_dynamic_criteria(connection) unless new_site
@@ -297,8 +297,22 @@ module Nexpose
     # @return [Fixnum] Site ID.
     #
     def save_dynamic_criteria(nsc)
-      params = to_dynamic_map
-      response = AJAX.form_post(nsc, '/data/site/saveSite', params)
+      # Several parameters are passed through the URI
+      params = { 'configID' => @discovery_connection_id,
+                 'entityid' => @id > 0 ? @id : false,
+                 'mode' => @id > 0 ? 'edit' : false }
+      uri = AJAX.parameterize_uri('/data/site/saveSite', params)
+
+      # JSON body of POST request contains details.
+      details = { 'dynamic' => true,
+                  'name' => @name,
+                  'tag' => @description.nil? ? '' : @description,
+                  'riskFactor' => @risk_factor,
+                  # 'vCenter' => @discovery_connection_id,
+                  'searchCriteria' => @criteria.nil? ? { 'operator' => 'AND' } : @criteria.to_map }
+      json = JSON.generate(details)
+
+      response = AJAX.post(nsc, uri, json, AJAX::CONTENT_TYPE::JSON)
       json = JSON.parse(response)
       if json['response'] =~ /success/
         if @id < 1
@@ -335,7 +349,8 @@ module Nexpose
       xml.attributes['name'] = @name
       xml.attributes['description'] = @description
       xml.attributes['riskfactor'] = @risk_factor
-      xml.attributes['isDynamic'] == '1' if dynamic?
+      xml.attributes['isDynamic'] = '1' if dynamic?
+      xml.attributes['dynamicConfigType'] = 'vSphere' if dynamic?
 
       if @description && !@description.empty?
         elem = REXML::Element.new('Description')
@@ -392,19 +407,6 @@ module Nexpose
 
     def to_xml
       as_xml.to_s
-    end
-
-    def to_dynamic_map
-      details = { 'dynamic' => true,
-                  'name' => @name,
-                  'tag' => @description.nil? ? '' : @description,
-                  'riskFactor' => @risk_factor,
-                  # 'vCenter' => @discovery_connection_id,
-                  'searchCriteria' => @criteria.nil? ? { 'operator' => 'AND' } : @criteria.to_map }
-      params = { 'configID' => @discovery_connection_id,
-                 'entityid' => @id > 0 ? @id : false,
-                 'mode' => @id > 0 ? 'edit' : false,
-                 'entityDetails' => details }
     end
 
     # Parse a response from a Nexpose console into a valid Site object.
@@ -475,7 +477,7 @@ module Nexpose
     end
 
     def _append_shared_creds_to_xml(connection, xml)
-      xml_w_creds = AJAX.get(connection, "/ajax/site_config.txml?siteid=#{@id}")
+      xml_w_creds = AJAX.get(connection, "/data/site/config?siteid=#{@id}")
       cred_xml = REXML::XPath.first(REXML::Document.new(xml_w_creds), 'Site/Credentials')
       unless cred_xml.nil?
         creds = REXML::XPath.first(xml, 'Credentials')
