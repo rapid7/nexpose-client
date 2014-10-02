@@ -391,6 +391,7 @@ module Nexpose
       xml.attributes['description'] = @description
       xml.attributes['riskfactor'] = @risk_factor
       xml.attributes['isDynamic'] = '1' if dynamic?
+      # TODO This should be set to 'Amazon Web Services' for AWS.
       xml.attributes['dynamicConfigType'] = 'vSphere' if dynamic?
 
       if @description && !@description.empty?
