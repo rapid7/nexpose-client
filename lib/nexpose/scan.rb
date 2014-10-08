@@ -256,51 +256,31 @@ module Nexpose
     # @return [String] An empty string on success.
     #
     def import_scan(site_id, zip_file)
+      # Generate the multipart message
+      parts = []
+      parts << "Content-Disposition: form-data; name=\"siteid\"\r\n\r\n#{ site_id.to_s }\r\n"
+      parts << "Content-Disposition: form-data; name=\"nexposeCCSessionID\"\r\n\r\n#{ self.session_id }\r\n"
+      content = File.new(zip_file, 'rb')
+      parts << "Content-Disposition: form-data; name=\"scan\"; filename=\"#{ zip_file }\"\r\n" + "Content-Type: application/zip\r\n\r\n#{ content.read }\r\n"
+      bound  = "_NexposeClientGem_#{rand(1024)}_#{rand(0xffffffff)}_#{rand(0xffffffff)}"
+      message = parts.map { |part| '--' + bound + "\r\n" + part }.join('') + '--' + bound + '--'
 
-      # ## Ideally, this code should not depend upon rest-client, but should be
-      # #  able to use the Rex library to generate the MIME message. I haven't
-      # #  been able to figure out how, though. Leaving it here, commented out,
-      # #  pending discovery of what to do.
+      post = Net::HTTP::Post.new('/data/scan/import')
+      post.body = message
+      post.content_length = message.size
+      post.set_content_type('multipart/form-data', boundary: bound)
 
-      # data = Rex::MIME::Message.new
-      # data.add_part(site_id.to_s, nil, nil, 'form-data; name="siteid"')
-      # data.add_part(self.session_id, nil, nil, 'form-data; name="nexposeCCSessionID"')
-
-      # scan = File.new(zip_file, 'rb')
-      # data.add_part(scan.read, 'application/zip', nil,
-      #               "form-data; name=\"scan\"; filename=\"#{zip_file}\"")
-
-      # post = Net::HTTP::Post.new('/data/scan/import')
-      # ## rex 2.0.3 has a bug that requires this monkey-patch for Message#to_s
-      # # class String
-      # #   def blank?
-      # #     self !~ /\S/
-      # #   end
-      # # end
-      # post.body = data.to_s
-      # post.set_content_type("multipart/form-data; boundary=#{data.bound}")
-      # AJAX._headers(nsc, post)
-
-      # http = AJAX._https(nsc)
-      # http.request(post)
-
-      scan = File.new(zip_file, 'rb')
-      url = "https://#{self.host}:#{self.port}/data/scan/import"
-      payload = { :siteid => site_id,
-                  :scan => scan,
-                  'nexposeCCSessionID' => self.session_id }
-      request = RestClient::Request.new(:method     => :post,
-                                        :url        => url,
-                                        :verify_ssl => OpenSSL::SSL::VERIFY_NONE,
-                                        :payload    => payload,
-                                        :cookies    => { 'nexposeCCSessionID' => self.session_id })
-
-      begin
-        request.execute
-      rescue RestClient::Forbidden => fourOhThree
-        raise Nexpose::PermissionError.new(fourOhThree)
-      rescue RestClient::InternalServerError => e
-        raise Nexpose::APIError.new(request, e)
+      # Avoiding AJAX#request, because the data can cause binary dump on error.
+      http = AJAX._https(self)
+      AJAX._headers(self, post)
+      response = http.request(post)
+      case response
+      when Net::HTTPOK
+        response.body
+      when Net::HTTPUnauthorized
+        raise Nexpose::PermissionError.new(response)
+      else
+        raise Nexpose::APIError.new(post, response.body)
       end
     end
 
