@@ -256,19 +256,16 @@ module Nexpose
     # @return [String] An empty string on success.
     #
     def import_scan(site_id, zip_file)
-      # Generate the multipart message
-      parts = []
-      parts << "Content-Disposition: form-data; name=\"siteid\"\r\n\r\n#{ site_id.to_s }\r\n"
-      parts << "Content-Disposition: form-data; name=\"nexposeCCSessionID\"\r\n\r\n#{ self.session_id }\r\n"
-      content = File.new(zip_file, 'rb')
-      parts << "Content-Disposition: form-data; name=\"scan\"; filename=\"#{ zip_file }\"\r\n" + "Content-Type: application/zip\r\n\r\n#{ content.read }\r\n"
-      bound  = "_NexposeClientGem_#{rand(1024)}_#{rand(0xffffffff)}_#{rand(0xffffffff)}"
-      message = parts.map { |part| '--' + bound + "\r\n" + part }.join('') + '--' + bound + '--'
+      data = Rex::MIME::Message.new
+      data.add_part(site_id.to_s, nil, nil, 'form-data; name="siteid"')
+      data.add_part(self.session_id, nil, nil, 'form-data; name="nexposeCCSessionID"')
+      scan = File.new(zip_file, 'rb')
+      data.add_part(scan.read, 'application/zip', 'binary',
+                    "form-data; name=\"scan\"; filename=\"#{zip_file}\"")
 
       post = Net::HTTP::Post.new('/data/scan/import')
-      post.body = message
-      post.content_length = message.size
-      post.set_content_type('multipart/form-data', boundary: bound)
+      post.body = data.to_s
+      post.set_content_type('multipart/form-data', boundary: data.bound)
 
       # Avoiding AJAX#request, because the data can cause binary dump on error.
       http = AJAX._https(self)

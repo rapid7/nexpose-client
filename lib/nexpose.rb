@@ -103,3 +103,11 @@ module Nexpose
     puts 'response: ' + object.response_xml.to_s
   end
 end
+
+# Monkey patch from ActiveSupport which rex 2.0.3 incorrectly replies upon.
+# This enables the multipart MIME handling in Connection#import_scan
+class String
+  def blank?
+    self !~ /\S/
+  end
+end
