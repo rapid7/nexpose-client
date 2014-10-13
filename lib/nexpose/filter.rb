@@ -329,7 +329,9 @@ module Nexpose
     end
 
     def self.parse(json)
-      ret = Criteria.new([], json['operator'])
+      # The call returns empty JSON, so default to 'AND' if not present.
+      operator = json['operator'] || 'AND'
+      ret = Criteria.new([], operator)
       json['criteria'].each do |c|
         ret.criteria << Criterion.parse(c)
       end
