@@ -28,13 +28,19 @@ module Nexpose
     #                               'table-id' => 'site-assets',
     #                               'siteID' => site_id })
     #
-    def _get_json_table(console, address, parameters = {}, page_size = 500, records = nil)
+    def _get_json_table(console, address, parameters = {}, page_size = 500, records = nil, post = true)
       parameters['dir'] = 'DESC'
       parameters['startIndex'] = -1
       parameters['results'] = -1
 
-      post = AJAX.form_post(console, address, parameters)
-      data = JSON.parse(post)
+      if post
+        request = lambda { |p| AJAX.form_post(console, address, p) }
+      else
+        request = lambda { |p| AJAX.get(console, address.dup, AJAX::CONTENT_TYPE::JSON, p) }
+      end
+
+      response = request.call(parameters)
+      data = JSON.parse(response)
       total = records || data['totalRecords']
       return [] if total == 0
 
@@ -43,7 +49,7 @@ module Nexpose
       while rows.length < total
         parameters['startIndex'] = rows.length
 
-        data = JSON.parse(AJAX.form_post(console, address, parameters))
+        data = JSON.parse(request.call(parameters))
         rows.concat data['records']
       end
       rows
