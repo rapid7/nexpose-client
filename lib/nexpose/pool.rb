@@ -40,6 +40,24 @@ module Nexpose
       @name = name
       @scope = scope
     end
+
+    # Deletes an engine pool
+    #
+    # @param [Connection] conn Connection to console where site exists.
+    #
+    def delete(conn)
+      xml = conn.make_xml('EnginePoolDeleteRequest')
+      xml.add_element(as_xml)
+      result = conn.execute(xml, '1.2')
+      result.success
+    end
+
+    def as_xml
+      xml = REXML::Element.new('EnginePool')
+      xml.add_attribute('name', @name)
+      xml.add_attribute('scope', @scope)
+      xml
+    end
   end
 
   # Engine pool configuration object.
