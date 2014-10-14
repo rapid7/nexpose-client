@@ -58,6 +58,10 @@ module Nexpose
       # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, CONTAINS, NOT_CONTAINS
       ASSET = 'ASSET'
 
+      # Search for an Asset by CVE ID
+      # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS
+      CVE_ID = 'CVE_ID'
+
       # Valid Operators: IS, IS_NOT
       # Valid Values (See Value::AccessComplexity): LOW, MEDIUM, HIGH
       CVSS_ACCESS_COMPLEXITY = 'CVSS_ACCESS_COMPLEXITY'
@@ -158,6 +162,10 @@ module Nexpose
       # Valid Operators: INCLUDE, DO_NOT_INCLUDE
       # Valid Values (See Value::VulnerabilityExposure): MALWARE, METASPLOIT, DATABASE
       VULNERABILITY_EXPOSURES = 'VULNERABILITY_EXPOSURES'
+
+      # Search by VULNERABILITY CATEGORY
+      # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS, STARTS_WITH, ENDS_WITH
+      VULN_CATEGORY = 'VULN_CATEGORY'
     end
 
     # List of acceptable operators. Not all fields accept all operators.
