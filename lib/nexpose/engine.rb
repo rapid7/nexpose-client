@@ -182,7 +182,7 @@ module Nexpose
       r = connection.execute(xml, '1.2')
       if r.success
         r.res.elements.each('EngineSaveResponse/EngineConfig') do |v|
-          return @id = v.attributes['id']
+          return @id = v.attributes['id'].to_i
         end
       end
     end
