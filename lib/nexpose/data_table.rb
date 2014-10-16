@@ -39,7 +39,7 @@ module Nexpose
         request = lambda { |p| AJAX.get(console, address.dup, AJAX::CONTENT_TYPE::JSON, p) }
       end
 
-      response = request.call(parameters)
+      response = request.(parameters)
       data = JSON.parse(response)
       total = records || data['totalRecords']
       return [] if total == 0
@@ -49,7 +49,7 @@ module Nexpose
       while rows.length < total
         parameters['startIndex'] = rows.length
 
-        data = JSON.parse(request.call(parameters))
+        data = JSON.parse(request.(parameters))
         rows.concat data['records']
       end
       rows
