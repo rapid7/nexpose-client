@@ -15,6 +15,6 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.9'
   s.platform              = 'ruby'
 
-  s.add_runtime_dependency('rex', '~> 2.0.3', '>= 2.0.3')
+  s.add_runtime_dependency('rex', '~> 2.0.4', '>= 2.0.4')
   s.add_runtime_dependency('nokogiri', '~> 1.6', '>= 1.6.2')
 end
