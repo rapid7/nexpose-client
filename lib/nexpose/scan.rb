@@ -179,6 +179,24 @@ module Nexpose
     end
 
     # Retrieve a list of current scan activities across all Scan Engines
+    # managed by Nexpose. This method returns lighter weight objects than
+    # scan_activity.
+    #
+    # @return [Array[ScanData]] Array of ScanData objects associated with
+    #   each active scan on the engines.
+    #
+    def activity
+      r = execute(make_xml('ScanActivityRequest'))
+      res = []
+      if r.success
+        r.res.elements.each('//ScanSummary') do |scan|
+          res << ScanData.parse(scan)
+        end
+      end
+      res
+    end
+
+    # Retrieve a list of current scan activities across all Scan Engines
     # managed by Nexpose.
     #
     # @return [Array[ScanSummary]] Array of ScanSummary objects associated with
@@ -293,9 +311,11 @@ module Nexpose
     end
   end
 
-  # Object that represents a summary of a scan.
+  # Minimal scan data object.
+  # Unlike ScanSummary, these objects don't collect vulnerability data, which
+  # can be rather verbose and isn't useful for many automation scenarios.
   #
-  class ScanSummary
+  class ScanData
 
     # The Scan ID of the Scan
     attr_reader :scan_id
@@ -310,6 +330,40 @@ module Nexpose
     # The scan status.
     # One of: running|finished|stopped|error|dispatched|paused|aborted|uknown
     attr_reader :status
+
+    # Constructor
+    def initialize(scan_id, site_id, engine_id, status, start_time, end_time)
+      @scan_id, @site_id, @engine_id, @status, @start_time, @end_time = scan_id, site_id, engine_id, status, start_time, end_time
+    end
+    def self.parse(xml)
+      # Start time can be empty in some error conditions.
+      start_time = nil
+      unless xml.attributes['startTime'] == ''
+        start_time = DateTime.parse(xml.attributes['startTime'].to_s).to_time
+        # Timestamp is UTC, but parsed as local time.
+        start_time -= start_time.gmt_offset
+      end
+
+      # End time is often not present, since reporting on running scans.
+      end_time = nil
+      if xml.attributes['endTime']
+        end_time = DateTime.parse(xml.attributes['endTime'].to_s).to_time
+        # Timestamp is UTC, but parsed as local time.
+        end_time -= end_time.gmt_offset
+      end
+
+      ScanData.new(xml.attributes['scan-id'].to_i,
+                   xml.attributes['site-id'].to_i,
+                   xml.attributes['engine-id'].to_i,
+                   xml.attributes['status'],
+                   start_time,
+                   end_time)
+    end
+  end
+
+  # Object that represents a summary of a scan.
+  #
+  class ScanSummary < ScanData
 
     # The reason the scan was stopped or failed, if applicable.
     attr_reader :message
