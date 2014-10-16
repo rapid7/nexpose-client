@@ -166,7 +166,7 @@ module Nexpose
     #
     def resume_scan(scan_id)
       r = execute(make_xml('ScanResumeRequest', { 'scan-id' => scan_id }), '1.1', timeout: 60)
-      r.success ? r.attributes['success'] : nil
+      r.success ? r.attributes['success'] == '1' : false
     end
 
     # Pauses a scan.
@@ -175,7 +175,7 @@ module Nexpose
     #
     def pause_scan(scan_id)
       r = execute(make_xml('ScanPauseRequest', { 'scan-id' => scan_id }))
-      r.success ? r.attributes['success'] : nil
+      r.success ? r.attributes['success'] == '1' : false
     end
 
     # Retrieve a list of current scan activities across all Scan Engines
