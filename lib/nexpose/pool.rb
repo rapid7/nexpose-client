@@ -36,7 +36,7 @@ module Nexpose
     attr_reader :scope
 
     def initialize(id, name, scope = 'silo')
-      @id = id
+      @id = id.to_i
       @name = name
       @scope = scope
     end
