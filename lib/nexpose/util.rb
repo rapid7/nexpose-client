@@ -72,5 +72,24 @@ module Nexpose
         end
       end
     end
+
+    # Parse a REXML::Document or REXML::Element for any hosts listed and convert
+    # them to HostName and IPRange objects.
+    #
+    # @param [REXML::Document|REXML::Element] xml REXML class potentially
+    #   containing host references.
+    # @return [Array[HostName|IPRange]] Collection of parsed hosts.
+    #
+    def parse(xml)
+      coll = []
+      xml.elements.each('//range') do |elem|
+        to = elem.attribute('to').nil? ? nil : elem.attribute('to').value
+        coll << IPRange.new(elem.attribute('from').value, to)
+      end
+      xml.elements.each('//host') do |elem|
+        coll << HostName.new(elem.text)
+      end
+      coll
+    end
   end
 end

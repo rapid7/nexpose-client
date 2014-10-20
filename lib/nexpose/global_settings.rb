@@ -14,7 +14,7 @@ module Nexpose
     def initialize(xml)
       @xml = xml
 
-      @asset_exclusions = _parse_exclusions(xml)
+      @asset_exclusions = HostOrIP.parse(xml)
     end
 
     # Save any updates to this settings object to the Nexpose console.
@@ -72,19 +72,6 @@ module Nexpose
         asset = HostOrIP.convert(host_or_ip)
       end
       @asset_exclusions = asset_exclusions.reject { |a| a.eql? asset }
-    end
-
-    # Internal method for parsing exclusions from XML.
-    def _parse_exclusions(xml)
-      exclusions = []
-      xml.elements.each('//range') do |elem|
-        to = elem.attribute('to').nil? ? nil : elem.attribute('to').value
-        exclusions << IPRange.new(elem.attribute('from').value, to)
-      end
-      xml.elements.each('//host') do |elem|
-        exclusions << HostName.new(elem.text)
-      end
-      exclusions
     end
 
     # Internal method for updating exclusions before saving.
