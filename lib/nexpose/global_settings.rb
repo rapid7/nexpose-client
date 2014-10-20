@@ -6,6 +6,10 @@ module Nexpose
     # all sites.
     attr_accessor :asset_exclusions
 
+    # Whether control scanning in enabled. A feature tied to ControlsInsight
+    # integration.
+    attr_accessor :control_scanning
+
     # XML document representing the entire configuration.
     attr_reader :xml
 
@@ -15,6 +19,12 @@ module Nexpose
       @xml = xml
 
       @asset_exclusions = HostOrIP.parse(xml)
+      @control_scanning = _get_control_scanning(xml)
+    end
+
+    # Returns true if controls scanning is enabled.
+    def control_scanning?
+      control_scanning
     end
 
     # Save any updates to this settings object to the Nexpose console.
@@ -30,19 +40,10 @@ module Nexpose
       end
 
       _replace_exclusions(xml, asset_exclusions)
+      _set_control_scanning(xml, control_scanning)
 
       response = AJAX.post(nsc, '/data/admin/global-settings', xml)
       XMLUtils.success? response
-    end
-
-    # Load the global settings from a Nexpose console.
-    #
-    # @param [Connection] nsc Connection to a Nexpose console.
-    # @return [GlobalSettings] Settings object for the console.
-    #
-    def self.load(nsc)
-      response = AJAX.get(nsc, '/data/admin/global-settings')
-      new(REXML::Document.new(response))
     end
 
     # Add an asset exclusion setting.
@@ -74,12 +75,42 @@ module Nexpose
       @asset_exclusions = asset_exclusions.reject { |a| a.eql? asset }
     end
 
+    # Load the global settings from a Nexpose console.
+    #
+    # @param [Connection] nsc Connection to a Nexpose console.
+    # @return [GlobalSettings] Settings object for the console.
+    #
+    def self.load(nsc)
+      response = AJAX.get(nsc, '/data/admin/global-settings')
+      new(REXML::Document.new(response))
+    end
+
     # Internal method for updating exclusions before saving.
     def _replace_exclusions(xml, exclusions)
       xml.elements.delete('//ExcludedHosts')
       elem = xml.root.add_element('ExcludedHosts')
       exclusions.each do |exclusion|
         elem.add_element(exclusion.as_xml)
+      end
+    end
+
+    # Internal method for parsing XML for whether control scanning in enabled.
+    def _get_control_scanning(xml)
+      enabled = false
+      if elem = REXML::XPath.first(xml, '//enableControlsScan[@enabled]')
+        enabled = elem.attribute('enabled').value.to_i == 1
+      end
+      enabled
+    end
+
+    # Internal method for updating control scanning before saving.
+    def _set_control_scanning(xml, enabled)
+      if elem = REXML::XPath.first(xml, '//enableControlsScan')
+        elem.attributes['enabled'] = enabled ? '1' : '0'
+      else
+        elem = REXML::Element.new('ControlsScan', xml.root)
+        elem.add_element('enableControlsScan',
+                         'enabled' => enabled ? '1' : '0')
       end
     end
   end
