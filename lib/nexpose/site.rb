@@ -29,7 +29,7 @@ module Nexpose
     # @return Whether or not the delete request succeeded.
     #
     def delete_site(site_id)
-      r = execute(make_xml('SiteDeleteRequest', {'site-id' => site_id}))
+      r = execute(make_xml('SiteDeleteRequest', { 'site-id' => site_id }))
       r.success
     end
 
@@ -40,7 +40,7 @@ module Nexpose
     #   each scan run to date on the site provided.
     #
     def site_scan_history(site_id)
-      r = execute(make_xml('SiteScanHistoryRequest', {'site-id' => site_id}))
+      r = execute(make_xml('SiteScanHistoryRequest', { 'site-id' => site_id }))
       scans = []
       if r.success
         r.res.elements.each('SiteScanHistoryResponse/ScanSummary') do |scan_event|
@@ -59,7 +59,18 @@ module Nexpose
     # @return [ScanSummary] details of the last completed scan for a site.
     #
     def last_scan(site_id)
-      site_scan_history(site_id).select { |scan| scan.end_time }.max_by { |scan| scan.end_time }
+      site_scan_history(site_id).select(&:end_time).max_by(&:end_time)
+    end
+
+    # Retrieve a history of the completed scans for a given site.
+    #
+    # @param [FixNum] site_id Site ID to find scans for.
+    # @return [CompletedScan] details of the completed scans for the site.
+    #
+    def completed_scans(site_id)
+      table = { 'table-id' => 'site-completed-scans' }
+      data = DataTable._get_json_table(self, "/data/scan/site/#{site_id}", table)
+      data.map(&CompletedScan.method(:parse_json))
     end
   end
 
@@ -178,7 +189,7 @@ module Nexpose
     #
     # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
     def remove_host(hostname)
-      @assets = assets.reject { |asset| asset == HostName.new(hostname) } 
+      @assets = assets.reject { |asset| asset == HostName.new(hostname) }
     end
 
     # Adds an asset to this site by IP address.
@@ -228,8 +239,8 @@ module Nexpose
     #
     def remove_asset(asset)
       begin
-        # If the asset registers as a valid IP, store as IP.
-        ip = IPAddr.new(asset)
+        # If the asset registers as a valid IP, remove as IP.
+        IPAddr.new(asset)
         remove_ip(asset)
       rescue ArgumentError => e
         if e.message == 'invalid address'
@@ -531,7 +542,6 @@ module Nexpose
   # Object that represents the summary of a Nexpose Site.
   #
   class SiteSummary
-
     # The Site ID.
     attr_reader :id
     # The Site Name.
@@ -557,7 +567,6 @@ module Nexpose
   # Object that represents a hostname to be added to a site.
   #
   class HostName
-
     # Named host (usually DNS or Netbios name).
     attr_accessor :host
 
@@ -595,7 +604,6 @@ module Nexpose
   # If to is nil then the from field will be used to specify a single IP Address only.
   #
   class IPRange
-
     # Start of range *Required
     attr_accessor :from
     # End of range *Optional (If nil then IPRange is a single IP Address)

@@ -520,7 +520,6 @@ module Nexpose
       # and vuln-potential.
       #
       class Status
-
         attr_reader :severities, :count
 
         def initialize(severity = nil, count = 0)
@@ -547,7 +546,6 @@ module Nexpose
   # Struct class for tracking scan launch information.
   #
   class Scan
-
     # The scan ID when a scan is successfully launched.
     attr_reader :id
     # The engine the scan was dispatched to.
@@ -576,6 +574,50 @@ module Nexpose
       PAUSED = 'paused'
       DISPATCHED = 'dispatched'
       UNKNOWN = 'unknown'
+    end
+  end
+
+  # Summary object of a completed scan for a site.
+  #
+  class CompletedScan
+    # Unique identifier of a scan.
+    attr_reader :id
+    # Start time of the scan.
+    attr_reader :start_time
+    # Completion time of the scan.
+    attr_reader :end_time
+    # Elapsed time of the scan in milliseconds.
+    attr_reader :duration
+    # Number of vulnerabilities discovered in the scan.
+    attr_reader :vulns
+    # Number of live assets discovered in the scan.
+    attr_reader :assets
+    # Cumulative risk score for all assets in the scan.
+    attr_reader :risk_score
+    # Scan type. One of :scheduled or :manual
+    attr_reader :type
+    # Name of the engine where the scan was run. Not the unique ID.
+    attr_reader :engine_name
+
+    # Internal constructor to be called by #parse_json.
+    def initialize(&block)
+      instance_eval(&block) if block_given?
+    end
+
+    # Internal method for converting a JSON representation into a CompletedScan
+    # object.
+    def self.parse_json(json)
+      new do
+        @id = json['scanID']
+        @start_time = Time.at(json['startTime'] / 1000)
+        @end_time = Time.at(json['endTime'] / 1000)
+        @duration = json['duration']
+        @vulns = json['vulnerabilityCount']
+        @assets = json['liveHosts']
+        @risk_score = json['riskScore']
+        @type = json['startedByCD'] == 'S' ? :scheduled : :manual
+        @engine_name = json['scanEngineName']
+      end
     end
   end
 end
