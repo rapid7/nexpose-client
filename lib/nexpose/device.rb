@@ -93,6 +93,20 @@ module Nexpose
     alias_method :asset_vulns, :list_device_vulns
     alias_method :device_vulns, :list_device_vulns
 
+    # Retrieve a list of assets which completed in a given scan. If called
+    # during a scan, this method returns currently completed assets. A
+    # "completed" asset can be in one of three states: completed successfully,
+    # failed due to an error, or stopped by a user.
+    #
+    # @param [Fixnum] scan_id Unique identifier of a scan.
+    # @return [Array[CompletedAsset]] List of completed assets.
+    #
+    def completed_assets(scan_id)
+      uri = "/data/asset/scan/#{scan_id}/complete-assets"
+      data = DataTable._get_json_table(self, uri, {}, 500, nil, false)
+      data.map(&CompletedAsset.method(:parse_json))
+    end
+
     def delete_device(device_id)
       r = execute(make_xml('DeviceDeleteRequest', { 'device-id' => device_id }))
       r.success
@@ -104,7 +118,6 @@ module Nexpose
   # Object that represents a single device in a Nexpose security console.
   #
   class Device
-
     # A unique device ID (assigned automatically by the Nexpose console).
     attr_reader :id
     # IP Address or Hostname of this device.
@@ -122,6 +135,55 @@ module Nexpose
       @site_id = site_id.to_i
       @risk_factor = risk_factor.to_f
       @risk_score = risk_score.to_f
+    end
+  end
+
+  # Summary object of a completed asset for a scan.
+  #
+  class CompletedAsset
+    # Unique identifier of an asset.
+    attr_reader :id
+    # IP address of the asset.
+    attr_reader :ip
+    # Host name of the asset, if discovered.
+    attr_reader :host_name
+    # Operating system fingerprint of the asset.
+    attr_reader :os
+    # Number of vulnerabilities discovered on the asset.
+    attr_reader :vulns
+    # Status of the asset on scan completion.
+    # One of :completed, :error, or :stopped.
+    attr_reader :status
+    # Time it took to scan the asset, in milliseconds.
+    attr_reader :duration
+
+    # Internal constructor to be called by #parse_json.
+    def initialize(&block)
+      instance_eval(&block) if block_given?
+    end
+
+    # Convenience method for assessing "ip" as "ip_address".
+    def ip_address
+      ip
+    end
+
+    # Convenience method for assessing "os" as "operating_system".
+    def operating_system
+      os
+    end
+
+    # Internal method for converting a JSON representation into a CompletedScan
+    # object.
+    def self.parse_json(json)
+      new do
+        @id = json['id'].to_i
+        @ip = json['ipAddress']
+        @host_name = json['hostName']
+        @os = json['operatingSystem']
+        @vulns = json['vulnerabilityCount']
+        @status = json['scanStatusTranslation'].downcase.to_sym
+        @duration = json['duration']
+      end
     end
   end
 end
