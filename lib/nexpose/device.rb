@@ -103,8 +103,10 @@ module Nexpose
     #
     def completed_assets(scan_id)
       uri = "/data/asset/scan/#{scan_id}/complete-assets"
-      data = DataTable._get_json_table(self, uri, {}, 500, nil, false)
-      data.map(&CompletedAsset.method(:parse_json))
+      AJAX.preserving_preference(self, 'scan-complete-assets') do
+        data = DataTable._get_json_table(self, uri, {}, 500, nil, false)
+        data.map(&CompletedAsset.method(:parse_json))
+      end
     end
 
     def delete_device(device_id)
