@@ -119,6 +119,15 @@ module Nexpose
       uri
     end
 
+    def preserving_preference(nsc, pref)
+      begin
+        orig = _get_rows(nsc, pref)
+        yield
+      ensure
+        _set_rows(nsc, pref, orig)
+      end
+    end
+
     ###
     # Internal helper methods
 
@@ -152,6 +161,28 @@ module Nexpose
       else
         req_type = request.class.name.split('::').last.upcase
         raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}")
+      end
+    end
+
+    def _get_rows(nsc, pref)
+      uri = '/ajax/user_pref_get.txml'
+      resp = get(nsc, uri, CONTENT_TYPE::XML, 'name' => "#{pref}.rows")
+      xml = REXML::Document.new(resp)
+      if val = REXML::XPath.first(xml, 'GetUserPref/userPref')
+        val.text.to_i
+      else
+        10
+      end
+    end
+
+    def _set_rows(nsc, pref, value)
+      uri = '/ajax/user_pref_set.txml'
+      params = { 'name'  => "#{pref}.rows",
+                 'value' => value }
+      resp = get(nsc, uri, CONTENT_TYPE::XML, params)
+      xml = REXML::Document.new(resp)
+      if attr = REXML::XPath.first(xml, 'SetUserPref/@success')
+        attr.value == '1'
       end
     end
   end
