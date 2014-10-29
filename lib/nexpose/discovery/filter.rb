@@ -2,6 +2,7 @@ module Nexpose
   module Search
     module Field
 
+      ###### vSphere Filters ######
       # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS, STARTS_WITH
       CLUSTER = 'CLUSTER'
 
@@ -23,6 +24,14 @@ module Nexpose
 
       # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS, STARTS_WITH
       VIRTUAL_MACHINE_NAME = 'VM'
+
+      ###### Mobile Filters ######
+      # Valid Operators: CONTAINS, NOT_CONTAINS
+      OPERATING_SYSTEM = 'DEVICE_OPERATING_SYSTEM'
+
+      # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS, STARTS_WITH
+      USER = 'DEVICE_USER_DISPLAY_NAME'
+
     end
 
     module Value

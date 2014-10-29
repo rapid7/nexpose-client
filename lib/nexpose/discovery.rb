@@ -33,6 +33,14 @@ module Nexpose
     module Protocol
       HTTP = 'HTTP'
       HTTPS = 'HTTPS'
+      LDAP = 'LDAP'
+      LDAPS = 'LDAPS'
+    end
+
+    module Type
+      VSPHERE = 'VSPHERE'
+      AWS = 'AWS'
+      ACTIVESYNC = 'ACTIVESYNC'
     end
 
     # A unique identifier for this connection.
@@ -40,6 +48,9 @@ module Nexpose
 
     # A unique name for this connection.
     attr_accessor :name
+
+    # Type of discovery connection
+    attr_accessor :type
 
     # The IP address or fully qualified domain name of the server.
     attr_accessor :address
@@ -70,6 +81,7 @@ module Nexpose
     #
     def initialize(name, address, user, password = nil)
       @name, @address, @user, @password = name, address, user, password
+      @type = nil  # for backwards compatibilitly, at some point should set this to Type::VSPHERE
       @id = -1
       @port = 443
       @protocol = Protocol::HTTPS
@@ -131,12 +143,13 @@ module Nexpose
 
     def as_xml
       xml = REXML::Element.new('DiscoveryConnection')
-      xml.add_attributes({ 'name' => @name,
-                           'address' => @address,
-                           'port' => @port,
-                           'protocol' => @protocol,
-                           'user-name' => @user,
-                           'password' => @password })
+      xml.attributes['name']      = @name
+      xml.attributes['address']   = @address
+      xml.attributes['port']      = @port
+      xml.attributes['protocol']  = @protocol
+      xml.attributes['user-name'] = @user
+      xml.attributes['password']  = @password
+      xml.attributes['type']      = @type if @type
       xml
     end
 
@@ -187,5 +200,24 @@ module Nexpose
         asset.pool = json['resourcePool']
       end
     end
+  end
+
+  class MobileDiscoveryConnection < DiscoveryConnection
+    # Create a new Mobile discovery connection.
+    #
+    # @param [String] name Name to assign to this connection.
+    # @param [DiscoveryConnection::Protocol] protocol The protocol to use for discovery - LDAPS or LDAP
+    # @param [String] address IP or fully qualified domain name of the
+    #    connection server.
+    # @param [String] user User name for credentials on this connection.
+    # @param [String] password Password for credentials on this connection.
+    #
+    def initialize(name, protocol, address, user, password = nil)
+      @name, @protocol, @address, @user, @password = name, protocol, address, user, password
+      @type = Type::ACTIVESYNC
+      @id = -1
+      @port = 443   #port not used for mobile connection
+    end
+
   end
 end
