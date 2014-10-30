@@ -1,9 +1,6 @@
 module Nexpose
-
-  # Constants
-
+  # Constants useful across the Nexpose module.
   module Scope
-
     GLOBAL = 'global'
     SILO = 'silo'
   end
@@ -27,7 +24,6 @@ module Nexpose
   # the application will send reports via e-mail to access-list members and
   # non-members.
   class Email
-
     # Send as file attachment or zipped file to individuals who are not members
     # of the report access list. One of: file|zip
     attr_accessor :send_as
@@ -164,6 +160,7 @@ module Nexpose
     end
   end
 
+  # Organization configuration, as used in Site and Silo.
   class Organization
     attr_accessor :name
     attr_accessor :url
@@ -178,7 +175,7 @@ module Nexpose
     attr_accessor :country
 
     def initialize(&block)
-      instance_eval &block if block_given?
+      instance_eval(&block) if block_given?
     end
 
     def self.parse(xml)
