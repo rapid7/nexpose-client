@@ -1,5 +1,4 @@
 module Nexpose
-
   class Connection
     include XMLUtils
 
@@ -110,7 +109,7 @@ module Nexpose
     # @param [HostName|IPRange] asset Asset to append to XML.
     #
     def _append_asset!(xml, asset)
-      if asset.kind_of? Nexpose::IPRange
+      if asset.is_a? Nexpose::IPRange
         xml.add_element('range', { 'from' => asset.from, 'to' => asset.to })
       else  # Assume HostName
         host = REXML::Element.new('host')
@@ -227,6 +226,26 @@ module Nexpose
       end
     end
 
+    # Get a history of past scans for this console, sorted by most recent first.
+    #
+    # Please note that for consoles with a deep history of scanning, this method
+    # could return an excessive amount of data (and take quite a bit of time to
+    # retrieve). Consider limiting the amount of data with the optional argument.
+    #
+    # @param [Fixnum] limit The maximum number of records to return from this call.
+    # @return [Array[CompletedScan]] List of completed scans, ordered by most
+    #   recently completed first.
+    #
+    def past_scans(limit = nil)
+      uri = '/data/scan/global/scan-history'
+      rows = AJAX._row_pref_of(limit)
+      params = { 'sort' => 'endTime', 'dir' => 'DESC', 'startIndex' => 0 }
+      AJAX.preserving_preference(self, 'global-completed-scans') do
+        data = DataTable._get_json_table(self, uri, params, rows, limit)
+        data.map(&CompletedScan.method(:parse_json))
+      end
+    end
+
     # Export the data associated with a single scan, and optionally store it in
     # a zip-compressed file under the provided name.
     #
@@ -276,7 +295,7 @@ module Nexpose
     def import_scan(site_id, zip_file)
       data = Rex::MIME::Message.new
       data.add_part(site_id.to_s, nil, nil, 'form-data; name="siteid"')
-      data.add_part(self.session_id, nil, nil, 'form-data; name="nexposeCCSessionID"')
+      data.add_part(session_id, nil, nil, 'form-data; name="nexposeCCSessionID"')
       scan = File.new(zip_file, 'rb')
       data.add_part(scan.read, 'application/zip', 'binary',
                     "form-data; name=\"scan\"; filename=\"#{zip_file}\"")
@@ -316,7 +335,6 @@ module Nexpose
   # can be rather verbose and isn't useful for many automation scenarios.
   #
   class ScanData
-
     # The Scan ID of the Scan
     attr_reader :scan_id
     # The site that was scanned.
@@ -582,6 +600,10 @@ module Nexpose
   class CompletedScan
     # Unique identifier of a scan.
     attr_reader :id
+    # Site ID for which the scan was run.
+    attr_reader :site_id
+    # Final status of the scan. One of :completed, :stopped, :aborted, :unknown.
+    attr_reader :status
     # Start time of the scan.
     attr_reader :start_time
     # Completion time of the scan.
@@ -609,6 +631,8 @@ module Nexpose
     def self.parse_json(json)
       new do
         @id = json['scanID']
+        @site_id = json['siteID']
+        @status = CompletedScan._parse_status(json['status'])
         @start_time = Time.at(json['startTime'] / 1000)
         @end_time = Time.at(json['endTime'] / 1000)
         @duration = json['duration']
@@ -617,6 +641,20 @@ module Nexpose
         @risk_score = json['riskScore']
         @type = json['startedByCD'] == 'S' ? :scheduled : :manual
         @engine_name = json['scanEngineName']
+      end
+    end
+
+    # Internal method to parsing status codes.
+    def self._parse_status(code)
+      case code
+      when 'C'
+        :completed
+      when 'S'
+        :stopped
+      when 'A'
+        :aborted
+      else
+        :unknown
       end
     end
   end
