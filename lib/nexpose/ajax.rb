@@ -185,5 +185,19 @@ module Nexpose
         attr.value == '1'
       end
     end
+
+    def _row_pref_of(val)
+      if val.nil? || val > 100
+        500
+      elsif val > 50
+        100
+      elsif val > 25
+        50
+      elsif val > 10
+        25
+      else
+        10
+      end
+    end
   end
 end
