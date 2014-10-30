@@ -14,11 +14,14 @@ module Nexpose
     # @param [Connection] console API connection to a Nexpose console.
     # @param [String] address Controller address relative to https://host:port
     # @param [Hash] parameters Parameters that need to be sent to the controller
-    # @param [Integer] pagination size
-    # @param [Integer] number of records to return, gets all if not specified
-    #    The following attributes need to be provided:
+    #    The following attributes may need to be provided:
     #      'sort' Column to sort by
     #      'table-id' The ID of the table to get from this controller
+    # @param [Fixnum] page_size Number of records to include per page.
+    #   Value must conform to supported defaults: -1, 10, 25, 50, 100, 500.
+    # @param [Fixnum] records number of records to return, gets all if not
+    #   specified.
+    # @param [Boolean] post Whether to use form post or get to retrieve data.
     # @return [Array[Hash]] An array of hashes representing the requested table.
     #
     # Example usage:
@@ -41,8 +44,11 @@ module Nexpose
 
       response = request.(parameters)
       data = JSON.parse(response)
-      total = records || data['totalRecords']
+
+      # Don't attept to grab more records than there are.
+      total = data['totalRecords']
       return [] if total == 0
+      total = records.nil? ? total : [records, total].min
 
       rows = []
       parameters['results'] = page_size
