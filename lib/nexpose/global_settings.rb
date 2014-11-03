@@ -27,6 +27,11 @@ module Nexpose
       control_scanning
     end
 
+    # Enables/disables controls scanning
+    def control_scanning=(enabled)
+      set_control_scanning(xml, enabled)
+    end
+
     # Save any updates to this settings object to the Nexpose console.
     #
     # @param [Connection] nsc Connection to a Nexpose console.
