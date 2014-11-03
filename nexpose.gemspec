@@ -1,8 +1,11 @@
 # encoding: utf-8
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'nexpose/version'
 
 Gem::Specification.new do |s|
   s.name                  = 'nexpose'
-  s.version               = '0.8.10'
+  s.version               = Nexpose::VERSION
   s.homepage              = 'https://github.com/rapid7/nexpose-client'
   s.summary               = 'Ruby API for Rapid7 Nexpose'
   s.description           = 'This gem provides a Ruby API to the Nexpose vulnerability management product by Rapid7.'
@@ -17,4 +20,6 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency('rex', '~> 2.0.4', '>= 2.0.4')
   s.add_runtime_dependency('nokogiri', '~> 1.6', '>= 1.6.2')
+
+  s.add_development_dependency('bundler', '~> 1.3')
 end
