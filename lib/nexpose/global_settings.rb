@@ -19,7 +19,7 @@ module Nexpose
       @xml = xml
 
       @asset_exclusions = HostOrIP.parse(xml)
-      @control_scanning = get_control_scanning(xml)
+      @control_scanning = parse_control_scanning_from_xml(xml)
     end
 
     # Returns true if controls scanning is enabled.
@@ -29,7 +29,7 @@ module Nexpose
 
     # Enables/disables controls scanning
     def control_scanning=(enabled)
-      set_control_scanning(xml, enabled)
+      add_control_scanning_to_xml(xml, enabled)
     end
 
     # Save any updates to this settings object to the Nexpose console.
@@ -45,7 +45,7 @@ module Nexpose
       end
 
       replace_exclusions(xml, asset_exclusions)
-      set_control_scanning(xml, control_scanning)
+      add_control_scanning_to_xml(xml, control_scanning)
 
       response = AJAX.post(nsc, '/data/admin/global-settings', xml)
       XMLUtils.success? response
@@ -102,7 +102,7 @@ module Nexpose
     end
 
     # Internal method for parsing XML for whether control scanning in enabled.
-    def get_control_scanning(xml)
+    def parse_control_scanning_from_xml(xml)
       enabled = false
       if elem = REXML::XPath.first(xml, '//enableControlsScan[@enabled]')
         enabled = elem.attribute('enabled').value.to_i == 1
@@ -111,7 +111,7 @@ module Nexpose
     end
 
     # Internal method for updating control scanning before saving.
-    def set_control_scanning(xml, enabled)
+    def add_control_scanning_to_xml(xml, enabled)
       if elem = REXML::XPath.first(xml, '//enableControlsScan')
         elem.attributes['enabled'] = enabled ? '1' : '0'
       else
