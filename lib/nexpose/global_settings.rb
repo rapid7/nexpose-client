@@ -8,7 +8,7 @@ module Nexpose
 
     # Whether control scanning in enabled. A feature tied to ControlsInsight
     # integration.
-    attr_accessor :control_scanning
+    attr_reader :control_scanning
 
     # XML document representing the entire configuration.
     attr_reader :xml
@@ -19,12 +19,17 @@ module Nexpose
       @xml = xml
 
       @asset_exclusions = HostOrIP.parse(xml)
-      @control_scanning = _get_control_scanning(xml)
+      @control_scanning = parse_control_scanning_from_xml(xml)
     end
 
     # Returns true if controls scanning is enabled.
     def control_scanning?
       control_scanning
+    end
+
+    # Enables/disables controls scanning
+    def control_scanning=(enabled)
+      add_control_scanning_to_xml(xml, enabled)
     end
 
     # Save any updates to this settings object to the Nexpose console.
@@ -39,8 +44,8 @@ module Nexpose
         risk_model.add_attribute('recalculation_duration', 'do_not_recalculate')
       end
 
-      _replace_exclusions(xml, asset_exclusions)
-      _set_control_scanning(xml, control_scanning)
+      replace_exclusions(xml, asset_exclusions)
+      add_control_scanning_to_xml(xml, control_scanning)
 
       response = AJAX.post(nsc, '/data/admin/global-settings', xml)
       XMLUtils.success? response
@@ -85,8 +90,10 @@ module Nexpose
       new(REXML::Document.new(response))
     end
 
+    private
+
     # Internal method for updating exclusions before saving.
-    def _replace_exclusions(xml, exclusions)
+    def replace_exclusions(xml, exclusions)
       xml.elements.delete('//ExcludedHosts')
       elem = xml.root.add_element('ExcludedHosts')
       exclusions.each do |exclusion|
@@ -95,7 +102,7 @@ module Nexpose
     end
 
     # Internal method for parsing XML for whether control scanning in enabled.
-    def _get_control_scanning(xml)
+    def parse_control_scanning_from_xml(xml)
       enabled = false
       if elem = REXML::XPath.first(xml, '//enableControlsScan[@enabled]')
         enabled = elem.attribute('enabled').value.to_i == 1
@@ -104,7 +111,7 @@ module Nexpose
     end
 
     # Internal method for updating control scanning before saving.
-    def _set_control_scanning(xml, enabled)
+    def add_control_scanning_to_xml(xml, enabled)
       if elem = REXML::XPath.first(xml, '//enableControlsScan')
         elem.attributes['enabled'] = enabled ? '1' : '0'
       else
