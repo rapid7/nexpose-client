@@ -107,6 +107,27 @@ module Nexpose
       end
     end
 
+    # @return [Boolean] Whether control scanning in enabled.
+    def control_scanning?
+      global_controls_scan = REXML::XPath.first(@xml, 'ScanTemplate/ControlsScan/globalControlsScanEnabled')
+      local_controls_scan = REXML::XPath.first(@xml, 'ScanTemplate/ControlsScan/localControlsScanEnabled')
+
+      global_controls_scan.attributes['enabled'] == '1' || local_controls_scan.attributes['enabled'] == '1'
+    end
+
+    # Adjust whether to perform control scanning (ControlsInsight integration)
+    # with this template.
+    # @param [Boolean] enable Whether to turn on control scanning.
+    def control_scanning=(enable)
+      global_controls_scan = REXML::XPath.first(@xml, 'ScanTemplate/ControlsScan/globalControlsScanEnabled')
+      if global_controls_scan.attributes['enabled'] == '1'
+        warn 'Updating the local controls scanning option when the global is enabled has no effect.'
+      end
+
+      local_controls_scan = REXML::XPath.first(@xml, 'ScanTemplate/ControlsScan/localControlsScanEnabled')
+      local_controls_scan.attributes['enabled'] = enable ? '1' : '0'
+    end
+
     # @return [Boolean] Whether vuln scanning in enabled.
     def vuln_scanning?
       gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
