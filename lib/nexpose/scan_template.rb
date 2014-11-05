@@ -119,11 +119,6 @@ module Nexpose
     # with this template.
     # @param [Boolean] enable Whether to turn on control scanning.
     def control_scanning=(enable)
-      global_controls_scan = REXML::XPath.first(@xml, 'ScanTemplate/ControlsScan/globalControlsScanEnabled')
-      if global_controls_scan.attributes['enabled'] == '1'
-        warn 'Updating the local controls scanning option when the global is enabled has no effect.'
-      end
-
       local_controls_scan = REXML::XPath.first(@xml, 'ScanTemplate/ControlsScan/localControlsScanEnabled')
       local_controls_scan.attributes['enabled'] = enable ? '1' : '0'
     end
