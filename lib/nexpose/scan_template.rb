@@ -423,7 +423,7 @@ module Nexpose
     # @param [Connection] nsc API connection to a Nexpose console.
     #
     def delete(nsc)
-      nsc.delete_scan_template(@id)
+      nsc.delete_scan_template(id)
     end
   end
 end
