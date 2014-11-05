@@ -8,7 +8,7 @@ module Nexpose
 
     # Whether control scanning in enabled. A feature tied to ControlsInsight
     # integration.
-    attr_reader :control_scanning
+    attr_accessor :control_scanning
 
     # XML document representing the entire configuration.
     attr_reader :xml
@@ -25,11 +25,6 @@ module Nexpose
     # Returns true if controls scanning is enabled.
     def control_scanning?
       control_scanning
-    end
-
-    # Enables/disables controls scanning
-    def control_scanning=(enabled)
-      add_control_scanning_to_xml(xml, enabled)
     end
 
     # Save any updates to this settings object to the Nexpose console.
