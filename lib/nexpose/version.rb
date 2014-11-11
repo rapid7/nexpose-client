@@ -1,4 +1,4 @@
 module Nexpose
   # The latest version of the Nexpose gem
-  VERSION = '0.8.13'
+  VERSION = '0.8.14'
 end
