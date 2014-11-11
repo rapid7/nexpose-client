@@ -169,7 +169,8 @@ module Nexpose
       resp = get(nsc, uri, CONTENT_TYPE::XML, 'name' => "#{pref}.rows")
       xml = REXML::Document.new(resp)
       if val = REXML::XPath.first(xml, 'GetUserPref/userPref')
-        val.text.to_i
+        rows = val.text.to_i
+        rows > 0 ? rows : 10
       else
         10
       end
