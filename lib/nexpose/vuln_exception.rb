@@ -115,7 +115,8 @@ module Nexpose
     attr_accessor :asset_id
     alias :device_id :asset_id
     alias :device_id= :asset_id=
-
+    # Id of the site, if this exception applies to all instances on a site
+    attr_accessor :site_id
     # Port on a asset, if this exception applies to a specific port.
     attr_accessor :port
     # The specific vulnerable component in a discovered instance of the
@@ -153,6 +154,8 @@ module Nexpose
         xml.add_attributes({ 'device-id' => @asset_id,
                              'port-no' => @port,
                              'vuln-key' => @vuln_key })
+      when Scope::ALL_INSTANCES_IN_A_SPECIFIC_SITE
+        xml.add_attributes({ 'site-id ' => @site_id })
       end
 
       @submitter_comment = comment if comment
@@ -313,6 +316,8 @@ module Nexpose
       when Scope::SPECIFIC_INSTANCE_OF_SPECIFIC_ASSET
         raise ArgumentError.new('No asset_id.') unless @asset_id
         raise ArgumentError.new('Port or vuln_key is required.') unless @port || @vuln_key
+      when Scope::ALL_INSTANCES_IN_A_SPECIFIC_SITE
+        raise ArgumentError.new('No site_id.') unless @site_id
       else
         raise ArgumentError.new("Invalid scope: #{@scope}")
       end
