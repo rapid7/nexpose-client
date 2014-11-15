@@ -109,6 +109,21 @@ module Nexpose
       end
     end
 
+    # Retrieve a list of assets which are incomplete in a given scan. If called
+    # during a scan, this method returns currently incomplete assets which may
+    # be in progress.
+    #
+    # @param [Fixnum] scan_id Unique identifier of a scan.
+    # @return [Array[IncompleteAsset]] List of incomplete assets.
+    #
+    def incomplete_assets(scan_id)
+      uri = "/data/asset/scan/#{scan_id}/incomplete-assets"
+      AJAX.preserving_preference(self, 'scan-incomplete-assets') do
+        data = DataTable._get_json_table(self, uri, {}, 500, nil, false)
+        data.map(&IncompleteAsset.method(:parse_json))
+      end
+    end
+
     def delete_device(device_id)
       r = execute(make_xml('DeviceDeleteRequest', { 'device-id' => device_id }))
       r.success
@@ -187,5 +202,10 @@ module Nexpose
         @duration = json['duration']
       end
     end
+  end
+
+  # Summary object of an incomplete asset for a scan.
+  #
+  class IncompleteAsset < CompletedAsset
   end
 end
