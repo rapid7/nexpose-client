@@ -160,7 +160,7 @@ module Nexpose
         raise Nexpose::PermissionError.new(response) 
       else
         req_type = request.class.name.split('::').last.upcase
-        raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}")
+        raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
       end
     end
 
