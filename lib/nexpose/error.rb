@@ -1,10 +1,12 @@
 module Nexpose
   class APIError < ::RuntimeError
     attr_accessor :req, :reason
+    attr_reader :code
 
-    def initialize(req, reason = '')
+    def initialize(req, reason = '', code = 400)
       @req = req
       @reason = reason
+      @code = code
     end
 
     def to_s
