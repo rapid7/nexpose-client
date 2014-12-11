@@ -92,4 +92,28 @@ module Nexpose
       coll
     end
   end
+
+  # Function module for converting to ISO 8601 and UTC dates expected by 2.0 API.
+  module ISO8601
+    module_function
+
+    # Convert a string representation into a Time object.
+    #
+    # @param [String] time_string String representation in basic format.
+    #   For example: '20141210T165822.412Z'
+    # @return [Time] Time, if it can be converted.
+    #
+    def to_time(time_string)
+      Time.strptime(time_string.to_s, '%Y%m%dT%H%M%S.%LZ')
+    end
+
+    # Convert a time object into a UTC ISO 8601 basic date-time format.
+    #
+    # @param [Time|Date|DateTime] time Time to convert.
+    # @return [String] ISO 8601 basic representation.
+    #
+    def to_string(time = Time.now)
+      time.to_time.utc.strftime('%Y%m%dT%H%M%S.%LZ')
+    end
+  end
 end
