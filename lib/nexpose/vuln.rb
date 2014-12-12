@@ -1,5 +1,4 @@
 module Nexpose
-
   class Connection
     include XMLUtils
 
@@ -18,9 +17,9 @@ module Nexpose
       if response.success
         response.res.elements.each('VulnerabilityListingResponse/VulnerabilitySummary') do |vuln|
           if full
-            vulns << VulnerabilitySummary.parse(vuln)
+            vulns << XML::VulnerabilitySummary.parse(vuln)
           else
-            vulns << Vulnerability.new(vuln.attributes['id'],
+            vulns << XML::Vulnerability.new(vuln.attributes['id'],
                                        vuln.attributes['title'],
                                        vuln.attributes['severity'].to_i)
           end
@@ -63,7 +62,7 @@ module Nexpose
       response = execute(xml, '1.2')
       if response.success
         response.res.elements.each('VulnerabilityDetailsResponse/Vulnerability') do |vuln|
-          return VulnerabilityDetail.parse(vuln)
+          return XML::VulnerabilityDetail.parse(vuln)
         end
       end
     end
@@ -79,7 +78,7 @@ module Nexpose
       uri = "/data/vulnerability/vulnerabilities/dyntable.xml?tableID=VulnCheckSynopsis&phrase=#{URI.encode(search_term)}&allWords=#{all_words}"
       data = DataTable._get_dyn_table(self, uri)
       data.map do |vuln|
-        VulnCheck.new(vuln)
+        XML::VulnCheck.new(vuln)
       end
     end
 
@@ -99,142 +98,130 @@ module Nexpose
     end
   end
 
-  # Basic vulnerability information. Only includes ID, title, and severity.
+  # Object definitions which are derived from XML values.
   #
-  class Vulnerability
+  module XML
+    # Basic vulnerability information. Only includes ID, title, and severity.
+    #
+    class Vulnerability
+      # The unique ID string for this vulnerability
+      attr_reader :id
+      # The title of this vulnerability
+      attr_reader :title
+      # How critical the vulnerability is on a scale of 1 to 10.
+      attr_reader :severity
 
-    # The unique ID string for this vulnerability
-    attr_reader :id
-
-    # The title of this vulnerability
-    attr_reader :title
-
-    # How critical the vulnerability is on a scale of 1 to 10.
-    attr_reader :severity
-
-    def initialize(id, title, severity)
-      @id, @title, @severity = id, title, severity.to_i
-    end
-  end
-
-  # Vulnerability Check information.
-  #
-  class VulnCheck < Vulnerability
-
-    attr_reader :check_id
-    # @return [Array[String]] Categories that this check is a member of.
-    #   Note that this is note the same as the categories from #list_vuln_categories.
-    attr_reader :categories
-    # @return [String] Check type. @see #list_vuln_types
-    attr_reader :check_type
-
-    def initialize(json)
-      @id = json['Vuln ID']
-      @check_id = json['Vuln Check ID']
-      @title = json['Vulnerability']
-      @severity = json['Severity'].to_i
-      @check_type = json['Check Type']
-      @categories = json['Category'].split(/, */)
-    end
-  end
-
-  # Summary of a vulnerability.
-  #
-  class VulnerabilitySummary < Vulnerability
-
-    # PCI severity value for the vulnerability on a scale of 1 to 5.
-    attr_accessor :pci_severity
-
-    # Whether all checks for the vulnerability are safe.
-    # Unsafe checks may cause denial of service or otherwise disrupt system performance.
-    attr_accessor :safe
-
-    # A vulnerability is considered "credentialed" when all of its checks
-    # require credentials or if the check depends on previous authentication
-    # during a scan.
-    attr_accessor :credentials
-
-    # When this vulnerability was first included in the application.
-    attr_accessor :added
-
-    # The last date the vulnerability was modified.
-    attr_accessor :modified
-
-    # The date when the information about the vulnerability was first released.
-    attr_accessor :published
-
-    # How the vulnerability is exploited according to PCI standards.
-    attr_accessor :cvss_vector
-
-    # The computation of the Common Vulnerability Scoring System indicating
-    # compliance with PCI standards on a scale from 0 to 10.0.
-    attr_accessor :cvss_score
-
-    def self.parse_attributes(xml)
-      vuln = new(xml.attributes['id'],
-                 xml.attributes['title'],
-                 xml.attributes['severity'].to_i)
-
-      vuln.pci_severity = xml.attributes['pciSeverity'].to_i
-      vuln.safe = xml.attributes['safe'] == 'true'  # or xml.attributes['safe'] == '1'
-      vuln.added = Date.parse(xml.attributes['added'])
-      vuln.modified = Date.parse(xml.attributes['modified'])
-      vuln.credentials = xml.attributes['requiresCredentials'] == 'true'
-
-      # These three fields are optional in the XSD.
-      vuln.published = Date.parse(xml.attributes['published']) if xml.attributes['published']
-      vuln.cvss_vector = xml.attributes['cvssVector'] if xml.attributes['cvssVector']
-      vuln.cvss_score = xml.attributes['cvssScore'].to_f if xml.attributes['cvssScore']
-      vuln
-    end
-
-    def self.parse(xml)
-      parse_attributes(xml)
-    end
-  end
-
-  # Details for a vulnerability.
-  #
-  class VulnerabilityDetail < VulnerabilitySummary
-
-    # The HTML Description of this vulnerability.
-    attr_accessor :description
-
-    # External References for this vulnerability.
-    # Array containing (Reference)
-    attr_accessor :references
-
-    # The HTML Solution for this vulnerability.
-    attr_accessor :solution
-
-    def initialize(id, title, severity)
-      @id, @title, @severity = id, title, severity
-      @references = []
-    end
-
-    def self.parse(xml)
-      vuln = parse_attributes(xml)
-
-      vuln.description = REXML::XPath.first(xml, 'description').text
-      vuln.solution = REXML::XPath.first(xml, 'solution').text
-
-      xml.elements.each('references/reference') do |ref|
-        vuln.references << Reference.new(ref.attributes['source'], ref.text)
+      def initialize(id, title, severity)
+        @id, @title, @severity = id, title, severity.to_i
       end
-      vuln
     end
-  end
 
-  # Reference information for a Vulnerability.
-  #
-  class Reference
+    # Vulnerability Check information.
+    #
+    class VulnCheck < Vulnerability
+      attr_reader :check_id
+      # @return [Array[String]] Categories that this check is a member of.
+      #   Note that this is note the same as the categories from #list_vuln_categories.
+      attr_reader :categories
+      # @return [String] Check type. @see #list_vuln_types
+      attr_reader :check_type
 
-    attr_reader :source
-    attr_reader :reference
+      def initialize(json)
+        @id = json['Vuln ID']
+        @check_id = json['Vuln Check ID']
+        @title = json['Vulnerability']
+        @severity = json['Severity'].to_i
+        @check_type = json['Check Type']
+        @categories = json['Category'].split(/, */)
+      end
+    end
 
-    def initialize(source, reference)
-      @source = source
-      @reference = reference
+    # Summary of a vulnerability.
+    #
+    class VulnerabilitySummary < Vulnerability
+      # PCI severity value for the vulnerability on a scale of 1 to 5.
+      attr_accessor :pci_severity
+      # Whether all checks for the vulnerability are safe.
+      # Unsafe checks may cause denial of service or otherwise disrupt system performance.
+      attr_accessor :safe
+      # A vulnerability is considered "credentialed" when all of its checks
+      # require credentials or if the check depends on previous authentication
+      # during a scan.
+      attr_accessor :credentials
+      # When this vulnerability was first included in the application.
+      attr_accessor :added
+      # The last date the vulnerability was modified.
+      attr_accessor :modified
+      # The date when the information about the vulnerability was first released.
+      attr_accessor :published
+      # How the vulnerability is exploited according to PCI standards.
+      attr_accessor :cvss_vector
+      # The computation of the Common Vulnerability Scoring System indicating
+      # compliance with PCI standards on a scale from 0 to 10.0.
+      attr_accessor :cvss_score
+
+      def self.parse_attributes(xml)
+        vuln = new(xml.attributes['id'],
+                   xml.attributes['title'],
+                   xml.attributes['severity'].to_i)
+
+        vuln.pci_severity = xml.attributes['pciSeverity'].to_i
+        vuln.safe = xml.attributes['safe'] == 'true'  # or xml.attributes['safe'] == '1'
+        vuln.added = Date.parse(xml.attributes['added'])
+        vuln.modified = Date.parse(xml.attributes['modified'])
+        vuln.credentials = xml.attributes['requiresCredentials'] == 'true'
+
+        # These three fields are optional in the XSD.
+        vuln.published = Date.parse(xml.attributes['published']) if xml.attributes['published']
+        vuln.cvss_vector = xml.attributes['cvssVector'] if xml.attributes['cvssVector']
+        vuln.cvss_score = xml.attributes['cvssScore'].to_f if xml.attributes['cvssScore']
+        vuln
+      end
+
+      def self.parse(xml)
+        parse_attributes(xml)
+      end
+    end
+
+    # Details for a vulnerability.
+    #
+    class VulnerabilityDetail < VulnerabilitySummary
+      # The HTML Description of this vulnerability.
+      attr_accessor :description
+      # External References for this vulnerability.
+      # Array containing (Reference)
+      attr_accessor :references
+      # The HTML Solution for this vulnerability.
+      attr_accessor :solution
+
+      def initialize(id, title, severity)
+        @id, @title, @severity = id, title, severity
+        @references = []
+      end
+
+      def self.parse(xml)
+        vuln = parse_attributes(xml)
+
+        vuln.description = REXML::XPath.first(xml, 'description').text
+        vuln.solution = REXML::XPath.first(xml, 'solution').text
+
+        xml.elements.each('references/reference') do |ref|
+          vuln.references << Reference.new(ref.attributes['source'], ref.text)
+        end
+        vuln
+      end
+    end
+
+    # Reference information for a Vulnerability.
+    #
+    class Reference
+      attr_reader :source
+      attr_reader :reference
+
+      def initialize(source, reference)
+        @source = source
+        @reference = reference
+      end
     end
   end
 
@@ -243,7 +230,6 @@ module Nexpose
   # cross-referenced to the String ID to be used elsewhere.
   #
   class VulnFinding
-
     # Unique identifier of the vulnerability.
     attr_reader :id
     # Unique, console-specific identifier of the vulnerability.
@@ -286,7 +272,6 @@ module Nexpose
   # cross-referenced to the String ID to be used elsewhere.
   #
   class VulnSynopsis < VulnFinding
-
     def initialize(hash)
       @id = hash['Vuln ID'].to_i
       @title = hash['Vulnerability']
