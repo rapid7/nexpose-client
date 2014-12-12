@@ -104,7 +104,7 @@ module Nexpose
     # @return [Time] Time, if it can be converted.
     #
     def to_time(time_string)
-      Time.strptime(time_string.to_s, '%Y%m%dT%H%M%S.%LZ')
+      Time.strptime(time_string.to_s, '%Y%m%dT%H%M%S.%L%Z')
     end
 
     # Convert a time object into a UTC ISO 8601 basic date-time format.
