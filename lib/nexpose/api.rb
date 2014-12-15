@@ -54,7 +54,11 @@ module Nexpose
       obj = class_from_string(k)
       resp = AJAX.get(nsc, url, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
-      resources = hash[:resources].map { |e| obj.method(:new).call.object_from_hash(nsc, e) }
+      if hash.key? :resources
+        resources = hash[:resources].map { |e| obj.method(:new).call.object_from_hash(nsc, e) }
+      else
+        resources = obj.method(:new).call.object_from_hash(nsc, hash)
+      end
       instance_variable_set("@#{k}", resources)
       self.class.send(:define_method, k, proc { instance_variable_get("@#{k}") })
       resources
