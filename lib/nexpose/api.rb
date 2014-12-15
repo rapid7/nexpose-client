@@ -2,6 +2,16 @@ module Nexpose
   # Base class for all API 2.0 objects which are derived from JSON
   # representations.
   #
+  # This class is not intended to be used by customers, but to extend
+  # functionality in the gem itself.
+  #
+  # To use this class, do the following:
+  # * Subclass APIObject
+  # * Do NOT provide a constructor method, or it must take no arguments.
+  # * Clearly document all attributes which the customer can expect to see.
+  # * Clearly document those attributes which are lazily loaded.
+  # * If applicable, implement a load method which calls new.object_from_hash
+  #
   class APIObject
     # Populate object methods and attributes from a JSON-derived hash.
     #
@@ -30,7 +40,7 @@ module Nexpose
       self
     end
 
-    protected
+    private
 
     # Load a resource from the security console. Once loaded, the value is
     # cached so that it need not be loaded again.
@@ -44,10 +54,10 @@ module Nexpose
       obj = class_from_string(k)
       resp = AJAX.get(nsc, url, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
-      coll = hash[:resources].map { |e| obj.method(:new).call.object_from_hash(nsc, e) }
-      instance_variable_set("@#{k}", coll)
+      resources = hash[:resources].map { |e| obj.method(:new).call.object_from_hash(nsc, e) }
+      instance_variable_set("@#{k}", resources)
       self.class.send(:define_method, k, proc { instance_variable_get("@#{k}") })
-      coll
+      resources
     end
 
     # Get the class referred to by a field name.
