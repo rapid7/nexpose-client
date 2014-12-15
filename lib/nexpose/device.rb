@@ -65,14 +65,14 @@ module Nexpose
     # Get a list of all assets currently associated with a group.
     #
     # @param [Fixnum] dev_id Unique identifier of a device (asset).
-    # @return [Array[Asset]] List of group assets.
+    # @return [Array[FilteredAsset]] List of group assets.
     #
     def group_assets(group_id)
       payload = { 'sort' => 'assetName',
                   'table-id' => 'group-assets',
                   'groupID' => group_id }
       results = DataTable._get_json_table(self, '/data/asset/group', payload)
-      results.map { |a| Asset.new(a) }
+      results.map { |a| FilteredAsset.new(a) }
     end
 
     # List the vulnerability findings for a given device ID.

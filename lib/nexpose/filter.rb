@@ -11,7 +11,7 @@ module Nexpose
     # @param [String] field Constant from Search::Field
     # @param [String] operator Constant from Search::Operator
     # @param [String] value Search term or constant from Search::Value
-    # @return [Array[Asset]] List of matching assets.
+    # @return [Array[FilteredAsset]] List of matching assets.
     #
     def filter(field, operator, value = '')
       criterion = Criterion.new(field, operator, value)
@@ -32,17 +32,17 @@ module Nexpose
     #   results = nsc.search(criteria)
     #
     # @param [Criteria] criteria Criteria search object.
-    # @return [Array[Asset]] List of matching assets.
+    # @return [Array[FilteredAsset]] List of matching assets.
     #
     def search(criteria)
       results = DataTable._get_json_table(self,
                                           '/data/asset/filterAssets',
                                           criteria._to_payload)
-      results.map { |a| Asset.new(a) }
+      results.map { |a| FilteredAsset.new(a) }
     end
   end
 
-  # Constans for performing Asset Filter searches and generating Dynamic Asset
+  # Constants for performing Asset Filter searches and generating Dynamic Asset
   # Groups.
   #
   module Search
@@ -349,7 +349,7 @@ module Nexpose
 
   # Asset data as returned by an Asset Filter search.
   #
-  class Asset
+  class FilteredAsset
 
     # Unique identifier of this asset. Also known as device ID.
     attr_reader :id
