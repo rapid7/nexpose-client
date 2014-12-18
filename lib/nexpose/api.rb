@@ -54,7 +54,9 @@ module Nexpose
       obj = class_from_string(k)
       resp = AJAX.get(nsc, url, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
-      if hash.key? :resources
+      if hash.is_a?(Array)
+        resources = hash.map { |e| obj.method(:new).call.object_from_hash(nsc, e) }
+      elsif hash.key?(:resources)
         resources = hash[:resources].map { |e| obj.method(:new).call.object_from_hash(nsc, e) }
       else
         resources = obj.method(:new).call.object_from_hash(nsc, hash)
@@ -74,6 +76,7 @@ module Nexpose
     #
     def class_from_string(field)
       str = field.to_s.split('_').map(&:capitalize!).join
+      str = 'Vulnerability' if str == 'Vulnerabilities'
       str.chop! if str.end_with?('s')
       Object.const_get('Nexpose').const_get(str)
     end
