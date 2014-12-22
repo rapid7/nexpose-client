@@ -31,6 +31,8 @@ module Nexpose
           # Convert timestamps.
           if v.is_a?(String) && v.match(/^\d{8}T\d{6}\.\d{3}/)
             instance_variable_set("@#{k}", ISO8601.to_time(v))
+          elsif v.is_a?(Array) && k == :attributes
+            instance_variable_set("@#{k}", v.map { |h| { h[:key] => h[:value] } })
           else
             instance_variable_set("@#{k}", v)
           end

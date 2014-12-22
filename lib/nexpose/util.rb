@@ -116,4 +116,22 @@ module Nexpose
       time.to_time.utc.strftime('%Y%m%dT%H%M%S.%LZ')
     end
   end
+
+  # Functions for handling attributes as understood by the API.
+  # In particular, the API expects a JSON object with the hash defined as:
+  #  { "key": "key-string",
+  #    "value": "value-string" }
+  #
+  module Attributes
+    module_function
+
+    # Convert an array of attributes into a hash consumable by the API.
+    #
+    # @param [Array[Hash]] arr Array of attributes to convert.
+    # @return [Array[Hash]] Array formatted as expected by the API.
+    #
+    def to_hash(arr)
+      arr.map(&:flatten).map { |p| { 'key' => p.first.to_s, 'value' => p.last.to_s } }
+    end
+  end
 end
