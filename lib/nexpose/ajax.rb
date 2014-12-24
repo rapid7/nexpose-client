@@ -156,6 +156,8 @@ module Nexpose
         response.body
       when Net::HTTPCreated
         response.body
+      when Net::HTTPForbidden
+        raise Nexpose::PermissionError.new(response)
       when Net::HTTPUnauthorized
         raise Nexpose::PermissionError.new(response) 
       else
