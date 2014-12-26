@@ -25,8 +25,7 @@ module Nexpose
         next if k == :url  # Do not store self-referential URL.
         # Store resource URLs separately and create lazy accessors.
         if v.is_a?(Hash) && v.key?(:url)
-          instance_variable_set("@#{k}_url", v[:url].gsub(/.*\/api/, '/api'))
-          self.class.send(:define_method, k, proc { |conn = nsc| load_resource(conn, k, instance_variable_get("@#{k}_url")) })
+          self.class.send(:define_method, k, proc { |conn = nsc| load_resource(conn, k, v[:url].gsub(/.*\/api/, '/api')) })
         else
           # Convert timestamps.
           if v.is_a?(String) && v.match(/^\d{8}T\d{6}\.\d{3}/)
