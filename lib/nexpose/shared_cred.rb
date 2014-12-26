@@ -27,7 +27,7 @@ module Nexpose
     attr_accessor :id
     # Name to identify this credential.
     attr_accessor :name
-    # The credential type. See Nexpose::Credential::Type.
+    # The site credential type. See Nexpose::SiteCredential::Type.
     attr_accessor :type
     # Domain or realm.
     attr_accessor :domain
@@ -77,7 +77,7 @@ module Nexpose
     attr_accessor :pem_key
     # Password to use when elevating permissions (e.g., sudo).
     attr_accessor :privilege_password
-    # Permission elevation type. See Nexpose::Credential::ElevationType.
+    # Permission elevation type. See Nexpose::SiteCredential::ElevationType.
     attr_accessor :privilege_type
     # Privacty password of SNMP v3 credential
     attr_accessor :privacy_password
@@ -186,6 +186,7 @@ module Nexpose
       parameters = _to_param(target, engine_id)
       xml = AJAX.form_post(nsc, '/ajax/test_admin_credentials.txml', parameters)
       result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
+      binding.pry
       result.attributes['success'].to_i == 1
     end
 
