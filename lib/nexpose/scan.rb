@@ -263,7 +263,7 @@ module Nexpose
       case resp
       when Net::HTTPSuccess
         if zip_file
-          File.open(zip_file, 'wb') { |file| file.write(resp.body) }
+          ::File.open(zip_file, 'wb') { |file| file.write(resp.body) }
         else
           resp.body
         end
@@ -296,7 +296,7 @@ module Nexpose
       data = Rex::MIME::Message.new
       data.add_part(site_id.to_s, nil, nil, 'form-data; name="siteid"')
       data.add_part(session_id, nil, nil, 'form-data; name="nexposeCCSessionID"')
-      scan = File.new(zip_file, 'rb')
+      scan = ::File.new(zip_file, 'rb')
       data.add_part(scan.read, 'application/zip', 'binary',
                     "form-data; name=\"scan\"; filename=\"#{zip_file}\"")
 

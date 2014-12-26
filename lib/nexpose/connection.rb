@@ -108,7 +108,7 @@ module Nexpose
       resp = http.get(uri.to_s, headers)
 
       if file_name
-        File.open(file_name, 'wb') { |file| file.write(resp.body) }
+        ::File.open(file_name, 'wb') { |file| file.write(resp.body) }
       else
         resp.body
       end
