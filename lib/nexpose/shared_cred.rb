@@ -21,13 +21,13 @@ module Nexpose
     alias_method :delete_shared_cred, :delete_shared_credential
   end
 
-  class SharedCredentialSummary
+  class SharedCredentialSummary < Credential
 
     # Unique ID assigned to this credential by Nexpose.
     attr_accessor :id
     # Name to identify this credential.
     attr_accessor :name
-    # The site credential type. See Nexpose::SiteCredential::Type.
+    # The site credential type. See Nexpose::Credential::Type.
     attr_accessor :type
     # Domain or realm.
     attr_accessor :domain
@@ -77,7 +77,7 @@ module Nexpose
     attr_accessor :pem_key
     # Password to use when elevating permissions (e.g., sudo).
     attr_accessor :privilege_password
-    # Permission elevation type. See Nexpose::SiteCredential::ElevationType.
+    # Permission elevation type. See Nexpose::Credential::ElevationType.
     attr_accessor :privilege_type
     # Privacty password of SNMP v3 credential
     attr_accessor :privacy_password
@@ -166,50 +166,6 @@ module Nexpose
 
     def to_xml
       as_xml.to_s
-    end
-
-    # Test this credential against a target where the credentials should apply.
-    # Only works for a newly created credential. Loading an existing credential
-    # will likely fail.
-    #
-    # @param [Connection] nsc An active connection to the security console.
-    # @param [String] target Target host to check credentials against.
-    # @param [Fixnum] engine_id ID of the engine to use for testing credentials.
-    #   Will default to the local engine if none is provided.
-    #
-    def test(nsc, target, engine_id = nil)
-      unless engine_id
-        local_engine = nsc.engines.find { |e| e.name == 'Local scan engine' }
-        engine_id = local_engine.id
-      end
-
-      parameters = _to_param(target, engine_id)
-      xml = AJAX.form_post(nsc, '/ajax/test_admin_credentials.txml', parameters)
-      result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
-      binding.pry
-      result.attributes['success'].to_i == 1
-    end
-
-    def _to_param(target, engine_id)
-      port = @port
-      port = Credential::DEFAULT_PORTS[@type] if port.nil?
-
-      { engineid: engine_id,
-        sc_creds_dev: target,
-        sc_creds_svc: @type,
-        sc_creds_database: @database,
-        sc_creds_domain: @domain,
-        sc_creds_uname: @username,
-        sc_creds_password: @password,
-        sc_creds_pemkey: @pem_key,
-        sc_creds_port: port,
-        sc_creds_privilegeelevationusername: @privilege_username,
-        sc_creds_privilegeelevationpassword: @privilege_password,
-        sc_creds_privilegeelevationtype: @privilege_type,
-        sc_creds_snmpv3authtype: @auth_type,
-        sc_creds_snmpv3privtype: @privacy_type,
-        sc_creds_snmpv3privpassword: @privacy_password,
-        siteid: -1 }
     end
 
     def self.parse(xml)

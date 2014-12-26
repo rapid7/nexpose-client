@@ -6,30 +6,9 @@ module Nexpose
   # be passed back as is during a Site Save operation. This object
   # can only be used to create a new set of credentials.
   #
-  # class Credential
-  class SiteCredential
+  class SiteCredential < Credential
     include XMLUtils
 
-    DEFAULT_PORTS = { 'cvs' => 2401,
-                      'ftp' => 21,
-                      'http' => 80,
-                      'as400' => 449,
-                      'notes' => 1352,
-                      'tds' => 1433,
-                      'sybase' => 5000,
-                      'cifs' => 445,
-                      'cifshash' => 445,
-                      'oracle' => 1521,
-                      'pop' => 110,
-                      'postgresql' => 5432,
-                      'remote execution' => 512,
-                      'snmp' => 161,
-                      'snmpv3' => 161,
-                      'ssh' => 22,
-                      'ssh-key' => 22,
-                      'telnet' => 23,
-                      'mysql' => 3306,
-                      'db2' => 50000 }
 
     # Security blob for an existing set of credentials
     attr_accessor :blob
@@ -64,6 +43,22 @@ module Nexpose
     # The privacy/encryption pass phrase to use with SNMP v3 credentials
     attr_accessor :privacy_password
 
+    ## Added temporarily while testing the test method.
+    # The site credential type. See Nexpose::Credential::Type.
+    attr_accessor :type
+    # Permission elevation type. See Nexpose::Credential::ElevationType.
+    attr_accessor :privilege_type
+    # User name.
+    attr_accessor :username
+
+
+    def initialize(name, id = -1)
+      @name, @id = name, id.to_i
+      @sites = []
+      @disabled = []
+    end
+
+
     def self.for_service(service, user, password, realm = nil, host = nil, port = nil)
       cred = new
       cred.service = service
@@ -81,7 +76,7 @@ module Nexpose
       @priv_username = username
       @priv_password = password
     end
-    
+
     def add_snmpv3_credentials(auth_type, privacy_type, privacy_password)
       @auth_type = auth_type
       @privacy_type = privacy_type
@@ -114,7 +109,7 @@ module Nexpose
       attributes['privilegeelevationtype'] = @priv_type if @priv_type
       attributes['privilegeelevationusername'] = @priv_username if @priv_username
       attributes['privilegeelevationpassword'] = @priv_password if @priv_password
-      
+
       attributes['snmpv3authtype'] = @auth_type if @auth_type
       attributes['snmpv3privtype'] = @privacy_type if @privacy_type
       attributes['snmpv3privpassword'] = @privacy_password if @privacy_password
@@ -140,61 +135,6 @@ module Nexpose
       to_xml.hash
     end
 
-    # Credential type options.
-    #
-    module Type
-
-      # Concurrent Versioning System (CVS)
-      CVS = 'cvs'
-      # File Transfer Protocol (FTP)
-      FTP = 'ftp'
-      # Web Site HTTP Authentication
-      HTTP = 'http'
-      # IBM AS/400
-      AS400 = 'as400'
-      # Lotus Notes/Domino
-      NOTES = 'notes'
-      # Microsoft SQL Server
-      TDS = 'tds'
-      # Sybase SQL Server
-      SYBASE = 'sybase'
-      # Microsoft Windows/Samba (SMB/CIFS)
-      CIFS = 'cifs'
-      # Microsoft Windows/Samba LM/NTLM Hash (SMB/CIFS)
-      CIFSHASH = 'cifshash'
-      # Oracle
-      ORACLE = 'oracle'
-      # Post Office Protocol (POP)
-      POP = 'pop'
-      # PostgreSQL
-      POSTGRESQL = 'postgresql'
-      # Remote Execution
-      REMOTE_EXECUTION = 'remote execution'
-      # Simple Network Management Protocol
-      SNMP = 'snmp'
-      # Simple Network Management Protocol v3
-      SNMPV3 = 'snmpv3'
-      # Secure Shell (SSH)
-      SSH = 'ssh'
-      # Secure Shell (SSH) Public Key
-      SSH_KEY = 'ssh-key'
-      # TELNET
-      TELNET = 'telnet'
-      # MySQL Server
-      MYSQL = 'mysql'
-      # DB2
-      DB2 = 'db2'
-    end
-
-    # Permission Elevation Types
-    #
-    module ElevationType
-
-      NONE = 'NONE'
-      SUDO = 'SUDO'
-      SUDOSU = 'SUDOSU'
-      SU = 'SU'
-    end
   end
 
   # Object that represents Header name-value pairs, associated with Web Session Authentication.
