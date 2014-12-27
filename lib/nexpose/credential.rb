@@ -4,79 +4,60 @@ module Nexpose
   # See Nexpose::SiteCredential or Nexpose::SharedCredential for additional info.
   class Credential
 
-    DEFAULT_PORTS = { 'cvs' => 2401,
-                  'ftp' => 21,
-                  'http' => 80,
-                  'as400' => 449,
-                  'notes' => 1352,
-                  'tds' => 1433,
-                  'sybase' => 5000,
-                  'cifs' => 445,
-                  'cifshash' => 445,
-                  'oracle' => 1521,
-                  'pop' => 110,
-                  'postgresql' => 5432,
-                  'remote execution' => 512,
-                  'snmp' => 161,
-                  'snmpv3' => 161,
-                  'ssh' => 22,
-                  'ssh-key' => 22,
-                  'telnet' => 23,
-                  'mysql' => 3306,
-                  'db2' => 50000 }
+    # Mapping of Common Ports.
+    DEFAULT_PORTS = { 'cvs'              => 2401,
+                      'ftp'              => 21,
+                      'http'             => 80,
+                      'as400'            => 449,
+                      'notes'            => 1352,
+                      'tds'              => 1433,
+                      'sybase'           => 5000,
+                      'cifs'             => 445,
+                      'cifshash'         => 445,
+                      'oracle'           => 1521,
+                      'pop'              => 110,
+                      'postgresql'       => 5432,
+                      'remote execution' => 512,
+                      'snmp'             => 161,
+                      'snmpv3'           => 161,
+                      'ssh'              => 22,
+                      'ssh-key'          => 22,
+                      'telnet'           => 23,
+                      'mysql'            => 3306,
+                      'db2'              => 50000 }
 
 
     # Credential type options.
     module Type
-      # Concurrent Versioning System (CVS)
-      CVS = 'cvs'
-      # File Transfer Protocol (FTP)
-      FTP = 'ftp'
-      # Web Site HTTP Authentication
-      HTTP = 'http'
-      # IBM AS/400
-      AS400 = 'as400'
-      # Lotus Notes/Domino
-      NOTES = 'notes'
-      # Microsoft SQL Server
-      TDS = 'tds'
-      # Sybase SQL Server
-      SYBASE = 'sybase'
-      # Microsoft Windows/Samba (SMB/CIFS)
-      CIFS = 'cifs'
-      # Microsoft Windows/Samba LM/NTLM Hash (SMB/CIFS)
-      CIFSHASH = 'cifshash'
-      # Oracle
-      ORACLE = 'oracle'
-      # Post Office Protocol (POP)
-      POP = 'pop'
-      # PostgreSQL
-      POSTGRESQL = 'postgresql'
-      # Remote Execution
-      REMOTE_EXECUTION = 'remote execution'
-      # Simple Network Management Protocol
-      SNMP = 'snmp'
-      # Simple Network Management Protocol v3
-      SNMPV3 = 'snmpv3'
-      # Secure Shell (SSH)
-      SSH = 'ssh'
-      # Secure Shell (SSH) Public Key
-      SSH_KEY = 'ssh-key'
-      # TELNET
-      TELNET = 'telnet'
-      # MySQL Server
-      MYSQL = 'mysql'
-      # DB2
-      DB2 = 'db2'
+      CVS              = 'cvs'              # Concurrent Versioning System (CVS)
+      FTP              = 'ftp'              # File Transfer Protocol (FTP)
+      HTTP             = 'http'             # Web Site HTTP Authentication
+      AS400            = 'as400'            # IBM AS/400
+      NOTES            = 'notes'            # Lotus Notes/Domino
+      TDS              = 'tds'              # Microsoft SQL Server
+      SYBASE           = 'sybase'           # Sybase SQL Server
+      CIFS             = 'cifs'             # Microsoft Windows/Samba (SMB/CIFS)
+      CIFSHASH         = 'cifshash'         # Microsoft Windows/Samba LM/NTLM Hash (SMB/CIFS)
+      ORACLE           = 'oracle'           # Oracle
+      POP              = 'pop'              # Post Office Protocol (POP)
+      POSTGRESQL       = 'postgresql'       # PostgreSQL
+      REMOTE_EXECUTION = 'remote execution' # Remote Execution
+      SNMP             = 'snmp'             # Simple Network Management Protocol
+      SNMPV3           = 'snmpv3'           # Simple Network Management Protocol v3
+      SSH              = 'ssh'              # Secure Shell (SSH)
+      SSH_KEY          = 'ssh-key'          # Secure Shell (SSH) Public Key
+      TELNET           = 'telnet'           # TELNET
+      MYSQL            = 'mysql'            # MySQL Server
+      DB2              = 'db2'              # DB2
     end
 
 
-    # Permission Elevation Types
+    # Permission Elevation / Privilege Escalation Types.
     module ElevationType
-      NONE = 'NONE'
-      SUDO = 'SUDO'
+      NONE   = 'NONE'
+      SUDO   = 'SUDO'
       SUDOSU = 'SUDOSU'
-      SU = 'SU'
+      SU     = 'SU'
     end
 
 
@@ -91,23 +72,17 @@ module Nexpose
     #
     def test(nsc, target, engine_id = nil)
       unless engine_id
-        local_engine = nsc.engines.find { |e| e.name == 'Local scan engine' }
-        engine_id = local_engine.id
+        engine_id = nsc.engines.find { |e| e.name == 'Local scan engine' }.id
       end
-
-      parameters = _to_param(target, engine_id)
-      ## fix @port
-      ## _to_param hash it out.
+      @port = Credential::DEFAULT_PORTS[@type] if @port.nil?
+      parameters = _to_param(target, engine_id, @port)
       xml = AJAX.form_post(nsc, '/ajax/test_admin_credentials.txml', parameters)
       result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
       result.attributes['success'].to_i == 1
     end
 
 
-    def _to_param(target, engine_id)
-      port = @port
-      port = Credential::DEFAULT_PORTS[@type] if port.nil?
-
+    def _to_param(target, engine_id, port)
       { engineid: engine_id,
         sc_creds_dev: target,
         sc_creds_svc: @type,
