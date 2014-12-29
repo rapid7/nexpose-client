@@ -18,8 +18,7 @@ module Nexpose
     attr_accessor :host
     # The port on which to use these credentials.
     attr_accessor :port
-    # The user id or username
-    attr_accessor :userid
+    ###attr_accessor :userid
     # The password
     attr_accessor :password
     # The realm for these credentials
@@ -43,13 +42,15 @@ module Nexpose
     # The privacy/encryption pass phrase to use with SNMP v3 credentials
     attr_accessor :privacy_password
 
+
     # The site credential type. See Nexpose::Credential::Type.
     attr_accessor :type
     # Permission elevation type. See Nexpose::Credential::ElevationType.
     attr_accessor :privilege_type
-    # User name.
+    # The User ID or Username
     attr_accessor :username
-
+    alias :userid :username
+    alias :userid= :username=
 
     def initialize(name, id = -1)
       @name, @id = name, id.to_i
