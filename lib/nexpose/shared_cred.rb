@@ -27,7 +27,7 @@ module Nexpose
     attr_accessor :id
     # Name to identify this credential.
     attr_accessor :name
-    # The site credential type. See Nexpose::Credential::Type.
+    # The credential type. See Nexpose::Credential::Type.
     attr_accessor :type
     # Domain or realm.
     attr_accessor :domain

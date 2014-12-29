@@ -43,7 +43,6 @@ module Nexpose
     # The privacy/encryption pass phrase to use with SNMP v3 credentials
     attr_accessor :privacy_password
 
-    ## Added temporarily while testing the test method.
     # The site credential type. See Nexpose::Credential::Type.
     attr_accessor :type
     # Permission elevation type. See Nexpose::Credential::ElevationType.
