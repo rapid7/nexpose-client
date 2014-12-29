@@ -27,8 +27,8 @@ module Nexpose
                       'db2'              => 50000 }
 
 
-    # Credential type options.
-    module Type
+    # Credential Service/Type Options.
+    module Service
       CVS              = 'cvs'              # Concurrent Versioning System (CVS)
       FTP              = 'ftp'              # File Transfer Protocol (FTP)
       HTTP             = 'http'             # Web Site HTTP Authentication
@@ -58,6 +58,7 @@ module Nexpose
       SUDO   = 'SUDO'
       SUDOSU = 'SUDOSU'
       SU     = 'SU'
+      PBRUN  = 'PBRUN'
     end
 
 
@@ -70,22 +71,22 @@ module Nexpose
     # @param [Fixnum] engine_id ID of the engine to use for testing credentials.
     #   Will default to the local engine if none is provided.
     #
-    def test(nsc, target, engine_id = nil)
+    def test(nsc, target, engine_id = nil, siteid = -1)
       unless engine_id
         engine_id = nsc.engines.find { |e| e.name == 'Local scan engine' }.id
       end
-      @port = Credential::DEFAULT_PORTS[@type] if @port.nil?
-      parameters = _to_param(target, engine_id, @port)
+      @port = Credential::DEFAULT_PORTS[@service] if @port.nil?
+      parameters = _to_param(target, engine_id, @port, siteid)
       xml = AJAX.form_post(nsc, '/ajax/test_admin_credentials.txml', parameters)
       result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
       result.attributes['success'].to_i == 1
     end
 
 
-    def _to_param(target, engine_id, port)
+    def _to_param(target, engine_id, port, siteid)
       { engineid: engine_id,
         sc_creds_dev: target,
-        sc_creds_svc: @type,
+        sc_creds_svc: @service,
         sc_creds_database: @database,
         sc_creds_domain: @domain,
         sc_creds_uname: @username,
@@ -98,7 +99,7 @@ module Nexpose
         sc_creds_snmpv3authtype: @auth_type,
         sc_creds_snmpv3privtype: @privacy_type,
         sc_creds_snmpv3privpassword: @privacy_password,
-        siteid: -1 }
+        siteid: siteid }
     end
 
   end
