@@ -48,12 +48,6 @@ module Nexpose
     alias :userid :username
     alias :userid= :username=
 
-    def initialize(name, id = -1)
-      @name, @id = name, id.to_i
-      @sites = []
-      @disabled = []
-    end
-
 
     def self.for_service(service, user, password, realm = nil, host = nil, port = nil)
       cred = new
