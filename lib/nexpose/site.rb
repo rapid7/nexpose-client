@@ -494,7 +494,7 @@ module Nexpose
         end
 
         s.elements.each('Credentials/adminCredentials') do |cred|
-          site.credentials << Credential.parse(cred)
+          site.credentials << SiteCredential.parse(cred)
         end
 
         s.elements.each('ScanConfig') do |scan_config|
