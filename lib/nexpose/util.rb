@@ -6,12 +6,6 @@ module Nexpose
     end
   end
 
-  module HTMLUtils
-    def parse_html(html)
-      Nokogiri::HTML(html, nil, 'UTF-8')
-    end
-  end
-
   module XMLUtils
 
     def parse_xml(xml)
