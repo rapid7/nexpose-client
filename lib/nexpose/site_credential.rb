@@ -18,7 +18,6 @@ module Nexpose
     attr_accessor :host
     # The port on which to use these credentials.
     attr_accessor :port
-    ###attr_accessor :userid
     # The password
     attr_accessor :password
     # The realm for these credentials
