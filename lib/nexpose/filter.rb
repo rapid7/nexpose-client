@@ -283,11 +283,12 @@ module Nexpose
 
     # Convert this object into the map format expected by Nexpose.
     #
-    def to_map
+    def to_hash
       { 'metadata' => { 'fieldName' => field },
         'operator' => operator,
         'values' => Array(value) }
     end
+    alias_method :to_map, :to_hash
 
     def self.parse(json)
       Criterion.new(json['metadata']['fieldName'],
@@ -310,15 +311,16 @@ module Nexpose
       @match = match.upcase
     end
 
-    def to_map
+    def to_hash
       { 'operator' => @match,
-        'criteria' => @criteria.map { |c| c.to_map } }
+        'criteria' => @criteria.map { |c| c.to_hash } }
     end
+    alias_method :to_map, :to_hash
 
     # Convert this object into the format expected by Nexpose.
     #
     def to_json
-      JSON.generate(to_map)
+      JSON.generate(to_hash)
     end
 
     # Generate the payload needed for a POST request for Asset Filter.

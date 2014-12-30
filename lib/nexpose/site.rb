@@ -352,7 +352,7 @@ module Nexpose
                   'tag' => @description.nil? ? '' : @description,
                   'riskFactor' => @risk_factor,
                   # 'vCenter' => @discovery_connection_id,
-                  'searchCriteria' => @criteria.nil? ? { 'operator' => 'AND' } : @criteria.to_map }
+                  'searchCriteria' => @criteria.nil? ? { 'operator' => 'AND' } : @criteria.to_hash }
       json = JSON.generate(details)
 
       response = AJAX.post(nsc, uri, json, AJAX::CONTENT_TYPE::JSON)

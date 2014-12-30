@@ -259,7 +259,7 @@ module Nexpose
           'tag_config' => { 'site_ids' => @site_ids,
                             'tag_associated_asset_ids' => @associated_asset_ids,
                             'asset_group_ids' => @asset_group_ids,
-                            'search_criteria' => @search_criteria ? @search_criteria.to_map : nil
+                            'search_criteria' => @search_criteria ? @search_criteria.to_hash : nil
           }
       }
       if @type == Type::Generic::CUSTOM
