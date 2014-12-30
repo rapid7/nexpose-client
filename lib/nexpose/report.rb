@@ -229,13 +229,15 @@ module Nexpose
     # @param [Connection] connection Nexpose connection.
     # @param [Fixnum] timeout How long, in seconds, to wait for the report to
     #   generate. Larger reports can take a significant amount of time.
+    # @param [Boolean] raw Whether to bypass response parsing an use the raw
+    #   response.
     # @return Report in text format except for PDF, which returns binary data.
     #
-    def generate(connection, timeout = 300)
+    def generate(connection, timeout = 300, raw = false)
       xml = %(<ReportAdhocGenerateRequest session-id="#{connection.session_id}">)
       xml << to_xml
       xml << '</ReportAdhocGenerateRequest>'
-      response = connection.execute(xml, '1.1', timeout: timeout)
+      response = connection.execute(xml, '1.1', timeout: timeout, raw: raw)
       if response.success
         content_type_response = response.raw_response.header['Content-Type']
         if content_type_response =~ /multipart\/mixed;\s*boundary=([^\s]+)/

@@ -47,34 +47,45 @@ module Nexpose
         @http.read_timeout = options[:timeout] if options.key? :timeout
         @raw_response = @http.post(@uri.path, @req, @headers)
         @raw_response_data = @raw_response.read_body
-        @res = parse_xml(@raw_response_data)
 
-        unless @res.root
-          @error = 'Nexpose service returned invalid XML.'
-          return @sid
-        end
-
-        @sid = attributes['session-id']
-
-        if (attributes['success'] and attributes['success'].to_i == 1)
-          @success = true
-        elsif @api_version =~ /1.2/ and @res and (@res.get_elements '//Exception').count < 1
-          @success = true
+        # Allow the :raw keyword to bypass XML parsing.
+        if options[:raw]
+          if raw_response_data =~ /success="1"/
+            @success = true
+          else
+            @success = false
+            @error = "User requested raw XML response. Not parsing failures."
+          end
         else
-          @success = false
-          if @api_version =~ /1.2/
-            @res.elements.each('//Exception/Message') do |message|
+          @res = parse_xml(@raw_response_data)
+
+          unless @res.root
+            @error = 'Nexpose service returned invalid XML.'
+            return @sid
+          end
+
+          @sid = attributes['session-id']
+
+          if (attributes['success'] and attributes['success'].to_i == 1)
+            @success = true
+          elsif @api_version =~ /1.2/ and @res and (@res.get_elements '//Exception').count < 1
+            @success = true
+          else
+            @success = false
+            if @api_version =~ /1.2/
+              @res.elements.each('//Exception/Message') do |message|
               @error = message.text.sub(/.*Exception: */, '')
-            end
+              end
             @res.elements.each('//Exception/Stacktrace') do |stacktrace|
               @trace = stacktrace.text
             end
-          else
-            @res.elements.each('//message') do |message|
-              @error = message.text.sub(/.*Exception: */, '')
-            end
-            @res.elements.each('//stacktrace') do |stacktrace|
-              @trace = stacktrace.text
+            else
+              @res.elements.each('//message') do |message|
+                @error = message.text.sub(/.*Exception: */, '')
+              end
+              @res.elements.each('//stacktrace') do |stacktrace|
+                @trace = stacktrace.text
+              end
             end
           end
         end
