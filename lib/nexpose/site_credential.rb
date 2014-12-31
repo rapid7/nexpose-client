@@ -45,14 +45,15 @@ module Nexpose
     attr_accessor :privilege_type
     # The User ID or Username
     attr_accessor :username
-    alias :userid :username
-    alias :userid= :username=
+    attr_accessor :userid
+    # alias :userid :username
+    # alias :userid= :username=
 
 
     def self.for_service(service, user, password, realm = nil, host = nil, port = nil)
       cred = new
       cred.service = service
-      cred.username = user
+      cred.userid = user
       cred.password = password
       cred.realm = realm
       cred.host = host
