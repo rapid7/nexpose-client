@@ -52,7 +52,7 @@ module Nexpose
     def self.for_service(service, user, password, realm = nil, host = nil, port = nil)
       cred = new
       cred.service = service
-      cred.userid = user
+      cred.username = user
       cred.password = password
       cred.realm = realm
       cred.host = host
