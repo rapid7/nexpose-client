@@ -224,13 +224,14 @@ module Nexpose
 
     # Generate a report once using a simple configuration.
     #
-    # For XML-based reports, only the raw report is returned and not any images.
+    # For XML-based reports, only the textual report is returned and not any images.
     #
     # @param [Connection] connection Nexpose connection.
     # @param [Fixnum] timeout How long, in seconds, to wait for the report to
     #   generate. Larger reports can take a significant amount of time.
     # @param [Boolean] raw Whether to bypass response parsing an use the raw
-    #   response.
+    #   response. If this option is used, error will only be exposed by
+    #   examining Connection#response_xml.
     # @return Report in text format except for PDF, which returns binary data.
     #
     def generate(connection, timeout = 300, raw = false)
