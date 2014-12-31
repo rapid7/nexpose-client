@@ -45,15 +45,14 @@ module Nexpose
     attr_accessor :privilege_type
     # The User ID or Username
     attr_accessor :username
-    attr_accessor :userid
-    # alias :userid :username
-    # alias :userid= :username=
+    alias :userid :username
+    alias :userid= :username=
 
 
     def self.for_service(service, user, password, realm = nil, host = nil, port = nil)
       cred = new
       cred.service = service
-      cred.userid = user
+      cred.username = user
       cred.password = password
       cred.realm = realm
       cred.host = host
@@ -89,9 +88,8 @@ module Nexpose
 
     def as_xml
       attributes = {}
-
       attributes['service'] = @service
-      attributes['userid'] = @userid
+      attributes['userid'] = @username
       attributes['password'] = @password
       attributes['realm'] = @realm
       attributes['host'] = @host
