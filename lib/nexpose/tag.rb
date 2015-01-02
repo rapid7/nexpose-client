@@ -8,7 +8,7 @@ module Nexpose
     #
     def tags
       tag_summary = []
-      tags = JSON.parse(AJAX.get(self, '/api/2.0/tags', AJAX::CONTENT_TYPE::JSON, { per_page: 2147483647 }))
+      tags = JSON.parse(AJAX.get(self, '/api/2.0/tags', AJAX::CONTENT_TYPE::JSON, { per_page: 2_147_483_647 }))
       tags['resources'].each do |json|
         tag_summary << TagSummary.parse(json)
       end
@@ -31,7 +31,7 @@ module Nexpose
     #
     def asset_tags(asset_id)
       tag_summary = []
-      asset_tag = JSON.parse(AJAX.get(self, "/api/2.0/assets/#{asset_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2147483647 }))
+      asset_tag = JSON.parse(AJAX.get(self, "/api/2.0/assets/#{asset_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2_147_483_647 }))
       asset_tag['resources'].select { |r| r['asset_ids'].find { |i| i == asset_id } }.each do |json|
         tag_summary << TagSummary.parse(json)
       end
@@ -55,7 +55,7 @@ module Nexpose
     #
     def site_tags(site_id)
       tag_summary = []
-      site_tag = JSON.parse(AJAX.get(self, "/api/2.0/sites/#{site_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2147483647 }))
+      site_tag = JSON.parse(AJAX.get(self, "/api/2.0/sites/#{site_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2_147_483_647 }))
       site_tag['resources'].each do |json|
         tag_summary << TagSummary.parse(json)
       end
@@ -79,7 +79,7 @@ module Nexpose
     #
     def asset_group_tags(asset_group_id)
       tag_summary = []
-      asset_group_tag = JSON.parse(AJAX.get(self, "/api/2.0/asset_groups/#{asset_group_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2147483647 }))
+      asset_group_tag = JSON.parse(AJAX.get(self, "/api/2.0/asset_groups/#{asset_group_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2_147_483_647 }))
       asset_group_tag['resources'].each do |json|
         tag_summary << TagSummary.parse(json)
       end
@@ -252,14 +252,12 @@ module Nexpose
           'tag_name' => @name,
           'tag_type' => @type,
           'tag_id' => @id,
-          'attributes' => [
-                            { 'tag_attribute_name' => 'SOURCE',
-                              'tag_attribute_value' => @source }
-                          ],
+          'attributes' => [{ 'tag_attribute_name' => 'SOURCE',
+                             'tag_attribute_value' => @source }],
           'tag_config' => { 'site_ids' => @site_ids,
                             'tag_associated_asset_ids' => @associated_asset_ids,
                             'asset_group_ids' => @asset_group_ids,
-                            'search_criteria' => @search_criteria ? @search_criteria.to_hash : nil
+                            'search_criteria' => @search_criteria ? @search_criteria.to_h : nil
           }
       }
       if @type == Type::Generic::CUSTOM
@@ -306,8 +304,9 @@ module Nexpose
     # @return [Fixnum] ID of applied tag
     #
     def add_to_asset(connection, asset_id)
-      params = _to_json_for_add
-      uri = AJAX.post(connection, "/api/2.0/assets/#{asset_id}/tags", params, AJAX::CONTENT_TYPE::JSON)
+      params = to_json_for_add
+      url = "/api/2.0/assets/#{asset_id}/tags"
+      uri = AJAX.post(connection, url, params, AJAX::CONTENT_TYPE::JSON)
       @id = uri.split('/').last.to_i
     end
 
@@ -318,8 +317,9 @@ module Nexpose
     # @return [Fixnum] ID of applied tag
     #
     def add_to_site(connection, site_id)
-      params = _to_json_for_add
-      uri = AJAX.post(connection, "/api/2.0/sites/#{site_id}/tags", params, AJAX::CONTENT_TYPE::JSON)
+      params = to_json_for_add
+      url = "/api/2.0/sites/#{site_id}/tags"
+      uri = AJAX.post(connection, url, params, AJAX::CONTENT_TYPE::JSON)
       @id = uri.split('/').last.to_i
     end
 
@@ -330,26 +330,24 @@ module Nexpose
     # @return [Fixnum] ID of applied tag
     #
     def add_to_group(connection, group_id)
-      params = _to_json_for_add
-      uri = AJAX.post(connection, "/api/2.0/asset_groups/#{group_id}/tags", params, AJAX::CONTENT_TYPE::JSON)
+      params = to_json_for_add
+      url = "/api/2.0/asset_groups/#{group_id}/tags"
+      uri = AJAX.post(connection, url, params, AJAX::CONTENT_TYPE::JSON)
       @id = uri.split('/').last.to_i
     end
     alias_method :add_to_asset_group, :add_to_group
 
     private
 
-    def _to_json_for_add
+    def to_json_for_add
       if @id == -1
-        json = {
-            'tag_name' => @name,
-            'tag_type' => @type,
-            'attributes' => [
-                { 'tag_attribute_name' => 'SOURCE',
-                  'tag_attribute_value' => @source }
-            ],
-        }
+        json = { 'tag_name' => @name,
+                 'tag_type' => @type,
+                 'attributes' => [{ 'tag_attribute_name' => 'SOURCE',
+                                    'tag_attribute_value' => @source }] }
         if @type == Tag::Type::Generic::CUSTOM
-          json['attributes'] << { 'tag_attribute_name' => 'COLOR', 'tag_attribute_value' => @color }
+          json['attributes'] << { 'tag_attribute_name' => 'COLOR',
+                                  'tag_attribute_value' => @color }
         end
         params = JSON.generate(json)
       else

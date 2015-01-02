@@ -1,6 +1,4 @@
 module Nexpose
-
-  # === Description
   # Object that represents a connection to a Nexpose Security Console.
   #
   # === Examples

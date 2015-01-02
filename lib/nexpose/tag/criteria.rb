@@ -1,45 +1,37 @@
 module Nexpose
   class Tag
-
+    # Override of filter criterion to account for proper JSON naming.
+    #
     class Criterion < Nexpose::Criterion
-
-      def to_map
-        { 'operator' => operator,
-          'values' => Array(value),
-          'field_name' => field
-        }
+      # Convert to Hash, which can be converted to JSON for API calls.
+      def to_h
+        { operator: operator,
+          values: Array(value),
+          field_name: field }
       end
 
+      # Create a Criterion object from a JSON-derived Hash.
+      #
+      # @param [Hash] json JSON-derived Hash of a Criterion object.
+      # @return [Criterion] Parsed object.
+      #
       def self.parse(json)
-        Criterion.new(json['field_name'],
-                      json['operator'],
-                      json['values'])
+        new(json['field_name'], json['operator'], json['values'])
       end
-
     end
 
+    # Override of filter criteria to account for different parsing from JSON.
+    #
     class Criteria < Nexpose::Criteria
-
-      def initialize(criteria = [], match = 'AND')
-        super(criteria, match)
-      end
-
-      def to_map
-        { 'criteria' => @criteria.map { |c| c.to_map },
-          'operator' => @match
-        }
-      end
-
+      # Create a Criteria object from a JSON-derived Hash.
+      #
+      # @param [Hash] json JSON-derived Hash of a Criteria object.
+      # @return [Criteria] Parsed object.
+      #
       def self.parse(json)
-        ret = Criteria.new([], json['operator'])
-        json['criteria'].each do |c|
-          ret.criteria << Criterion.parse(c)
-        end
-        ret
+        criteria = json['criteria'].map { |c| Criterion.parse(c) }
+        new(criteria, json['operator'])
       end
-
     end
   end
 end
-
-

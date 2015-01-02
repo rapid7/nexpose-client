@@ -1,7 +1,6 @@
 module Nexpose
-
+  # Object that represents a connection to a Nexpose Security Console.
   class Connection
-
     # Perform an asset filter search that will locate assets matching the
     # provided conditions.
     #
@@ -53,9 +52,9 @@ module Nexpose
     # Only these values are accepted for a field value.
     #
     module Field
-
       # Search for an Asset by name.
-      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, CONTAINS, NOT_CONTAINS
+      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, CONTAINS,
+      #                  NOT_CONTAINS
       ASSET = 'ASSET'
 
       # Search for an Asset by CVE ID
@@ -91,7 +90,8 @@ module Nexpose
       CVSS_SCORE = 'CVSS_SCORE'
 
       # Valid Operators: IN, NOT_IN
-      # Valid Values (See Value::HostType): UNKNOWN, VIRTUAL, HYPERVISOR, BARE_METAL
+      # Valid Values (See Value::HostType): UNKNOWN, VIRTUAL, HYPERVISOR,
+      #                                     BARE_METAL
       HOST_TYPE = 'HOST_TYPE'
 
       # Valid Operators: IN, NOT_IN
@@ -138,17 +138,21 @@ module Nexpose
       # Valid Operators: CONTAINS, NOT_CONTAINS
       SOFTWARE = 'SOFTWARE'
 
-      # Valid Operators: IS, IS_NOT, GREATER_THAN, LESS_THAN, IS_APPLIED, IS_NOT_APPLIED
+      # Valid Operators: IS, IS_NOT, GREATER_THAN, LESS_THAN, IS_APPLIED,
+      #                  IS_NOT_APPLIED
       # Valid Values: VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW
       USER_ADDED_CRITICALITY_LEVEL = 'TAG_CRITICALITY'
 
-      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, IS_APPLIED, IS_NOT_APPLIED, CONTAINS, NOT_CONTAINS
+      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, IS_APPLIED,
+      #                  IS_NOT_APPLIED, CONTAINS, NOT_CONTAINS
       USER_ADDED_CUSTOM_TAG = 'TAG'
 
-      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, IS_APPLIED, IS_NOT_APPLIED, CONTAINS, NOT_CONTAINS
+      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, IS_APPLIED,
+      #                  IS_NOT_APPLIED, CONTAINS, NOT_CONTAINS
       USER_ADDED_TAG_LOCATION = 'TAG_LOCATION'
 
-      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, IS_APPLIED, IS_NOT_APPLIED, CONTAINS, NOT_CONTAINS
+      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, IS_APPLIED,
+      #                  IS_NOT_APPLIED, CONTAINS, NOT_CONTAINS
       USER_ADDED_TAG_OWNER = 'TAG_OWNER'
 
       # Valid Operators: ARE
@@ -160,11 +164,13 @@ module Nexpose
       VULNERABILITY = 'VULNERABILITY'
 
       # Valid Operators: INCLUDE, DO_NOT_INCLUDE
-      # Valid Values (See Value::VulnerabilityExposure): MALWARE, METASPLOIT, DATABASE
+      # Valid Values (See Value::VulnerabilityExposure): MALWARE, METASPLOIT,
+      #                                                  DATABASE
       VULNERABILITY_EXPOSURES = 'VULNERABILITY_EXPOSURES'
 
       # Search by VULNERABILITY CATEGORY
-      # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS, STARTS_WITH, ENDS_WITH
+      # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS, STARTS_WITH,
+      #                  ENDS_WITH
       VULN_CATEGORY = 'VULN_CATEGORY'
     end
 
@@ -199,31 +205,35 @@ module Nexpose
     # Specialized values used by certain search fields
     #
     module Value
-
+      # Constants for filtering on access complexity.
       module AccessComplexity
         LOW = 'L'
         MEDIUM = 'M'
         HIGH = 'H'
       end
 
+      # Constants for filtering on access vector.
       module AccessVector
         LOCAL = 'L'
         ADJACENT = 'A'
         NETWORK = 'N'
       end
 
+      # Constants for filtering on whether authentication is required.
       module AuthenticationRequired
         NONE = 'N'
         SINGLE = 'S'
         MULTIPLE = 'M'
       end
 
+      # Constants for filtering on CVSS impact.
       module CVSSImpact
         NONE = 'N'
         PARTIAL = 'P'
         COMPLETE = 'C'
       end
 
+      # Constants for filtering on host type.
       module HostType
         UNKNOWN = '0'
         VIRTUAL = '1'
@@ -231,26 +241,31 @@ module Nexpose
         BARE_METAL = '3'
       end
 
+      # Constants for filtering on IP type.
       module IPType
         IPv4 = '0'
         IPv6 = '1'
       end
 
+      # Constants for filtering on PCI compliance.
       module PCICompliance
         PASS = '1'
         FAIL = '0'
       end
 
+      # Constants for filtering on scan date.
       module ScanDate
         # Pass this format to #strftime() to get expected format for requests.
         FORMAT = '%m/%d/%Y'
       end
 
+      # Constants for filtering on vulnerability validations.
       module ValidatedVulnerability
         NOT_PRESENT = 1
         PRESENT = 0
       end
 
+      # Constants for filtering on vulnerability exposure.
       module VulnerabilityExposure
         MALWARE = 'type:"malware_type", name:"malwarekit"'
         # TODO: A problem in Nexpose causes these values to not be constant.
@@ -263,7 +278,6 @@ module Nexpose
   # Individual search criterion.
   #
   class Criterion
-
     # Search field. One of Nexpose::Search::Field
     # @see Nexpose::Search::Field for any restrictions on the other attibutes.
     attr_accessor :field
@@ -274,8 +288,8 @@ module Nexpose
 
     def initialize(field, operator, value = '')
       @field, @operator = field.upcase, operator.upcase
-      if value.kind_of? Array
-        @value = value.map { |v| v.to_s }
+      if value.is_a? Array
+        @value = value.map(&:to_s)
       else
         @value = value.to_s
       end
@@ -283,12 +297,11 @@ module Nexpose
 
     # Convert this object into the map format expected by Nexpose.
     #
-    def to_hash
+    def to_h
       { 'metadata' => { 'fieldName' => field },
         'operator' => operator,
         'values' => Array(value) }
     end
-    alias_method :to_map, :to_hash
 
     def self.parse(json)
       Criterion.new(json['metadata']['fieldName'],
@@ -300,7 +313,6 @@ module Nexpose
   # Join search criteria for an asset filter search or dynamic asset group.
   #
   class Criteria
-
     # Whether to match any or all filters. One of 'OR' or 'AND'.
     attr_accessor :match
     # Array of criteria to match against.
@@ -311,16 +323,15 @@ module Nexpose
       @match = match.upcase
     end
 
-    def to_hash
+    def to_h
       { 'operator' => @match,
-        'criteria' => @criteria.map { |c| c.to_hash } }
+        'criteria' => @criteria.map(&:to_h) }
     end
-    alias_method :to_map, :to_hash
 
     # Convert this object into the format expected by Nexpose.
     #
     def to_json
-      JSON.generate(to_hash)
+      JSON.generate(to_h)
     end
 
     # Generate the payload needed for a POST request for Asset Filter.
@@ -352,7 +363,6 @@ module Nexpose
   # Asset data as returned by an Asset Filter search.
   #
   class FilteredAsset
-
     # Unique identifier of this asset. Also known as device ID.
     attr_reader :id
 
