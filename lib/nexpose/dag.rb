@@ -54,7 +54,7 @@ module Nexpose
     end
 
     def _to_entity_details
-      obj = { 'searchCriteria' => @criteria.to_hash,
+      obj = { 'searchCriteria' => @criteria.to_h,
               'name' => @name,
               'tag' => @description.nil? ? '' : @description,
               'dynamic' => true,
