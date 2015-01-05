@@ -238,7 +238,7 @@ module Nexpose
     #
     def past_scans(limit = nil)
       uri = '/data/scan/global/scan-history'
-      rows = AJAX._row_pref_of(limit)
+      rows = AJAX.row_pref_of(limit)
       params = { 'sort' => 'endTime', 'dir' => 'DESC', 'startIndex' => 0 }
       AJAX.preserving_preference(self, 'global-completed-scans') do
         data = DataTable._get_json_table(self, uri, params, rows, limit)
@@ -255,7 +255,7 @@ module Nexpose
     #   zip_file, if provided. Otherwise, returns raw ZIP binary data.
     #
     def export_scan(scan_id, zip_file = nil)
-      http = AJAX._https(self)
+      http = AJAX.https(self)
       headers = { 'Cookie' => "nexposeCCSessionID=#{@session_id}",
                   'Accept-Encoding' => 'identity' }
       resp = http.get("/data/scan/#{scan_id}/export", headers)
@@ -305,8 +305,8 @@ module Nexpose
       post.set_content_type('multipart/form-data', boundary: data.bound)
 
       # Avoiding AJAX#request, because the data can cause binary dump on error.
-      http = AJAX._https(self)
-      AJAX._headers(self, post)
+      http = AJAX.https(self)
+      AJAX.headers(self, post)
       response = http.request(post)
       case response
       when Net::HTTPOK
