@@ -11,7 +11,7 @@ This gem is heavily used for internal, automated testing of the Nexpose product.
 
 ## Contributions
 
-We welcome contributions to this package.
+We welcome contributions to this package. Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 Our coding standards include:
 
