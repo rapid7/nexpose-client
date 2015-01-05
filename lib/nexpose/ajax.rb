@@ -128,6 +128,27 @@ module Nexpose
       end
     end
 
+    # Get a valid row preference value.
+    # This is an internal utility method, not subject to backward compatibility
+    # concerns.
+    #
+    # @param [Fixnum] val Value to get inclusive row preference for.
+    # @return [Fixnum] Valid row preference.
+    #
+    def row_pref_of(val)
+      if val.nil? || val > 100
+        500
+      elsif val > 50
+        100
+      elsif val > 25
+        50
+      elsif val > 10
+        25
+      else
+        10
+      end
+    end
+
     ###
     # Internal helper methods
 
@@ -186,20 +207,6 @@ module Nexpose
       xml = REXML::Document.new(resp)
       if attr = REXML::XPath.first(xml, 'SetUserPref/@success')
         attr.value == '1'
-      end
-    end
-
-    def _row_pref_of(val)
-      if val.nil? || val > 100
-        500
-      elsif val > 50
-        100
-      elsif val > 25
-        50
-      elsif val > 10
-        25
-      else
-        10
       end
     end
   end

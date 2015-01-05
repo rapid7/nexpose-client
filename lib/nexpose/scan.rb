@@ -238,7 +238,7 @@ module Nexpose
     #
     def past_scans(limit = nil)
       uri = '/data/scan/global/scan-history'
-      rows = AJAX._row_pref_of(limit)
+      rows = AJAX.row_pref_of(limit)
       params = { 'sort' => 'endTime', 'dir' => 'DESC', 'startIndex' => 0 }
       AJAX.preserving_preference(self, 'global-completed-scans') do
         data = DataTable._get_json_table(self, uri, params, rows, limit)
