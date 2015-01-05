@@ -119,16 +119,28 @@ module Nexpose
       uri
     end
 
+    # Execute a block of code while presenving the preferences for any
+    # underlying table being accessed. Use this method when accessing data
+    # tables which are present in the UI to prevent existing row preferences
+    # from being set to 500.
+    #
+    # This is an internal utility method, not subject to backward compatibility
+    # concerns.
+    #
+    # @param [Connection] nsc Live connection to a Nepose console.
+    # @param [String] pref Preference key value to preserve.
+    #
     def preserving_preference(nsc, pref)
       begin
-        orig = _get_rows(nsc, pref)
+        orig = get_rows(nsc, pref)
         yield
       ensure
-        _set_rows(nsc, pref, orig)
+        set_rows(nsc, pref, orig)
       end
     end
 
     # Get a valid row preference value.
+    #
     # This is an internal utility method, not subject to backward compatibility
     # concerns.
     #
@@ -187,7 +199,9 @@ module Nexpose
       end
     end
 
-    def _get_rows(nsc, pref)
+    private
+
+    def get_rows(nsc, pref)
       uri = '/ajax/user_pref_get.txml'
       resp = get(nsc, uri, CONTENT_TYPE::XML, 'name' => "#{pref}.rows")
       xml = REXML::Document.new(resp)
@@ -199,7 +213,7 @@ module Nexpose
       end
     end
 
-    def _set_rows(nsc, pref, value)
+    def set_rows(nsc, pref, value)
       uri = '/ajax/user_pref_set.txml'
       params = { 'name'  => "#{pref}.rows",
                  'value' => value }
