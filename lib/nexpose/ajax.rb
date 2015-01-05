@@ -52,13 +52,14 @@ module Nexpose
     # @param [String] uri Controller address relative to https://host:port
     # @param [String|REXML::Document] payload XML document required by the call.
     # @param [String] content_type Content type to use when issuing the POST.
+    # @param [Fixnum] timeout Set an explicit timeout for the HTTP request.
     # @return [String|REXML::Document|Hash] The response from the call.
     #
-    def post(nsc, uri, payload = nil, content_type = CONTENT_TYPE::XML)
+    def post(nsc, uri, payload = nil, content_type = CONTENT_TYPE::XML, timeout = nil)
       post = Net::HTTP::Post.new(uri)
       post.set_content_type(content_type)
       post.body = payload.to_s if payload
-      request(nsc, post)
+      request(nsc, post, timeout)
     end
 
     # PATCH call to a Nexpose controller.
@@ -169,8 +170,9 @@ module Nexpose
     end
 
     # Use the Nexpose::Connection to establish a correct HTTPS object.
-    def https(nsc)
+    def https(nsc, timeout = nil)
       http = Net::HTTP.new(nsc.host, nsc.port)
+      http.read_timeout = timeout if timeout
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       http
@@ -182,8 +184,8 @@ module Nexpose
       request.add_field('Cookie', "nexposeCCSessionID=#{nsc.session_id}")
     end
 
-    def request(nsc, request)
-      http = https(nsc)
+    def request(nsc, request, timeout = nil)
+      http = https(nsc, timeout)
       headers(nsc, request)
 
       # Return response body if request is successful. Brittle.
