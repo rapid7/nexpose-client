@@ -28,7 +28,7 @@ module Nexpose
       parameterize_uri(uri, options)
       get = Net::HTTP::Get.new(uri)
       get.set_content_type(content_type)
-      _request(nsc, get)
+      request(nsc, get)
     end
 
     # PUT call to a Nexpose controller.
@@ -43,7 +43,7 @@ module Nexpose
       put = Net::HTTP::Put.new(uri)
       put.set_content_type(content_type)
       put.body = payload.to_s if payload
-      _request(nsc, put)
+      request(nsc, put)
     end
 
     # POST call to a Nexpose controller.
@@ -58,7 +58,7 @@ module Nexpose
       post = Net::HTTP::Post.new(uri)
       post.set_content_type(content_type)
       post.body = payload.to_s if payload
-      _request(nsc, post)
+      request(nsc, post)
     end
 
     # PATCH call to a Nexpose controller.
@@ -73,7 +73,7 @@ module Nexpose
       patch = Net::HTTP::Patch.new(uri)
       patch.set_content_type(content_type)
       patch.body = payload.to_s if payload
-      _request(nsc, patch)
+      request(nsc, patch)
     end
 
     # POST call to a Nexpose controller that uses a form-post model.
@@ -90,7 +90,7 @@ module Nexpose
       post = Net::HTTP::Post.new(uri)
       post.set_content_type(content_type)
       post.set_form_data(parameters)
-      _request(nsc, post)
+      request(nsc, post)
     end
 
     # DELETE call to a Nexpose controller.
@@ -101,8 +101,15 @@ module Nexpose
     def delete(nsc, uri, content_type = CONTENT_TYPE::XML)
       delete = Net::HTTP::Delete.new(uri)
       delete.set_content_type(content_type)
-      _request(nsc, delete)
+      request(nsc, delete)
     end
+
+    ###
+    # === Internal helper methods below this line. ===
+    #
+    # These are internal utility methods, not subject to backward compatibility
+    # concerns.
+    ###
 
     # Append the query parameters to given URI.
     #
@@ -161,11 +168,8 @@ module Nexpose
       end
     end
 
-    ###
-    # Internal helper methods
-
     # Use the Nexpose::Connection to establish a correct HTTPS object.
-    def _https(nsc)
+    def https(nsc)
       http = Net::HTTP.new(nsc.host, nsc.port)
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -173,14 +177,14 @@ module Nexpose
     end
 
     # Attach necessary header fields.
-    def _headers(nsc, request)
+    def headers(nsc, request)
       request.add_field('nexposeCCSessionID', nsc.session_id)
       request.add_field('Cookie', "nexposeCCSessionID=#{nsc.session_id}")
     end
 
-    def _request(nsc, request)
-      http = _https(nsc)
-      _headers(nsc, request)
+    def request(nsc, request)
+      http = https(nsc)
+      headers(nsc, request)
 
       # Return response body if request is successful. Brittle.
       response = http.request(request)
