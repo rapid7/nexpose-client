@@ -1,7 +1,5 @@
 # encoding: utf-8
-
 module Nexpose
-
   # Accessor to the Nexpose AJAX API.
   # These core methods should allow direct access to underlying controllers
   # in order to test functionality that is not currently exposed
@@ -10,6 +8,8 @@ module Nexpose
   module AJAX
     module_function
 
+    # Content type strings acceptect by Nexpose.
+    #
     module CONTENT_TYPE
       XML = 'text/xml; charset=UTF-8'
       JSON = 'application/json; charset-utf-8'
@@ -122,7 +122,7 @@ module Nexpose
     def parameterize_uri(uri, parameters)
       params = Hash.try_convert(parameters)
       unless params.nil? || params.empty?
-        uri = uri.concat(('?').concat(parameters.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&'))) 
+        uri = uri.concat(('?').concat(parameters.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')))
       end
       uri
     end
@@ -194,7 +194,7 @@ module Nexpose
       when Net::HTTPOK, Net::HTTPCreated
         response.body
       when Net::HTTPForbidden
-        raise Nexpose::PermissionError.new(response) 
+        raise Nexpose::PermissionError.new(response)
       when Net::HTTPFound
         if response.header['location'] =~ /login/
           raise Nexpose::AuthenticationFailed.new(response)
