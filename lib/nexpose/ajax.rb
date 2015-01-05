@@ -189,14 +189,17 @@ module Nexpose
       # Return response body if request is successful. Brittle.
       response = http.request(request)
       case response
-      when Net::HTTPOK
-        response.body
-      when Net::HTTPCreated
+      when Net::HTTPOK, Net::HTTPCreated
         response.body
       when Net::HTTPForbidden
-        raise Nexpose::PermissionError.new(response)
-      when Net::HTTPUnauthorized
         raise Nexpose::PermissionError.new(response) 
+      when Net::HTTPFound
+        if response.header['location'] =~ /login/
+          raise Nexpose::AuthenticationFailed.new(response)
+        else
+          req_type = request.class.name.split('::').last.upcase
+          raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
+        end
       else
         req_type = request.class.name.split('::').last.upcase
         raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
