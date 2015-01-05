@@ -127,6 +127,45 @@ module Nexpose
       uri
     end
 
+    # Use the Nexpose::Connection to establish a correct HTTPS object.
+    def https(nsc, timeout = nil)
+      http = Net::HTTP.new(nsc.host, nsc.port)
+      http.read_timeout = timeout if timeout
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      http
+    end
+
+    # Attach necessary header fields.
+    def headers(nsc, request)
+      request.add_field('nexposeCCSessionID', nsc.session_id)
+      request.add_field('Cookie', "nexposeCCSessionID=#{nsc.session_id}")
+    end
+
+    def request(nsc, request, timeout = nil)
+      http = https(nsc, timeout)
+      headers(nsc, request)
+
+      # Return response body if request is successful. Brittle.
+      response = http.request(request)
+      case response
+      when Net::HTTPOK, Net::HTTPCreated
+        response.body
+      when Net::HTTPForbidden
+        raise Nexpose::PermissionError.new(response)
+      when Net::HTTPFound
+        if response.header['location'] =~ /login/
+          raise Nexpose::AuthenticationFailed.new(response)
+        else
+          req_type = request.class.name.split('::').last.upcase
+          raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
+        end
+      else
+        req_type = request.class.name.split('::').last.upcase
+        raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
+      end
+    end
+
     # Execute a block of code while presenving the preferences for any
     # underlying table being accessed. Use this method when accessing data
     # tables which are present in the UI to prevent existing row preferences
@@ -168,47 +207,6 @@ module Nexpose
         10
       end
     end
-
-    # Use the Nexpose::Connection to establish a correct HTTPS object.
-    def https(nsc, timeout = nil)
-      http = Net::HTTP.new(nsc.host, nsc.port)
-      http.read_timeout = timeout if timeout
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      http
-    end
-
-    # Attach necessary header fields.
-    def headers(nsc, request)
-      request.add_field('nexposeCCSessionID', nsc.session_id)
-      request.add_field('Cookie', "nexposeCCSessionID=#{nsc.session_id}")
-    end
-
-    def request(nsc, request, timeout = nil)
-      http = https(nsc, timeout)
-      headers(nsc, request)
-
-      # Return response body if request is successful. Brittle.
-      response = http.request(request)
-      case response
-      when Net::HTTPOK, Net::HTTPCreated
-        response.body
-      when Net::HTTPForbidden
-        raise Nexpose::PermissionError.new(response)
-      when Net::HTTPFound
-        if response.header['location'] =~ /login/
-          raise Nexpose::AuthenticationFailed.new(response)
-        else
-          req_type = request.class.name.split('::').last.upcase
-          raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
-        end
-      else
-        req_type = request.class.name.split('::').last.upcase
-        raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
-      end
-    end
-
-    private
 
     def get_rows(nsc, pref)
       uri = '/ajax/user_pref_get.txml'
