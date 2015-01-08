@@ -60,8 +60,9 @@ module Nexpose
     end
 
     # Establish a new connection and Session ID
-    def login
+    def login(wait = false)
       begin
+        check_availability(wait)
         login_hash = {'sync-id' => 0, 'password' => @password, 'user-id' => @username}
         login_hash['silo-id'] = @silo_id if @silo_id
         r = execute(make_xml('LoginRequest', login_hash))
@@ -90,6 +91,13 @@ module Nexpose
       response
     end
 
+    def http_client(host, port, ssl = true)
+      http = Net::HTTP.new(host, port)
+      http.use_ssl = ssl
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE # XXX: security issue
+      http
+    end
+
     # Download a specific URL, typically a report.
     # Include an optional file_name parameter to write the output to a file.
     #
@@ -99,9 +107,7 @@ module Nexpose
     def download(url, file_name = nil)
       return nil if url.nil? or url.empty?
       uri = URI.parse(url)
-      http = Net::HTTP.new(@host, @port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE # XXX: security issue
+      http = http_client(@host, @port)
       headers = {'Cookie' => "nexposeCCSessionID=#{@session_id}"}
       resp = http.get(uri.to_s, headers)
 
@@ -111,5 +117,45 @@ module Nexpose
         resp.body
       end
     end
+
+    # Check if Nexpose is able to accept logins.
+    # wait: retry connection if Nexpose is starting up or in maintenance mode
+    # restarting: retry if Nexpose is restarting and drops connections
+    # timeout: seconds to continue retrying connection
+    def check_availability(wait = false, restarting = false, timeout = 300)
+      http = http_client(@host, @port)
+
+      begin
+        while (timeout -= 5) > 0
+          response = http.get('/login.html')
+          case response
+          when Net::HTTPOK then
+            return
+          when Net::HTTPRedirection then
+            if wait
+              if response['location'].downcase.include? 'starting.html'
+                sleep 5
+                next
+              elsif response['location'].downcase.include? 'maintenance-login.html'
+                restarting = true
+                sleep 5
+                next
+              end
+            end
+          end
+        end
+        raise APIError.new(response, 'Nexpose is not accepting logins')
+      rescue ::Errno::ECONNRESET, ::Errno::ECONNREFUSED, ::Errno::ENOTCONN, ::Errno::ECONNABORTED, OpenSSL::SSL::SSLError => e
+        if restarting
+          if (retries -= 5) > 0
+            sleep 5
+            retry
+          end
+        end
+        raise e
+      end
+
+    end
+
   end
 end
