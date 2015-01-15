@@ -110,6 +110,18 @@ module Nexpose
     attr_accessor :incremental
     attr_accessor :repeater_type
 
+    # Extended attributes added with the new scheduler implementation
+    attr_accessor :is_extended
+    attr_accessor :hour
+    attr_accessor :minute
+    attr_accessor :date
+    attr_accessor :day
+    attr_accessor :occurrence
+    attr_accessor :start_month
+    attr_accessor :timezone
+    attr_accessor :next_run_time
+    attr_accessor :template
+
     def initialize(type, interval, start, enabled = true)
       @type = type
       @interval = interval
@@ -117,16 +129,33 @@ module Nexpose
       @enabled = enabled
     end
 
+    def self.from_hash(hash)
+      schedule = new(hash[:type], hash[:interval], hash[:start])
+      hash.each do |k, v|
+        schedule.instance_variable_set("@#{k}", v)
+      end
+      schedule
+    end
+
     def as_xml
       xml = REXML::Element.new('Schedule')
       xml.attributes['enabled'] = @enabled ? 1 : 0
       xml.attributes['type'] = @type
       xml.attributes['interval'] = @interval
-      xml.attributes['start'] = @start
+      xml.attributes['start'] = @start if @start
       xml.attributes['maxDuration'] = @max_duration if @max_duration
       xml.attributes['notValidAfter'] = @not_valid_after if @not_valid_after
       xml.attributes['incremental'] = @incremental ? 1 : 0 if @incremental
       xml.attributes['repeaterType'] = @repeater_type if @repeater_type
+      xml.attributes['is_extended'] = @is_extended if @is_extended
+      xml.attributes['hour'] = @hour if @hour
+      xml.attributes['minute'] = @minute if @minute
+      xml.attributes['date'] = @date if @date
+      xml.attributes['day'] = @day if @day
+      xml.attributes['occurrence'] = @occurrence if @occurrence
+      xml.attributes['start_month'] = @start_month if @start_month
+      xml.attributes['timezone'] = @timezone if @timezone
+      xml.attributes['template'] = @template if @template
       xml
     end
 
@@ -145,6 +174,16 @@ module Nexpose
       schedule.not_valid_after = xml.attributes['notValidAfter'] if xml.attributes['notValidAfter']
       schedule.incremental = (xml.attributes['incremental'] && xml.attributes['incremental'] == '1')
       schedule.repeater_type = xml.attributes['repeaterType'] if xml.attributes['repeaterType']
+      schedule.is_extended = xml.attributes['is_extended'] if xml.attributes['is_extended']
+      schedule.hour = xml.attributes['hour'] if xml.attributes['hour']
+      schedule.minute = xml.attributes['minute'] if xml.attributes['minute']
+      schedule.date = xml.attributes['date'] if xml.attributes['date']
+      schedule.day = xml.attributes['day'] if xml.attributes['day']
+      schedule.occurrence = xml.attributes['occurrence'] if xml.attributes['occurrence']
+      schedule.start_month = xml.attributes['start_month'] if xml.attributes['start_month']
+      schedule.timezone = xml.attributes['timezone'] if xml.attributes['timezone']
+      schedule.next_run_time = xml.attributes['next_run_time'] if xml.attributes['next_run_time']
+      schedule.template = xml.attributes['template'] if xml.attributes['template']
       schedule
     end
 
