@@ -127,7 +127,7 @@ module Nexpose
       desc = xml.add_element('Description').add_text(@description)
 
       services = xml.add_element('Services')
-      service = services.add_element('Service').add_attribute('type', @type)
+      service = services.add_element('Service').add_attribute('type', @service)
 
       (account = xml.add_element('Account')).add_attribute('type', 'nexpose')
       account.add_element('Field', { 'name' => 'database' }).add_text(@database)

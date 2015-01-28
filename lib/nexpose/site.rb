@@ -257,9 +257,14 @@ module Nexpose
     # @param [Fixnum] id Site ID of an existing site.
     # @return [Site] Site configuration loaded from a Nexpose console.
     #
-    def self.load(connection, id)
-      r = APIRequest.execute(connection.url,
-                             %(<SiteConfigRequest session-id="#{connection.session_id}" site-id="#{id}"/>))
+    def self.load(connection, id, is_extended = false)
+      if is_extended
+        r = APIRequest.execute(connection.url,
+                               %(<SiteConfigRequest session-id="#{connection.session_id}" site-id="#{id}" is_extended="true"/>))
+      else
+        r = APIRequest.execute(connection.url,
+                               %(<SiteConfigRequest session-id="#{connection.session_id}" site-id="#{id}"/>))
+      end
       site = parse(r.res)
       site.load_dynamic_attributes(connection) if site.dynamic?
       site

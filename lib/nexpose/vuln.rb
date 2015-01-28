@@ -45,12 +45,11 @@ module Nexpose
     #
     # @return [Array[String]] Array of currently valid check types.
     #
-    def list_vuln_types
-      data = DataTable._get_dyn_table(self, '/ajax/vulnck_cat_synopsis.txml')
+    def vuln_types
+      data = DataTable._get_dyn_table(self, '/data/vulnerability/checktypes/dyntable.xml?tableID=VulnCheckCategorySynopsis')
       data.map { |c| c['Category'] }
     end
-
-    alias_method :vuln_types, :list_vuln_types
+    alias_method  :list_vuln_types, :vuln_types
 
     # Retrieve details for a vulnerability.
     #
@@ -92,7 +91,7 @@ module Nexpose
     #   Nexpose between the provided dates.
     #
     def find_vulns_by_date(from, to = nil)
-      uri = "/ajax/vuln_synopsis.txml?addedMin=#{from}"
+      uri = "/data/vulnerability/synopsis/dyntable.xml?addedMin=#{from}"
       uri += "&addedMax=#{to}" if to
       DataTable._get_dyn_table(self, uri).map { |v| VulnSynopsis.new(v) }
     end
@@ -284,5 +283,47 @@ module Nexpose
       @exploit = hash['ExploitSource']
       @malware = hash['MalwareSource'] == 'true'
     end
+  end
+
+  # A vulnerability discovered on an asset.
+  #
+  class Vulnerability < APIObject
+    # Unique identifier of the vulnerability.
+    attr_reader :id
+    # Vulnerability title.
+    attr_reader :title
+    # Full vulnerability definition. [Lazy]
+    attr_reader :vulnerability_definition
+  end
+
+  # An instance of a vulnerability discovered on an asset.
+  #
+  class VulnerabilityInstance < APIObject
+    # ID of the asset where the vulnerability instance was detected.
+    attr_reader :asset_id
+    # IP Address of the asset where the vulnerability instance was detected.
+    attr_reader :asset_ip_address
+    # ID of the scan where the vulnerability instance was detected.
+    attr_reader :scan_id
+    # The ID (natural key) of the vulnerability.
+    attr_reader :vulnerability_id
+    # The time at which the vulnerability test was performed.
+    attr_reader :date
+    # The vulnerable status of the vulnerability.
+    attr_reader :status
+    # The proof which explains why the vulnerability is present on the asset.
+    # The value is often HTML-formatted text.
+    attr_reader :proof
+    # Key that can distinguish the instances of the same type on the system.
+    # For spider vulnerabilities, this is typically the relative URI where the
+    # vuln was discovered.
+    attr_reader :key
+    # The service that the vulnerability test was performed against.
+    attr_reader :service
+    # The port on which the service was running if the vulnerability was found
+    # through a network service, -1 if not defined.
+    attr_reader :port
+    # Protocol the service was providing on which the vulnerability was found.
+    attr_reader :protocol
   end
 end
