@@ -178,34 +178,6 @@ module Nexpose
       @discovery_connection_id = value.to_i
     end
 
-    # Adds an asset to this site by host name.
-    #
-    # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
-    def add_host(hostname)
-      @assets << HostName.new(hostname)
-    end
-
-    # Remove an asset to this site by host name.
-    #
-    # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
-    def remove_host(hostname)
-      @assets = assets.reject { |asset| asset == HostName.new(hostname) }
-    end
-
-    # Adds an asset to this site by IP address.
-    #
-    # @param [String] ip IP address of an asset.
-    def add_ip(ip)
-      @assets << IPRange.new(ip)
-    end
-
-    # Remove an asset to this site by IP address.
-    #
-    # @param [String] ip IP address of an asset.
-    def remove_ip(ip)
-      @assets = assets.reject { |asset| asset == IPRange.new(ip) }
-    end
-
     # Adds assets to this site by IP address range.
     #
     # @param [String] from Beginning IP address of a range.
@@ -232,6 +204,9 @@ module Nexpose
       @assets << obj
     end
 
+    alias_method :add_host, :add_asset
+    alias_method :add_ip, :add_asset
+
     # Remove an asset to this site, resolving whether an IP or hostname is
     # provided.
     #
@@ -250,6 +225,9 @@ module Nexpose
         end
       end
     end
+
+    alias_method :remove_host, :remove_asset
+    alias_method :remove_ip, :remove_asset
 
     # Load an existing configuration from a Nexpose instance.
     #
