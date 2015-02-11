@@ -30,6 +30,15 @@ module Nexpose
     end
 
 
+    def for_integration(nsc:, scan_id:, status: 'finished', timeout: nil, polling_interval: nil)
+      begin
+        poller = Nexpose::Poller.new(timeout: timeout, polling_interval: polling_interval)
+        poller.wait(get_integration_status(nsc: nsc, scan_id: scan_id, status: status))
+        @ready = true
+      rescue TimeoutError
+        @error_message = "Timeout Waiting for Integration Status of '#{status}' - Scan ID: #{scan_id}"
+      end
+    end
 
 
 
@@ -38,6 +47,11 @@ module Nexpose
       # Method which contains a proc that we want to evaluate to true.
       def get_report_status(nsc:, report_id:)
         Proc.new { nsc.last_report(report_id).status == 'Generated' }
+      end
+
+
+      def get_integration_status(nsc:, scan_id: scan_id, status: status)
+        Proc.new { nsc.scan_status(scan_id).downcase == status.downcase }
       end
 
   end
@@ -54,6 +68,7 @@ module Nexpose
     def initialize(timeout: nil, polling_interval: nil)
       global_timeout = set_global_timeout
       @timeout = timeout.nil? ? global_timeout : timeout
+
       global_polling = set_polling_interval
       @polling_interval = polling_interval.nil? ? global_polling : polling_interval
     end
