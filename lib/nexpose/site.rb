@@ -264,12 +264,42 @@ module Nexpose
     alias_method :exclude_host, :exclude_asset
     alias_method :exclude_ip, :exclude_asset
 
+    # Remove an asset from this site's exclude list, resolving whether an IP 
+    # or hostname is provided.
+    #
+    # @param [String] asset Identifier of an asset, either IP or host name.
+    #
+    def remove_excluded_asset(asset)
+      begin
+        # If the asset registers as a valid IP, remove as IP.
+        IPAddr.new(asset)
+        @exclude = exclude.reject { |ip| ip == IPRange.new(asset) }
+      rescue ArgumentError => e
+        if e.message == 'invalid address'
+          @exclude = exclude.reject { |hostname| hostname == HostName.new(asset) }
+        else
+          raise "Unable to parse asset: '#{asset}'. #{e.message}"
+        end
+      end
+    end
+
+    alias_method :remove_excluded_host, :remove_excluded_asset
+    alias_method :remove_excluded_ip, :remove_excluded_asset
+
     # Adds assets to this site's exclude list by IP address range.
     #
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def exclude_ip_range(from, to)
       @exclude << IPRange.new(from, to)
+    end
+
+    # Remove assets from this site's exclude list by IP address range.
+    #
+    # @param [String] from Beginning IP address of a range.
+    # @param [String] to Ending IP address of a range.
+    def remove_ip_range(from, to)
+      @exclude = exclude.reject { |asset| asset == IPRange.new(from, to) }
     end
 
     # Load an existing configuration from a Nexpose instance.
