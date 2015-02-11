@@ -17,6 +17,8 @@ module Nexpose
 
 
     # Note: Uses keyword arguments.
+    # Default Timeout is 120 seconds.
+    # Default Polling Interval is 1 second.
     def for_report(nsc:, report_id:, timeout: nil, polling_interval: nil)
       begin
         poller = Nexpose::Poller.new(timeout: timeout, polling_interval: polling_interval)
