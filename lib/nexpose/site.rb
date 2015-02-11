@@ -251,6 +251,27 @@ module Nexpose
       end
     end
 
+    # Adds an asset to this site's exclude list, resolving whether an IP or 
+    # hostname is provided.
+    #
+    # @param [String] asset Identifier of an asset, either IP or host name.
+    #
+    def exclude_asset(asset)
+      obj = HostOrIP.convert(asset)
+      @exclude << obj
+    end
+
+    alias_method :exclude_host, :exclude_asset
+    alias_method :exclude_ip, :exclude_asset
+
+    # Adds assets to this site's exclude list by IP address range.
+    #
+    # @param [String] from Beginning IP address of a range.
+    # @param [String] to Ending IP address of a range.
+    def exclude_ip_range(from, to)
+      @exclude << IPRange.new(from, to)
+    end
+
     # Load an existing configuration from a Nexpose instance.
     #
     # @param [Connection] connection Connection to console where site exists.
