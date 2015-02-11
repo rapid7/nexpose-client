@@ -19,7 +19,7 @@ module Nexpose
     # Note: Uses keyword arguments.
     # Default Timeout is 120 seconds.
     # Default Polling Interval is 1 second.
-    def for_report(nsc:, report_id:, timeout: nil, polling_interval: nil)
+    def for_report(nsc: nil, report_id: nil, timeout: nil, polling_interval: nil)
       begin
         poller = Nexpose::Poller.new(timeout: timeout, polling_interval: polling_interval)
         poller.wait(get_report_status(nsc: nsc, report_id: report_id))
@@ -30,7 +30,7 @@ module Nexpose
     end
 
 
-    def for_integration(nsc:, scan_id:, status: 'finished', timeout: nil, polling_interval: nil)
+    def for_integration(nsc: nil, scan_id: nil, status: 'finished', timeout: nil, polling_interval: nil)
       begin
         poller = Nexpose::Poller.new(timeout: timeout, polling_interval: polling_interval)
         poller.wait(get_integration_status(nsc: nsc, scan_id: scan_id, status: status))
@@ -45,12 +45,12 @@ module Nexpose
     private
 
       # Method which contains a proc that we want to evaluate to true.
-      def get_report_status(nsc:, report_id:)
+      def get_report_status(nsc: nil, report_id: nil)
         Proc.new { nsc.last_report(report_id).status == 'Generated' }
       end
 
 
-      def get_integration_status(nsc:, scan_id: scan_id, status: status)
+      def get_integration_status(nsc: nil, scan_id: scan_id, status: status)
         Proc.new { nsc.scan_status(scan_id).downcase == status.downcase }
       end
 
