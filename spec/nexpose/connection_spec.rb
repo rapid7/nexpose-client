@@ -5,7 +5,6 @@ describe Nexpose::Connection do
     let(:username) { nil }
     let(:password) { nil }
     let(:silo_id) { nil }
-
     subject(:connection) { Nexpose::Connection.from_uri(uri, username, password, silo_id) }
 
     context 'with the default port' do
