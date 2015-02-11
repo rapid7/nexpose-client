@@ -12,16 +12,16 @@ describe Nexpose::ISO8601 do
   }
 
   describe '.to_string' do
-    it 'converts a ISO 8601 string into a Time object' do
-      observed = subject.to_time(time_iso8601_string)
-      expect(observed).to eq(time)
+    it 'converts a Time object into an ISO 8601 string' do
+      observed = subject.to_string(time)
+      expect(observed).to eq(time_iso8601_string)
     end
   end
 
   describe '.to_time' do
-    it 'formats a Time object into a string' do
-      observed = subject.to_string(time)
-      expect(observed).to eq(time_iso8601_string)
+    it 'converts an ISO 8601 string into a Time object' do
+      observed = subject.to_time(time_iso8601_string)
+      expect(observed).to eq(time)
     end
   end
 end
