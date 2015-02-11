@@ -216,10 +216,10 @@ module Nexpose
       begin
         # If the asset registers as a valid IP, remove as IP.
         IPAddr.new(asset)
-        remove_ip(asset)
+        @assets = assets.reject { |ip| ip == IPRange.new(asset) }
       rescue ArgumentError => e
         if e.message == 'invalid address'
-          remove_host(asset)
+          @assets = assets.reject { |hostname| hostname == HostName.new(asset) }
         else
           raise "Unable to parse asset: '#{asset}'. #{e.message}"
         end
