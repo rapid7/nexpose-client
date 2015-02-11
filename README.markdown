@@ -1,4 +1,4 @@
-# Nexpose-Client
+# Nexpose-Client [![Build Status](https://travis-ci.org/rapid7/nexpose-client.svg?branch=master)](https://travis-ci.org/rapid7/nexpose-client)
 
 This is the official gem package for the Ruby Nexpose API.
 
