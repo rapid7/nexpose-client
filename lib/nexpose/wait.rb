@@ -35,6 +35,7 @@ module Nexpose
 
     private
 
+      # Method which contains a proc that we want to evaluate to true.
       def get_report_status(nsc:, report_id:)
         Proc.new { nsc.last_report(report_id).status == 'Generated' }
       end
