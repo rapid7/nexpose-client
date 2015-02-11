@@ -4,17 +4,19 @@ module Nexpose
     ## Nexpose Universal Wait module.
     attr_reader :error_message, :ready
 
-
+    # Setup Default error_message, and set ready state to false.
     def initialize
       @error_message = "Default General Failure in Nexpose::Wait"
       @ready = false
     end
 
+    # Allow class to respond in a readable way to see if we are done waiting.
     def is_ready?
       @ready
     end
 
 
+    # Note: Uses keyword arguments.
     def for_report(nsc:, report_id:, timeout: nil, polling_interval: nil)
       begin
         poller = Nexpose::Poller.new(timeout: timeout, polling_interval: polling_interval)
