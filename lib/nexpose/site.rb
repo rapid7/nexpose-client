@@ -257,8 +257,7 @@ module Nexpose
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
     def exclude_asset(asset)
-      obj = HostOrIP.convert(asset)
-      @exclude << obj
+      @exclude << HostOrIP.convert(asset)
     end
 
     alias_method :exclude_host, :exclude_asset
@@ -270,17 +269,7 @@ module Nexpose
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
     def remove_excluded_asset(asset)
-      begin
-        # If the asset registers as a valid IP, remove as IP.
-        IPAddr.new(asset)
-        @exclude = exclude.reject { |ip| ip == IPRange.new(asset) }
-      rescue ArgumentError => e
-        if e.message == 'invalid address'
-          @exclude = exclude.reject { |hostname| hostname == HostName.new(asset) }
-        else
-          raise "Unable to parse asset: '#{asset}'. #{e.message}"
-        end
-      end
+      @exclude.reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
     end
 
     alias_method :remove_excluded_host, :remove_excluded_asset
@@ -299,7 +288,7 @@ module Nexpose
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def remove_ip_range(from, to)
-      @exclude = exclude.reject { |asset| asset == IPRange.new(from, to) }
+      @exclude.reject! { |asset| asset == IPRange.new(from, to) }
     end
 
     # Load an existing configuration from a Nexpose instance.
