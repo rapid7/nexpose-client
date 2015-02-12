@@ -5,3 +5,6 @@ rvm:
   - 2.1.0
   - 2.2.0
 script: bundle exec rspec --color --format=documentation
+addons:
+  code_climate:
+    repo_token: 6d4a51b47839a35d44ba7a899bd12e7cb4c519664cf2508724f8765210493ba2
