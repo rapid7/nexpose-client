@@ -617,6 +617,14 @@ module Nexpose
     def initialize(from, to = nil)
       @from = from
       @to = to unless from == to
+
+      return unless @to.nil?
+
+      range = IPAddr.new(@from.to_s).to_range
+      unless range.one?
+        @from = range.first.to_s
+        @to = range.last.to_s
+      end
     end
 
     # Size of the IP range. The total number of IP addresses represented
