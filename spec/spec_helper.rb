@@ -1,4 +1,10 @@
 require 'codeclimate-test-reporter'
-CodeClimate::TestReporter.start
+require 'simplecov'
+
+SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
+  SimpleCov::Formatter::HTMLFormatter,
+  CodeClimate::TestReporter::Formatter
+]
+SimpleCov.start
 
 require 'nexpose'
