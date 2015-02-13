@@ -2,10 +2,30 @@ require 'spec_helper'
 
 describe Nexpose::IPRange do
   describe '#<=>' do
-    it 'returns true for IPRanges created with two IPs and CIDR' do
-      multiple_ip_range = Nexpose::IPRange.new('192.168.1.0', '192.168.1.255')
-      cidr_range = Nexpose::IPRange.new('192.168.1.0/24')
-      expect(cidr_range).to eq(multiple_ip_range)
+    context 'with two from IP addresses' do
+      it 'returns -1 the first from IP address is less than the second' do
+        first = Nexpose::IPRange.new('192.168.1.0')
+        second = Nexpose::IPRange.new('192.168.1.1')
+        expect(first).to be < second
+      end
+    end
+
+    context 'with two from IP address and one to IP address' do
+      it 'returns 0 the first from IP address is equal to the second' do
+        first = Nexpose::IPRange.new('192.168.1.0')
+        second = Nexpose::IPRange.new('192.168.1.0')
+
+        # TODO: IPRange#== is currently overridden instead of being defined by IPRange#<=>
+        expect(first <=> second).to be_zero
+      end
+    end
+
+    context 'with one from IP address' do
+      it 'returns 1 the first from IP address is greater than the second' do
+        first = Nexpose::IPRange.new('192.168.1.1')
+        second = Nexpose::IPRange.new('192.168.1.0')
+        expect(first).to be > second
+      end
     end
   end
 
@@ -43,6 +63,32 @@ describe Nexpose::IPRange do
 
         attributes = attributes_to_hash(subject.attributes)
         expect(attributes).to include('from' => '192.168.1.0', 'to' => '192.168.1.255')
+      end
+    end
+  end
+
+  describe '#size' do
+    context 'with a single IP address' do
+      subject { Nexpose::IPRange.new('192.168.1.0') }
+
+      it 'returns one' do
+        expect(subject.size).to eq(1)
+      end
+    end
+
+    context 'with multiple IP addresses' do
+      subject { Nexpose::IPRange.new('192.168.1.0', '192.168.1.255') }
+
+      it 'returns 256' do
+        expect(subject.size).to eq(256)
+      end
+    end
+
+    context 'with a CIDR notation IP range' do
+      subject { Nexpose::IPRange.new('192.168.1.0/24') }
+
+      it 'returns 256' do
+        expect(subject.size).to eq(256)
       end
     end
   end
