@@ -7,4 +7,6 @@ rvm:
 script: bundle exec rspec --color --format=documentation
 addons:
   code_climate:
-    repo_token: 6d4a51b47839a35d44ba7a899bd12e7cb4c519664cf2508724f8765210493ba2
+    repo_token: &codeclimate_token 6d4a51b47839a35d44ba7a899bd12e7cb4c519664cf2508724f8765210493ba2
+env:
+  - CODECLIMATE_REPO_TOKEN: *codeclimate_token
