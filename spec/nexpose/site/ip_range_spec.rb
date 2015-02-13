@@ -15,7 +15,8 @@ describe Nexpose::IPRange do
         first = Nexpose::IPRange.new('192.168.1.0')
         second = Nexpose::IPRange.new('192.168.1.0')
 
-        # TODO: IPRange#== is currently overridden instead of being defined by IPRange#<=>
+        # TODO: IPRange#== is currently overridden instead of being defined by
+        # IPRange#<=>
         expect(first <=> second).to be_zero
       end
     end
@@ -51,7 +52,10 @@ describe Nexpose::IPRange do
         expect(subject).to have_name('range')
 
         attributes = attributes_to_hash(subject.attributes)
-        expect(attributes).to include('from' => '192.168.1.0', 'to' => '192.168.1.255')
+        expect(attributes).to include(
+          'from' => '192.168.1.0',
+          'to' => '192.168.1.255'
+        )
       end
     end
 
@@ -62,7 +66,10 @@ describe Nexpose::IPRange do
         expect(subject).to have_name('range')
 
         attributes = attributes_to_hash(subject.attributes)
-        expect(attributes).to include('from' => '192.168.1.0', 'to' => '192.168.1.255')
+        expect(attributes).to include(
+          'from' => '192.168.1.0',
+          'to' => '192.168.1.255'
+        )
       end
     end
   end
