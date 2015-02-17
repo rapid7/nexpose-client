@@ -2,12 +2,13 @@ module Nexpose
 
   class Wait
     ## Nexpose Universal Wait module.
-    attr_reader :error_message, :ready
+    attr_reader :error_message, :ready, :retry_count
 
-    # Setup Default error_message, and set ready state to false.
-    def initialize
+    # Setup Default error_message, set ready state to false, and allow caller to specify a retry count if there are Timeout failures.
+    def initialize(retry_count: nil)
       @error_message = "Default General Failure in Nexpose::Wait"
       @ready = false
+      @retry_count = retry_count.nil? ? 0 : retry_count
     end
 
     # Allow class to respond in a readable way to see if we are done waiting.
@@ -25,6 +26,7 @@ module Nexpose
         poller.wait(get_report_status(nsc: nsc, report_id: report_id))
         @ready = true
       rescue TimeoutError
+        retry if timeout_retry?
         @error_message = "Timeout Waiting for Report to Generate - Report Config ID: #{report_id}"
       end
     end
@@ -36,6 +38,7 @@ module Nexpose
         poller.wait(get_integration_status(nsc: nsc, scan_id: scan_id, status: status))
         @ready = true
       rescue TimeoutError
+        retry if timeout_retry?
         @error_message = "Timeout Waiting for Integration Status of '#{status}' - Scan ID: #{scan_id}"
       end
     end
@@ -53,6 +56,16 @@ module Nexpose
       def get_integration_status(nsc: nil, scan_id: scan_id, status: status)
         Proc.new { nsc.scan_status(scan_id).downcase == status.downcase }
       end
+
+      def timeout_retry?
+        if @retry_count > 0
+          @retry_count = @retry_count - 1
+          return true
+        else
+          return false
+        end
+      end
+
 
   end
 
