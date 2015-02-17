@@ -1,3 +1,4 @@
 tags
 nexpose-*.gem
 Gemfile.lock
+coverage
