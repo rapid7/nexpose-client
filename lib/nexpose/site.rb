@@ -113,7 +113,10 @@ module Nexpose
 
     # [Array] Collection of credentials associated with this site. Does not
     # include shared credentials.
-    attr_accessor :credentials
+    attr_accessor :site_credentials
+
+    # [Array] Collection of shared credentials associated with this site.
+    attr_accessor :shared_credentials
 
     # [Array] Collection of real-time alerts.
     # @see Alert
@@ -152,16 +155,14 @@ module Nexpose
     def initialize(name = nil, scan_template = 'full-audit-without-web-spider')
       @name = name
       @scan_template = scan_template
-
       @id = -1
       @risk_factor = 1.0
       @config_version = 3
       @is_dynamic = false
-      @assets = []
       @schedules = []
-      @credentials = []
+      @site_credentials = []
+      @shared_credentials = []
       @alerts = []
-      @exclude = []
       @users = []
       @tags = []
     end
@@ -556,163 +557,6 @@ module Nexpose
       @criteria = Criteria.parse(json['searchCriteria'])
     end
 
-    include Sanitize
-
-    # Generate an XML representation of this site configuration
-    #
-    # @return [String] XML valid for submission as part of other requests.
-    #
-    def as_xml
-      xml = REXML::Element.new('Site')
-      xml.attributes['id'] = @id
-      xml.attributes['name'] = @name
-      xml.attributes['description'] = @description
-      xml.attributes['riskfactor'] = @risk_factor
-      xml.attributes['isDynamic'] = '1' if dynamic?
-      # TODO This should be set to 'Amazon Web Services' for AWS.
-      xml.attributes['dynamicConfigType'] = 'vSphere' if dynamic?
-
-      if @description && !@description.empty?
-        elem = REXML::Element.new('Description')
-        elem.add_text(@description)
-        xml.add_element(elem)
-      end
-
-      unless @users.empty?
-        elem = REXML::Element.new('Users')
-        @users.each { |user| elem.add_element('user', { 'id' => user }) }
-        xml.add_element(elem)
-      end
-
-      xml.add_element(@organization.as_xml) if @organization
-
-      elem = REXML::Element.new('Hosts')
-      @assets.each { |a| elem.add_element(a.as_xml) }
-      xml.add_element(elem)
-
-      elem = REXML::Element.new('ExcludedHosts')
-      @exclude.each { |e| elem.add_element(e.as_xml) }
-      xml.add_element(elem)
-
-      unless credentials.empty?
-        elem = REXML::Element.new('Credentials')
-        @credentials.each { |c| elem.add_element(c.as_xml) }
-        xml.add_element(elem)
-      end
-
-      unless alerts.empty?
-        elem = REXML::Element.new('Alerting')
-        alerts.each { |a| elem.add_element(a.as_xml) }
-        xml.add_element(elem)
-      end
-
-      elem = REXML::Element.new('ScanConfig')
-      elem.add_attributes({ 'configID' => @id,
-                            'name' => @scan_template_name || @scan_template,
-                            'templateID' => @scan_template,
-                            'configVersion' => @config_version || 3,
-                            'engineID' => @engine })
-      sched = REXML::Element.new('Schedules')
-      @schedules.each { |s| sched.add_element(s.as_xml) }
-      elem.add_element(sched)
-      xml.add_element(elem)
-
-      unless tags.empty?
-        tag_xml = xml.add_element(REXML::Element.new('Tags'))
-        @tags.each { |tag| tag_xml.add_element(tag.as_xml) }
-      end
-
-      xml
-    end
-
-    def to_xml
-      as_xml.to_s
-    end
-
-    # Parse a response from a Nexpose console into a valid Site object.
-    #
-    # @param [REXML::Document] rexml XML document to parse.
-    # @return [Site] Site object represented by the XML.
-    #  ## TODO What is returned on failure?
-    #
-    def self.parse(rexml)
-      rexml.elements.each('//Site') do |s|
-        site = Site.new(s.attributes['name'])
-        site.id = s.attributes['id'].to_i
-        site.description = s.attributes['description']
-        site.risk_factor = s.attributes['riskfactor'] || 1.0
-        site.is_dynamic = true if s.attributes['isDynamic'] == '1'
-
-        s.elements.each('Description') do |desc|
-          site.description = desc.text
-        end
-
-        s.elements.each('Users/user') do |user|
-          site.users << user.attributes['id'].to_i
-        end
-
-        s.elements.each('Organization') do |org|
-          site.organization = Organization.parse(org)
-        end
-
-        s.elements.each('Hosts/range') do |r|
-          site.assets << IPRange.new(r.attributes['from'], r.attributes['to'])
-        end
-        s.elements.each('Hosts/host') do |host|
-          site.assets << HostName.new(host.text)
-        end
-
-        s.elements.each('ExcludedHosts/range') do |r|
-          site.exclude << IPRange.new(r.attributes['from'], r.attributes['to'])
-        end
-        s.elements.each('ExcludedHosts/host') do |host|
-          site.exclude << HostName.new(host.text)
-        end
-
-        s.elements.each('Credentials/adminCredentials') do |cred|
-          site.credentials << SiteCredential.parse(cred)
-        end
-
-        s.elements.each('ScanConfig') do |scan_config|
-          site.scan_template_name = scan_config.attributes['name']
-          site.scan_template = scan_config.attributes['templateID']
-          site.config_version = scan_config.attributes['configVersion'].to_i
-          site.engine = scan_config.attributes['engineID'].to_i
-          scan_config.elements.each('Schedules/Schedule') do |schedule|
-            site.schedules << Schedule.parse(schedule)
-          end
-        end
-
-        s.elements.each('Alerting/Alert') do |alert|
-          site.alerts << Alert.parse(alert)
-        end
-
-        s.elements.each('Tags/Tag') do |tag|
-          site.tags << TagSummary.parse_xml(tag)
-        end
-
-        return site
-      end
-      nil
-    end
-
-    def _append_shared_creds_to_xml(connection, xml)
-      xml_w_creds = AJAX.get(connection, "/data/site/config?siteid=#{@id}")
-      cred_xml = REXML::XPath.first(REXML::Document.new(xml_w_creds), 'Site/Credentials')
-      unless cred_xml.nil?
-        creds = REXML::XPath.first(xml, 'Credentials')
-        if creds.nil?
-          xml.add_element(cred_xml)
-        else
-          cred_xml.elements.each do |cred|
-            if cred.attributes['shared'].to_i == 1
-              creds.add_element(cred)
-            end
-          end
-        end
-      end
-      xml
-    end
   end
 
   # Object that represents the summary of a Nexpose Site.
