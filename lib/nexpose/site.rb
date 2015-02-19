@@ -78,7 +78,7 @@ module Nexpose
   #
   # For a basic walk-through, see {https://github.com/rapid7/nexpose-client/wiki/Using-Sites}
   class Site < APIObject
-
+    include JsonSerializer
     # The site ID. An ID of -1 is used to designate a site that has not been
     # saved to a Nexpose console.
     attr_accessor :id
@@ -439,13 +439,16 @@ module Nexpose
       uri = "/api/2.1/sites/#{id}/configuration"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
-      site = new.object_from_hash(nsc, hash)
-      creds = []
-      site.site_credentials.each {|cred| creds << Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      site.site_credentials = creds
-      creds = []
-      site.shared_credentials.each {|cred| creds << Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      site.shared_credentials = creds
+      site = new.deserialize(hash)
+
+      # site = new.object_from_hash(nsc, hash)
+      # creds = []
+      # site.site_credentials.each {|cred| creds << Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
+      # site.site_credentials = creds
+      # creds = []
+      # site.shared_credentials.each {|cred| creds << Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
+      # site.shared_credentials = creds
+
       site
     end
 
