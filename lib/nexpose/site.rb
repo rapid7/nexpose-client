@@ -442,8 +442,7 @@ module Nexpose
       site = new.deserialize(hash)
 
       # site = new.object_from_hash(nsc, hash)
-      # creds = []
-      # site.site_credentials.each {|cred| creds << Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
+      site.site_credentials = site.site_credentials.map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       # site.site_credentials = creds
       # creds = []
       # site.shared_credentials.each {|cred| creds << Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}

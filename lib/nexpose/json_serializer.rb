@@ -26,7 +26,7 @@ module Nexpose
     end
 
     private
-    
+
     def resolve_type(field)
       class_name = normalize_field(field)
 
