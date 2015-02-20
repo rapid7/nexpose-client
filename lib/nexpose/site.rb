@@ -95,15 +95,15 @@ module Nexpose
     # Excluded scan targets. May be IPv4, IPv6, DNS names, IPRanges or assetgroup ids.
     attr_accessor :excluded_scan_targets
 
-    # Scan template to use when starting a scan job. Default: full-audit
-    attr_accessor :scan_template
+    # Scan template to use when starting a scan job. Default: full-audit-without-web-spider
+    attr_accessor :scan_template_id
 
     # Friendly name of scan template to use when starting a scan job.
     # Value is populated when a site is saved or loaded from a console.
     attr_accessor :scan_template_name
 
     # Scan Engine to use. Will use the default engine if nil or -1.
-    attr_accessor :engine
+    attr_accessor :engine_id
 
     # [Array] Schedule starting dates and times for scans, and set their frequency.
     attr_accessor :schedules
@@ -151,15 +151,17 @@ module Nexpose
     # Site constructor. Both arguments are optional.
     #
     # @param [String] name Unique name of the site.
-    # @param [String] scan_template ID of the scan template to use.
-    def initialize(name = nil, scan_template = 'full-audit-without-web-spider')
+    # @param [String] scan_template_id ID of the scan template to use.
+    def initialize(name = nil, scan_template_id = 'full-audit-without-web-spider')
       @name = name
-      @scan_template = scan_template
+      @scan_template_id = scan_template_id
       @id = -1
       @risk_factor = 1.0
       @config_version = 3
       @is_dynamic = false
       @schedules = []
+      @included_scan_targets = { addresses: [], asset_groups: [] }
+      @excluded_scan_targets = { addresses: [], asset_groups: [] }
       @site_credentials = []
       @shared_credentials = []
       @alerts = []
@@ -429,6 +431,31 @@ module Nexpose
     rescue ArgumentError => e
       raise "Invalid asset_group id"
     end
+
+    def self.from_hash(hash)
+      site = new(hash[:name], hash[:scan_template_id])
+      hash.each do |k, v|
+        site.instance_variable_set("@#{k}", v)
+      end
+      site
+    end
+
+    def to_json
+      JSON.generate(to_h)
+    end
+
+    def to_h
+      {
+          id: id,
+          name: name,
+          description: description,
+          engine_id: engine_id,
+          scan_template_id: scan_template_id,
+          risk_factor: risk_factor,
+          schedules: schedules
+      }
+    end
+
     # Load an site from the provided console.
     #
     # @param [Connection] nsc Active connection to a Nexpose console.
@@ -436,7 +463,7 @@ module Nexpose
     # @return [Site] The requested site, if found.
     #
     def self.load(nsc, id)
-      uri = "/api/2.1/sites/#{id}/configuration"
+      uri = "/api/2.1/site_configurations/#{id}"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
       new.object_from_hash(nsc, hash)
@@ -465,23 +492,16 @@ module Nexpose
     # @return [Fixnum] Site ID assigned to this configuration, if successful.
     #
     def save(connection)
-      if dynamic?
-        raise APIError.new(nil, 'Cannot save a dynamic site without a discovery connection configured.') unless @discovery_connection_id
-
         new_site = @id == -1
-        save_dynamic_criteria(connection) if new_site
 
-        # Have to retrieve and attach shared creds, or saving will fail.
-        xml = _append_shared_creds_to_xml(connection, as_xml)
-        response = AJAX.post(connection, '/data/site/config', xml)
-        saved = REXML::XPath.first(REXML::Document.new(response), 'ajaxResponse')
-        raise APIError.new(response, 'Failed to save dynamic site.') if saved.nil? || saved.attributes['success'].to_i != 1
+        if new_site
+          #TODO Retrieve and attach shared creds, or saving will fail.
+          resp = AJAX.post(connection, '/api/2.1/site_configurations/', to_json, AJAX::CONTENT_TYPE::JSON)
+          @id = resp.to_i
+        else
+          resp = AJAX.put(connection, "/api/2.1/site_configurations/#{@id}", to_json, AJAX::CONTENT_TYPE::JSON)
+        end
 
-        save_dynamic_criteria(connection) unless new_site
-      else
-        r = connection.execute('<SiteSaveRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiteSaveRequest>')
-        @id = r.attributes['site-id'].to_i if r.success
-      end
       @id
     end
 
