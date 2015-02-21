@@ -94,8 +94,8 @@ describe Nexpose::Site do
         xit 'removes a new IPRange from the assets list' do
           subject.remove_asset('192.168.1.0/24')
 
-          expect(subject.assets)
-            .to_not include(Nexpose::IPRange.new('192.168.1.0', '192.168.1.255'))
+          expected_asset = Nexpose::IPRange.new('192.168.1.0', '192.168.1.255')
+          expect(subject.assets).to_not include(expected_asset)
         end
       end
     end
