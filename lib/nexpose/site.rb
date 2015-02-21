@@ -92,7 +92,7 @@ module Nexpose
     # [Array] Collection of assets. May be IPv4, IPv6, or DNS names.
     # @see HostName
     # @see IPRange
-    attr_accessor :assets
+    attr_writer :assets
 
     # [Array] Collection of excluded assets. May be IPv4, IPv6, or DNS names.
     attr_accessor :exclude
@@ -159,13 +159,19 @@ module Nexpose
       @risk_factor = 1.0
       @config_version = 3
       @is_dynamic = false
-      @assets = []
       @schedules = []
       @credentials = []
       @alerts = []
       @exclude = []
       @users = []
       @tags = []
+    end
+
+    # The list of assets the Site contains.
+    #
+    # @return [Array<HostName,IPRange>] the list of assets or an empty Array.
+    def assets
+      @assets ||= []
     end
 
     # Returns true when the site is dynamic.
@@ -183,7 +189,7 @@ module Nexpose
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def add_ip_range(from, to)
-      @assets << IPRange.new(from, to)
+      assets << IPRange.new(from, to)
     end
 
     # Remove assets to this site by IP address range.
@@ -191,7 +197,7 @@ module Nexpose
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def remove_ip_range(from, to)
-      @assets.reject! { |asset| asset == IPRange.new(from, to) }
+      assets.reject! { |asset| asset == IPRange.new(from, to) }
     end
 
     # Adds an asset to this site, resolving whether an IP or hostname is
@@ -200,7 +206,7 @@ module Nexpose
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
     def add_asset(asset)
-      @assets << HostOrIP.convert(asset)
+      assets << HostOrIP.convert(asset)
     end
 
     alias_method :add_host, :add_asset
@@ -212,7 +218,7 @@ module Nexpose
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
     def remove_asset(asset)
-      @assets.reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
+      assets.reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
     end
 
     alias_method :remove_host, :remove_asset
@@ -423,7 +429,7 @@ module Nexpose
       xml.add_element(@organization.as_xml) if @organization
 
       elem = REXML::Element.new('Hosts')
-      @assets.each { |a| elem.add_element(a.as_xml) }
+      assets.each { |a| elem.add_element(a.as_xml) }
       xml.add_element(elem)
 
       elem = REXML::Element.new('ExcludedHosts')
