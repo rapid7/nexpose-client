@@ -218,7 +218,7 @@ module Nexpose
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
     def remove_asset(asset)
-      assets.reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
+      assets.reject! { |existing| existing == HostOrIP.convert(asset) }
     end
 
     alias_method :remove_host, :remove_asset
