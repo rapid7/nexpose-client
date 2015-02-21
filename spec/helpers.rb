@@ -7,7 +7,7 @@ module Helpers
     #   into a Hash.
     # @return [Hash] the attribute keys mapped to the attribute values
     def attributes_to_hash(attributes)
-      attributes.to_enum.to_h
+      Hash[attributes.to_enum.to_a]
     end
   end
 end
