@@ -103,7 +103,6 @@ require 'nexpose/version'
 
 module Nexpose
 
-  # ==== Description
   # Echos the last XML API request and response for the specified object.  (Useful for debugging)
   def self.print_xml(object)
     puts 'request: ' + object.request_xml.to_s

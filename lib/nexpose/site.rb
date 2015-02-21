@@ -218,6 +218,46 @@ module Nexpose
     alias_method :remove_host, :remove_asset
     alias_method :remove_ip, :remove_asset
 
+    # Adds an asset to this site's exclude list, resolving whether an IP or 
+    # hostname is provided.
+    #
+    # @param [String] asset Identifier of an asset, either IP or host name.
+    #
+    def exclude_asset(asset)
+      @exclude << HostOrIP.convert(asset)
+    end
+
+    alias_method :exclude_host, :exclude_asset
+    alias_method :exclude_ip, :exclude_asset
+
+    # Remove an asset from this site's exclude list, resolving whether an IP 
+    # or hostname is provided.
+    #
+    # @param [String] asset Identifier of an asset, either IP or host name.
+    #
+    def remove_excluded_asset(asset)
+      @exclude.reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
+    end
+
+    alias_method :remove_excluded_host, :remove_excluded_asset
+    alias_method :remove_excluded_ip, :remove_excluded_asset
+
+    # Adds assets to this site's exclude list by IP address range.
+    #
+    # @param [String] from Beginning IP address of a range.
+    # @param [String] to Ending IP address of a range.
+    def exclude_ip_range(from, to)
+      @exclude << IPRange.new(from, to)
+    end
+
+    # Remove assets from this site's exclude list by IP address range.
+    #
+    # @param [String] from Beginning IP address of a range.
+    # @param [String] to Ending IP address of a range.
+    def remove_ip_range(from, to)
+      @exclude.reject! { |asset| asset == IPRange.new(from, to) }
+    end
+
     # Load an existing configuration from a Nexpose instance.
     #
     # @param [Connection] connection Connection to console where site exists.
