@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Nexpose::IPRange do
   describe '#<=>' do
     context 'with two from IP addresses' do
-      it 'returns -1 when the first from IP address is less than the second' do
+      it 'returns -1 when the first from address is less than the second' do
         first = Nexpose::IPRange.new('192.168.1.0')
         second = Nexpose::IPRange.new('192.168.1.1')
         expect(first).to be < second
@@ -11,7 +11,7 @@ describe Nexpose::IPRange do
     end
 
     context 'with two from IP address and one to IP address' do
-      it 'returns 0 when the first from IP address is equal to the second' do
+      it 'returns 0 when the first from address is equal to the second' do
         first = Nexpose::IPRange.new('192.168.1.0')
         second = Nexpose::IPRange.new('192.168.1.0')
 
@@ -22,7 +22,7 @@ describe Nexpose::IPRange do
     end
 
     context 'with one from IP address' do
-      it 'returns 1 when the first from IP address is greater than the second' do
+      it 'returns 1 when the first from address is greater than the second' do
         first = Nexpose::IPRange.new('192.168.1.1')
         second = Nexpose::IPRange.new('192.168.1.0')
         expect(first).to be > second
