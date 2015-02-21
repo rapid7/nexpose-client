@@ -239,7 +239,7 @@ module Nexpose
     # Retrieve detailed description of a single tag
     #
     # @param [Connection] connection Nexpose connection
-    # @param [Fixnum] ID of tag to retrieve
+    # @param [Fixnum] tag_id ID of tag to retrieve
     # @return [Tag] requested tag
     #
     def self.load(connection, tag_id)

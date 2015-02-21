@@ -401,7 +401,7 @@ module Nexpose
 
     # Parse a response from a Nexpose console into a valid ScanSummary object.
     #
-    # @param [REXML::Document] rexml XML document to parse.
+    # @param [REXML::Document] xml XML document to parse.
     # @return [ScanSummary] Scan summary represented by the XML.
     #
     def self.parse(xml)
