@@ -74,7 +74,8 @@ describe Nexpose::Site do
         it 'removes a new HostName from the assets list' do
           subject.remove_asset('nexpose.local')
 
-          expect(subject.assets).to_not include(Nexpose::HostName.new('nexpose.local'))
+          expect(subject.assets)
+            .to_not include(Nexpose::HostName.new('nexpose.local'))
         end
       end
 
@@ -82,16 +83,19 @@ describe Nexpose::Site do
         it 'removes a new IPRange from the assets list' do
           subject.remove_asset('192.168.1.1')
 
-          expect(subject.assets).to_not include(Nexpose::IPRange.new('192.168.1.1'))
+          expect(subject.assets)
+            .to_not include(Nexpose::IPRange.new('192.168.1.1'))
         end
       end
 
       context 'with a multiple IP address' do
-        # TODO: The IPRange class apparently doesn't handle CIDR notation on the client side
+        # TODO: The IPRange class apparently doesn't handle CIDR notation on
+        # the client side.
         xit 'removes a new IPRange from the assets list' do
           subject.remove_asset('192.168.1.0/24')
 
-          expect(subject.assets).to_not include(Nexpose::IPRange.new('192.168.1.0', '192.168.1.255'))
+          expect(subject.assets)
+            .to_not include(Nexpose::IPRange.new('192.168.1.0', '192.168.1.255'))
         end
       end
     end
@@ -100,7 +104,8 @@ describe Nexpose::Site do
       it 'removes a new HostName from the assets list' do
         subject.remove_asset('nexpose.local')
 
-        expect(subject.assets).to_not include(Nexpose::HostName.new('nexpose.local'))
+        expect(subject.assets)
+          .to_not include(Nexpose::HostName.new('nexpose.local'))
       end
     end
 
@@ -109,16 +114,19 @@ describe Nexpose::Site do
         it 'removes a new IPRange from the assets list' do
           subject.remove_asset('192.168.1.1')
 
-          expect(subject.assets).to_not include(Nexpose::IPRange.new('192.168.1.1'))
+          expect(subject.assets)
+            .to_not include(Nexpose::IPRange.new('192.168.1.1'))
         end
       end
 
       context 'with a multiple IP address' do
-        # TODO: The IPRange class apparently doesn't handle CIDR notation on the client side
+        # TODO: The IPRange class apparently doesn't handle CIDR notation on
+        # the client side.
         xit 'adds a new IPRange to the assets list' do
           subject.remove_asset('192.168.1.0/24')
 
-          expect(subject.assets).to include(Nexpose::IPRange.new('192.168.1.0', '192.168.1.255'))
+          expect(subject.assets)
+            .to_not include(Nexpose::IPRange.new('192.168.1.0/24'))
         end
       end
     end
