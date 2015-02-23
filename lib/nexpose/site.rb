@@ -181,36 +181,52 @@ module Nexpose
 
     # Adds an asset to this site by host name.
     #
-    # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
+    # @param [String|HostName] hostname FQDN or DNS-resolvable host name of an asset.
     def include_host(hostname)
-      self.included_scan_targets[:addresses] << hostname
+      hostname = HostName.new(hostname) if hostname.is_a? String
+      raise 'Invalid hostname specified' unless hostname.is_a? HostName
+      @included_scan_targets[:addresses] << hostname
     end
 
     # Remove an asset to this site by host name.
     #
-    # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
-    def remove_host_from_included(hostname)
-      self.included_scan_targets[:addresses].reject! { |t| t.eql? hostname }
+    # @param [String|HostName] hostname FQDN or DNS-resolvable host name of an asset.
+    def remove_included_host(hostname)
+      hostname = HostName.new(hostname) if hostname.is_a? String
+      raise 'Invalid hostname specified' unless hostname.is_a? HostName
+      @included_scan_targets[:addresses].reject! { |t| t.eql? hostname }
     end
 
     # Adds an asset to this site by IP address.
     #
-    # @param [String] ip IP address of an asset.
+    # @param [String|IPRange] ip IP address of an asset.
     def include_ip(ip)
-      IPAddr.new(ip)
-      self.included_scan_targets[:addresses] << ip
-    rescue ArgumentError => e
-      raise e.message
+      begin
+        if ip.is_a? String
+          IPAddr.new(ip)
+          ip = IPRange.new(ip)
+        end
+        raise 'Invalid IP address specified' unless ip.is_a? IPRange
+        @included_scan_targets[:addresses] << ip
+      rescue ArgumentError => e
+        raise e.message
+      end
     end
 
     # Remove an asset to this site by IP address.
     #
-    # @param [String] ip IP address of an asset.
-    def remove_ip_from_included(ip)
-      IPAddr.new(ip)
-      self.included_scan_targets[:addresses].reject! { |t| t.eql? ip }
-    rescue ArgumentError => e
-      raise e.message
+    # @param [String|IPRange] ip IP address of an asset.
+    def remove_included_ip(ip)
+      begin
+        if ip.is_a? String
+          IPAddr.new(ip)
+          ip = IPRange.new(ip)
+        end
+        raise 'Invalid IP address specified' unless ip.is_a? IPRange
+        @included_scan_targets[:addresses].reject! { |t| t.eql? ip }
+      rescue ArgumentError => e
+        raise e.message
+      end
     end
 
     # Adds assets to this site by IP address range.
@@ -218,97 +234,35 @@ module Nexpose
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def include_ip_range(from, to)
-      fromIP = IPAddr.new(from)
-      toIP = IPAddr.new(to)
-      (fromIP..toIP)
-      if (fromIP..toIP).to_a.size == 0
-        raise "Invalid IPRange"
+      begin
+        from_ip = IPAddr.new(from)
+        to_ip = IPAddr.new(to)
+        (from_ip..to_ip)
+        if (from_ip..to_ip).to_a.size == 0
+          raise 'Invalid IP range specified'
+        end
+        @included_scan_targets[:addresses] << IPRange.new(from, to)
+      rescue ArgumentError => e
+        raise "#{e.message} in given IP range"
       end
-      self.included_scan_targets[:addresses] << from + " - " + to
-    rescue ArgumentError => e
-      raise e.message + " in given IPRange"
     end
 
     # Remove assets to this site by IP address range.
     #
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
-    def remove_ip_range_from_included(from, to)
-      fromIP = IPAddr.new(from)
-      toIP = IPAddr.new(to)
-      (fromIP..toIP)
-      if (fromIP..toIP).to_a.size == 0
-        raise "Invalid IPRange"
+    def remove_included_ip_range(from, to)
+      begin
+        from_ip = IPAddr.new(from)
+        to_ip = IPAddr.new(to)
+        (from_ip..to_ip)
+        if (from_ip..to_ip).to_a.size == 0
+          raise 'Invalid IP range specified'
+        end
+        @included_scan_targets[:addresses].reject! { |t| t.eql? IPRange.new(from, to) }
+      rescue ArgumentError => e
+        raise "#{e.message} in given IP range"
       end
-      self.included_scan_targets[:addresses].reject! { |t| t.eql? from + " - " + to }
-    rescue ArgumentError => e
-      raise e.message + " in given IPRange"
-    end
-
-    # Adds an asset to this site excluded scan targets by host name.
-    #
-    # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
-    def exclude_host(hostname)
-      self.excluded_scan_targets[:addresses] << hostname
-    end
-
-    # Remove an asset from this site excluded scan targets by host name.
-    #
-    # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
-    def remove_host_from_excluded(hostname)
-      self.excluded_scan_targets[:addresses].reject! { |t| t.eql? hostname }
-    end
-
-    # Adds an asset to this site excluded scan targets by IP address.
-    #
-    # @param [String] ip IP address of an asset.
-    def exclude_ip(ip)
-      IPAddr.new(ip)
-      self.included_scan_targets[:addresses] << ip
-    rescue ArgumentError => e
-      raise e.message
-    end
-
-    # Remove an asset from this site excluded scan targets by IP address.
-    #
-    # @param [String] ip IP address of an asset.
-    def remove_ip_from_excluded(ip)
-      IPAddr.new(ip)
-      self.included_scan_targets[:addresses].reject! { |t| t.eql? ip }
-    rescue ArgumentError => e
-      raise e.message
-    end
-
-    # Adds assets to this site excluded scan targets by IP address range.
-    #
-    # @param [String] from Beginning IP address of a range.
-    # @param [String] to Ending IP address of a range.
-    def exclude_ip_range(from, to)
-      fromIP = IPAddr.new(from)
-      toIP = IPAddr.new(to)
-      (fromIP..toIP)
-      if (fromIP..toIP).to_a.size == 0
-        raise "Invalid IPRange"
-      end
-      self.included_scan_targets[:addresses] << from + " - " + to
-    rescue ArgumentError => e
-      raise e.message + " in given IPRange"
-    end
-
-    # Remove assets from this site excluded scan targets by IP address range.
-    #
-    # @param [String] from Beginning IP address of a range.
-    # @param [String] to Ending IP address of a range.
-    def remove_ip_range_from_excluded(from, to)
-      fromIP = IPAddr.new(from)
-      toIP = IPAddr.new(to)
-      (fromIP..toIP)
-      if (fromIP..toIP).to_a.size == 0
-        raise "Invalid IPRange"
-      end
-      self.included_scan_targets[:addresses].reject! { |t| t.eql? from + " - " + to }
-    rescue ArgumentError => e
-      raise e.message + " in given IPRange"
     end
 
     # Adds an asset to this site included scan targets, resolving whether an IP or hostname is
@@ -317,17 +271,7 @@ module Nexpose
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
     def include_asset(asset)
-      begin
-        # If the asset registers as a valid IP, include as IP.
-        IPAddr.new(asset)
-        self.included_scan_targets[:addresses] << asset
-      rescue ArgumentError => e
-        if e.message == 'invalid address'
-          self.included_scan_targets[:addresses] << asset
-        else
-          raise "Unable to parse asset: '#{asset}'. #{e.message}"
-        end
-      end
+      @included_scan_targets[:addresses] << HostOrIP.convert(asset)
     end
 
     # Remove an asset to this site included scan targets, resolving whether an IP or hostname is
@@ -335,17 +279,93 @@ module Nexpose
     #
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
-    def remove_asset_from_included(asset)
+    def remove_included_asset(asset)
+      @included_scan_targets[:addresses].reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
+    end
+
+    # Adds an asset to this site excluded scan targets by host name.
+    #
+    # @param [String|HostName] hostname FQDN or DNS-resolvable host name of an asset.
+    def exclude_host(hostname)
+      hostname = HostName.new(hostname) if hostname.is_a? String
+      raise 'Invalid hostname specified' unless hostname.is_a? HostName
+      @excluded_scan_targets[:addresses] << hostname
+    end
+
+    # Remove an asset from this site excluded scan targets by host name.
+    #
+    # @param [String|HostName] hostname FQDN or DNS-resolvable host name of an asset.
+    def remove_excluded_host(hostname)
+      hostname = HostName.new(hostname) if hostname.is_a? String
+      raise 'Invalid hostname specified' unless hostname.is_a? HostName
+      @excluded_scan_targets[:addresses].reject! { |t| t.eql? hostname }
+    end
+
+    # Adds an asset to this site excluded scan targets by IP address.
+    #
+    # @param [String|IPRange] ip IP address of an asset.
+    def exclude_ip(ip)
       begin
-        # If the asset registers as a valid IP, remove as IP.
-        IPAddr.new(asset)
-        self.included_scan_targets[:addresses].reject! { |t| t.eql? hostname }
-      rescue ArgumentError => e
-        if e.message == 'invalid address'
-          self.included_scan_targets[:addresses].reject! { |t| t.eql? hostname }
-        else
-          raise "Unable to parse asset: '#{asset}'. #{e.message}"
+        if ip.is_a? String
+          IPAddr.new(ip)
+          ip = IPRange.new(ip)
         end
+        raise 'Invalid IP address specified' unless ip.is_a? IPRange
+        @included_scan_targets[:addresses] << ip
+      rescue ArgumentError => e
+        raise e.message
+      end
+    end
+
+    # Remove an asset from this site excluded scan targets by IP address.
+    #
+    # @param [String|IPRange] ip IP address of an asset.
+    def remove_excluded_ip(ip)
+      begin
+        if ip.is_a? String
+          IPAddr.new(ip)
+          ip = IPRange.new(ip)
+        end
+        raise 'Invalid IP address specified' unless ip.is_a? IPRange
+        @included_scan_targets[:addresses].reject! { |t| t.eql? ip }
+      rescue ArgumentError => e
+        raise e.message
+      end
+    end
+
+    # Adds assets to this site excluded scan targets by IP address range.
+    #
+    # @param [String] from Beginning IP address of a range.
+    # @param [String] to Ending IP address of a range.
+    def exclude_ip_range(from, to)
+      begin
+        from_ip = IPAddr.new(from)
+        to_ip = IPAddr.new(to)
+        (from_ip..to_ip)
+        if (from_ip..to_ip).to_a.size == 0
+          raise 'Invalid IP range specified'
+        end
+        @included_scan_targets[:addresses] << IPRange.new(from, to)
+      rescue ArgumentError => e
+        raise "#{e.message} in given IP range"
+      end
+    end
+
+    # Remove assets from this site excluded scan targets by IP address range.
+    #
+    # @param [String] from Beginning IP address of a range.
+    # @param [String] to Ending IP address of a range.
+    def remove_excluded_ip_range(from, to)
+      begin
+        from_ip = IPAddr.new(from)
+        to_ip = IPAddr.new(to)
+        (from_ip..to_ip)
+        if (from_ip..to_ip).to_a.size == 0
+          raise 'Invalid IP range specified'
+        end
+        @included_scan_targets[:addresses].reject! { |t| t.eql? IPRange.new(from, to) }
+      rescue ArgumentError => e
+        raise "#{e.message} in given IP range"
       end
     end
 
@@ -355,17 +375,7 @@ module Nexpose
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
     def exclude_asset(asset)
-      begin
-        # If the asset registers as a valid IP, exclude as IP.
-        IPAddr.new(asset)
-        self.excluded_scan_targets[:addresses] << asset
-      rescue ArgumentError => e
-        if e.message == 'invalid address'
-          self.excluded_scan_targets[:addresses] << asset
-        else
-          raise "Unable to parse asset: '#{asset}'. #{e.message}"
-        end
-      end
+      @excluded_scan_targets[:addresses] << HostOrIP.convert(asset)
     end
 
     # Removes an asset to this site excluded scan targets, resolving whether an IP or hostname is
@@ -373,63 +383,54 @@ module Nexpose
     #
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
-    def remove_asset_from_excluded(asset)
+    def remove_excluded_asset(asset)
+      @excluded_scan_targets[:addresses].reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
+    end
+
+    # Adds an asset group ID to this site included scan targets.
+    #
+    # @param [Integer] asset_group_id Identifier of an assetGroupID.
+    #
+    def include_asset_group(asset_group_id)
+      validate_asset_group(asset_group_id)
+      @included_scan_targets[:asset_groups] << asset_group_id.to_i
+    end
+
+    # Adds an asset group ID to this site included scan targets.
+    #
+    # @param [Integer] asset_group_id Identifier of an assetGroupID.
+    #
+    def remove_included_asset_group(asset_group_id)
+      validate_asset_group(asset_group_id)
+      @included_scan_targets[:asset_groups].reject! { |t| t.eql? asset_group_id.to_i }
+    end
+
+    # Adds an asset group ID to this site excluded scan targets.
+    #
+    # @param [Integer] asset_group_id Identifier of an assetGroupID.
+    #
+    def exclude_asset_group(asset_group_id)
+      validate_asset_group(asset_group_id)
+      @excluded_scan_targets[:asset_groups] << asset_group_id.to_i
+    end
+
+    # Adds an asset group ID to this site excluded scan targets.
+    #
+    # @param [Integer] asset_group_id Identifier of an assetGroupID.
+    #
+    def remove_excluded_asset_group(asset_group_id)
+      validate_asset_group(asset_group_id)
+      @excluded_scan_targets[:asset_groups].reject! { |t| t.eql? asset_group_id.to_i }
+    end
+
+    def validate_asset_group(asset_group_id)
       begin
-        # If the asset registers as a valid IP, remove as IP.
-        IPAddr.new(asset)
-        self.excluded_scan_targets[:addresses].reject! { |t| t.eql? hostname }
+        Integer(asset_group_id)
       rescue ArgumentError => e
-        if e.message == 'invalid address'
-          self.excluded_scan_targets[:addresses].reject! { |t| t.eql? hostname }
-        else
-          raise "Unable to parse asset: '#{asset}'. #{e.message}"
-        end
+        raise "Invalid asset_group id. #{e.message}"
       end
-    end
 
-    # Adds an assetGroupID to this site included scan targets.
-    #
-    # @param [Integer] assetGroupID Identifier of an assetGroupID.
-    #
-    def include_asset_group(assetGroupID)
-      validAssetGroup(assetGroupID)
-      self.included_scan_targets[:asset_groups] << assetGroupID.to_i
-    end
-
-    # Adds an assetGroupID to this site included scan targets.
-    #
-    # @param [Integer] assetGroupID Identifier of an assetGroupID.
-    #
-    def remove_asset_group_from_included(assetGroupID)
-      validAssetGroup(assetGroupID)
-      self.included_scan_targets[:asset_groups].reject! { |t| t.eql? assetGroupID.to_i }
-    end
-
-    # Adds an assetGroupID to this site excluded scan targets.
-    #
-    # @param [Integer] assetGroupID Identifier of an assetGroupID.
-    #
-    def exclude_asset_group(assetGroupID)
-      validAssetGroup(assetGroupID)
-      self.excluded_scan_targets[:asset_groups] << assetGroupID.to_i
-    end
-
-    # Adds an assetGroupID to this site excluded scan targets.
-    #
-    # @param [Integer] assetGroupID Identifier of an assetGroupID.
-    #
-    def remove_asset_group_from_excluded(assetGroupID)
-      validAssetGroup(assetGroupID)
-      self.excluded_scan_targets[:asset_groups].reject! { |t| t.eql? assetGroupID.to_i }
-    end
-
-    def validAssetGroup(id)
-      Integer(id)
-      if id.to_i < 1
-        raise "Invalid asset_group id. Must be positive number."
-      end
-    rescue ArgumentError => e
-      raise "Invalid asset_group id"
+      raise 'Invalid asset_group id. Must be positive number.' if asset_group_id.to_i < 1
     end
 
     def self.from_hash(hash)
@@ -437,6 +438,18 @@ module Nexpose
       hash.each do |k, v|
         site.instance_variable_set("@#{k}", v)
       end
+
+      # Convert each string address to either a HostName or IPRange object
+      included_scan_targets = { addresses: [], asset_groups: [] }
+      site.included_scan_targets[:addresses].each { |asset| included_scan_targets[:addresses] << HostOrIP.convert(asset) }
+      included_scan_targets[:asset_groups] = site.included_scan_targets[:asset_groups]
+      site.included_scan_targets = included_scan_targets
+
+      excluded_scan_targets = { addresses: [], asset_groups: [] }
+      site.excluded_scan_targets[:addresses].each { |asset| excluded_scan_targets[:addresses] << HostOrIP.convert(asset) }
+      excluded_scan_targets[:asset_groups] = site.excluded_scan_targets[:asset_groups]
+      site.excluded_scan_targets = excluded_scan_targets
+
       site
     end
 
@@ -445,10 +458,19 @@ module Nexpose
     end
 
     def to_h
+      included_scan_targets = { addresses: [], asset_groups: [] }
+      excluded_scan_targets = { addresses: [], asset_groups: [] }
+      @included_scan_targets[:addresses].each { |a| included_scan_targets[:addresses] << a.to_s unless a.nil? }
+      @included_scan_targets[:asset_groups].each { |a| included_scan_targets[:asset_groups] << a.to_i unless a.nil? }
+      @excluded_scan_targets[:addresses].each { |a| excluded_scan_targets[:addresses] << a.to_s unless a.nil? }
+      @excluded_scan_targets[:asset_groups].each { |a| excluded_scan_targets[:asset_groups] << a.to_i unless a.nil? }
+
       {
           id: id,
           name: name,
           description: description,
+          included_scan_targets: included_scan_targets,
+          excluded_scan_targets: excluded_scan_targets,
           engine_id: engine_id,
           scan_template_id: scan_template_id,
           risk_factor: risk_factor,
@@ -459,7 +481,7 @@ module Nexpose
     # Load an site from the provided console.
     #
     # @param [Connection] nsc Active connection to a Nexpose console.
-    # @param [String] id Unique identifier of a site3.
+    # @param [String] id Unique identifier of a site.
     # @return [Site] The requested site, if found.
     #
     def self.load(nsc, id)
@@ -504,12 +526,16 @@ module Nexpose
         new_site = @id == -1
 
         if new_site
-          #TODO Retrieve and attach shared creds, or saving will fail.
           resp = AJAX.post(connection, '/api/2.1/site_configurations/', to_json, AJAX::CONTENT_TYPE::JSON)
           @id = resp.to_i
         else
           resp = AJAX.put(connection, "/api/2.1/site_configurations/#{@id}", to_json, AJAX::CONTENT_TYPE::JSON)
         end
+
+        # Retrieve the scan engine and shared credentials and add them to the site configuration
+        site_config = Site.load(connection, @id)
+        @engine_id = site_config.engine_id
+        @shared_credentials = site_config.shared_credentials
 
       @id
     end
@@ -647,6 +673,10 @@ module Nexpose
     def to_xml
       to_xml_elem.to_s
     end
+
+    def to_s
+      @host.to_s
+    end
   end
 
   # Object that represents a single IP address or an inclusive range of IP addresses.
@@ -729,6 +759,11 @@ module Nexpose
 
     def to_xml
       as_xml.to_s
+    end
+
+    def to_s
+      return from.to_s if to.nil?
+      "#{from.to_s} - #{to.to_s}"
     end
   end
 end
