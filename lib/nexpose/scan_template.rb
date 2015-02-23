@@ -200,7 +200,7 @@ module Nexpose
     end
 
     # Add custom UDP ports to scan for services
-    # @param [Array] posts to scan
+    # @param [Array] ports to scan
     def udp_service_ports=(ports)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/UDPPortScan')
       service_ports.attributes['mode'] = "custom"

@@ -415,7 +415,6 @@ module Nexpose
     # Retrieve the currrent filter criteria used by a dynamic site.
     #
     # @param [Connection] nsc Connection to a console.
-    # @param [Fixnum] site_id ID of an existing site.
     # @return [Criteria] Current criteria for the site.
     #
     def load_dynamic_attributes(nsc)
