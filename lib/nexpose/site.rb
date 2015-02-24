@@ -493,7 +493,9 @@ module Nexpose
 
       site.site_credentials = site.site_credentials.map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.shared_credentials = site.shared_credentials.map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      site.discovery_config = Nexpose::DiscoveryConfig.new.object_from_hash(nsc,site.discovery_config)
+      unless site.discovery_config.nil?
+        site.discovery_config = Nexpose::DiscoveryConfig.new.object_from_hash(nsc,site.discovery_config)
+      end
       unless site.search_criteria.nil?
         site.search_criteria = Nexpose::DiscoveryConfig::Criteria.parseHash(site.search_criteria)
       end
