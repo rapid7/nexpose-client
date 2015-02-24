@@ -137,13 +137,13 @@ module Nexpose
 
     # Whether or not this site is dynamic.
     # Dynamic sites are created through Asset Discovery Connections.
-    attr_accessor :is_dynamic
+    attr_accessor :dynamic
 
     # Asset filter criteria if this site is dynamic.
-    attr_accessor :criteria
+    attr_accessor :search_criteria
 
-    # ID of the discovery connection associated with this site if it is dynamic.
-    attr_accessor :discovery_connection_id
+    # discovery config of the discovery connection associated with this site if it is dynamic.
+    attr_accessor :discovery_config
 
     # [Array[TagSummary]] Collection of TagSummary
     attr_accessor :tags
@@ -170,13 +170,8 @@ module Nexpose
     end
 
     # Returns true when the site is dynamic.
-    def dynamic?
-      is_dynamic
-    end
-
-    def discovery_connection_id=(value)
-      @is_dynamic = true
-      @discovery_connection_id = value.to_i
+    def isdynamic?
+      dynamic
     end
 
     # Adds an asset to this site by host name.
@@ -465,6 +460,7 @@ module Nexpose
       @excluded_scan_targets[:addresses].each { |a| excluded_scan_targets[:addresses] << a.to_s unless a.nil? }
       @excluded_scan_targets[:asset_groups].each { |a| excluded_scan_targets[:asset_groups] << a.to_i unless a.nil? }
 
+
       {
           id: id,
           name: name,
@@ -474,10 +470,15 @@ module Nexpose
           engine_id: engine_id,
           scan_template_id: scan_template_id,
           risk_factor: risk_factor,
-          schedules: schedules
+          schedules: schedules,
+          shared_credentials: @shared_credentials.map {|cred| cred.to_h},
+          site_credentials: @site_credentials.map {|cred| cred.to_h},
+          discovery_config: @discovery_config.to_h,
+          search_criteria: @search_criteria.to_h
       }
     end
 
+    require 'json'
     # Load an site from the provided console.
     #
     # @param [Connection] nsc Active connection to a Nexpose console.
@@ -490,13 +491,12 @@ module Nexpose
       hash = JSON.parse(resp, symbolize_names: true)
       site = new.deserialize(hash)
 
-      # site = new.object_from_hash(nsc, hash)
       site.site_credentials = site.site_credentials.map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      # site.site_credentials = creds
-      # creds = []
-      # site.shared_credentials.each {|cred| creds << Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      # site.shared_credentials = creds
-
+      site.shared_credentials = site.shared_credentials.map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
+      site.discovery_config = Nexpose::DiscoveryConfig.new.object_from_hash(nsc,site.discovery_config)
+      unless site.search_criteria.nil?
+        site.search_criteria = Nexpose::DiscoveryConfig::Criteria.parseHash(site.search_criteria)
+      end
       site
     end
 
@@ -565,53 +565,6 @@ module Nexpose
       response = connection.execute(xml, '1.1', timeout: 60)
       Scan.parse(response.res) if response.success
     end
-
-    # Save only the criteria of a dynamic site.
-    #
-    # @param [Connection] nsc Connection to a console.
-    # @return [Fixnum] Site ID.
-    #
-    def save_dynamic_criteria(nsc)
-      # Several parameters are passed through the URI
-      params = { 'configID' => @discovery_connection_id,
-                 'entityid' => @id > 0 ? @id : false,
-                 'mode' => @id > 0 ? 'edit' : false }
-      uri = AJAX.parameterize_uri('/data/site/saveSite', params)
-
-      # JSON body of POST request contains details.
-      details = { 'dynamic' => true,
-                  'name' => @name,
-                  'tag' => @description.nil? ? '' : @description,
-                  'riskFactor' => @risk_factor,
-                  # 'vCenter' => @discovery_connection_id,
-                  'searchCriteria' => @criteria.nil? ? { 'operator' => 'AND' } : @criteria.to_h }
-      json = JSON.generate(details)
-
-      response = AJAX.post(nsc, uri, json, AJAX::CONTENT_TYPE::JSON)
-      json = JSON.parse(response)
-      if json['response'] =~ /success/
-        if @id < 1
-          @id = json['entityID'].to_i
-        end
-      else
-        raise APIError.new(response, json['message'])
-      end
-      @id
-    end
-
-    # Retrieve the currrent filter criteria used by a dynamic site.
-    #
-    # @param [Connection] nsc Connection to a console.
-    # @param [Fixnum] site_id ID of an existing site.
-    # @return [Criteria] Current criteria for the site.
-    #
-    def load_dynamic_attributes(nsc)
-      response = AJAX.get(nsc, "/data/site/loadDynamicSite?entityid=#{@id}")
-      json = JSON.parse(response)
-      @discovery_connection_id = json['discoveryConfigs']['id']
-      @criteria = Criteria.parse(json['searchCriteria'])
-    end
-
   end
 
   # Object that represents the summary of a Nexpose Site.
