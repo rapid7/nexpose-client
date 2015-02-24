@@ -1,3 +1,5 @@
+require 'pry'
+
 module Nexpose
 
   class Wait
@@ -28,6 +30,10 @@ module Nexpose
       rescue TimeoutError
         retry if timeout_retry?
         @error_message = "Timeout Waiting for Report to Generate - Report Config ID: #{report_id}"
+      rescue NoMethodError => error
+        @error_message = "Error Report Config ID: #{report_id} :: Report Probably Does Not Exist :: #{error}"
+      rescue => error
+        @error_message = "Error Report Config ID: #{report_id} :: #{error}"
       end
     end
 
@@ -40,6 +46,8 @@ module Nexpose
       rescue TimeoutError
         retry if timeout_retry?
         @error_message = "Timeout Waiting for Integration Status of '#{status}' - Scan ID: #{scan_id}"
+      rescue Nexpose::APIError => error
+        @error_message = "Error Waiting for Integration Scan ID: #{scan_id} :: #{error.req.error}"
       end
     end
 
