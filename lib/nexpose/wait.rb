@@ -47,7 +47,7 @@ module Nexpose
         retry if timeout_retry?
         @error_message = "Timeout Waiting for Integration Status of '#{status}' - Scan ID: #{scan_id}"
       rescue Nexpose::APIError => error
-        @error_message = "Error Waiting for Integration Scan ID: #{scan_id} :: #{error.req.error}"
+        @error_message = "API Error Waiting for Integration Scan ID: #{scan_id} :: #{error.req.error}"
       end
     end
 
