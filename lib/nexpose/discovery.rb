@@ -27,7 +27,7 @@ module Nexpose
     end
   end
 
-  class DiscoveryConnection
+  class DiscoveryConnection < APIObject
     include XMLUtils
 
     module Protocol
@@ -79,7 +79,7 @@ module Nexpose
     # @param [String] user User name for credentials on this connection.
     # @param [String] password Password for credentials on this connection.
     #
-    def initialize(name, address, user, password = nil)
+    def initialize(name = nil, address = nil, user = nil, password = nil)
       @name, @address, @user, @password = name, address, user, password
       @type = nil  # for backwards compatibilitly, at some point should set this to Type::VSPHERE
       @id = -1
@@ -166,6 +166,89 @@ module Nexpose
       conn.port = xml.attributes['port'].to_i
       conn.status = xml.attributes['connection-status']
       conn
+    end
+
+    # get discovery config object from hash
+    def self.from_hash(hash)
+      config = new
+      hash.each do |k, v|
+        config.instance_variable_set("@#{k}", v)
+      end
+      config
+    end
+
+    def to_json
+      JSON.generate(to_h)
+    end
+
+
+    def to_h
+      { id: id,
+        name: name,
+        type: type
+        # TODO Add remaining instance fields, once it is introduced in resource object
+      }
+    end
+
+    def <=>(other)
+      c = id <=> other.id
+      return c unless c == 0
+      c = name <=> other.name
+      return c unless c == 0
+      type <=> other.type
+      # TODO Add remaining instance fields, once it is introduced in resource object
+    end
+
+    def ==(other)
+      eql?(other)
+    end
+
+    def eql?(other)
+      id.eql?(other.id) &&
+      name.eql?(other.name) &&
+      type.eql?(other.type)
+      # TODO Add remaining instance fields, once it is introduced in resource object
+    end
+
+    # Override of filter criterion to account for proper JSON naming.
+    #
+    class Criterion < Nexpose::Criterion
+      # Convert to Hash, which can be converted to JSON for API calls.
+      def to_h
+        { operator: operator,
+          values: Array(value),
+          field_name: field }
+      end
+
+      # Create a Criterion object from a JSON-derived Hash.
+      #
+      # @param [Hash] json JSON-derived Hash of a Criterion object.
+      # @return [Criterion] Parsed object.
+      #
+      def self.parseHash(hash)
+        Criterion.new(hash[:field_name],
+                      hash[:operator],
+                      hash[:values])
+      end
+    end
+
+    # Override of filter criteria to account for different parsing from JSON.
+    #
+    class Criteria < Nexpose::Criteria
+      # Create a Criteria object from a Hash.
+      #
+      # @param [Hash] Hash of a Criteria object.
+      # @return [Criteria] Parsed object.
+      #
+      def self.parseHash(hash)
+        # The call returns empty JSON, so default to 'AND' if not present.
+        operator = hash[:operator] || 'AND'
+        ret = Criteria.new([], operator)
+        hash[:criteria].each do |c|
+          ret.criteria << Criterion.parseHash(c)
+        end
+        ret
+      end
     end
   end
 
