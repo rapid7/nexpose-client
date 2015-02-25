@@ -428,6 +428,22 @@ module Nexpose
       raise 'Invalid asset_group id. Must be positive number.' if asset_group_id.to_i < 1
     end
 
+    def add_user(user_id)
+      unless user_id.is_a?(Numeric) && user_id > 0
+        raise 'Invalid user id. A user id must be a positive number and refer to an existing system user.'
+      end
+
+      @users << { id: user_id}
+    end
+
+    def remove_user(user_id)
+      unless user_id.is_a?(Numeric) && user_id > 0
+        raise 'Invalid user id. A user id must be a positive number and refer to an existing system user.'
+      end
+
+      @users.delete_if { |h| h[:id] == user_id }
+    end
+
     def self.from_hash(hash)
       site = new(hash[:name], hash[:scan_template_id])
       hash.each do |k, v|
@@ -453,12 +469,14 @@ module Nexpose
     end
 
     def to_h
-      included_scan_targets = { addresses: [], asset_groups: [] }
-      excluded_scan_targets = { addresses: [], asset_groups: [] }
-      @included_scan_targets[:addresses].each { |a| included_scan_targets[:addresses] << a.to_s unless a.nil? }
-      @included_scan_targets[:asset_groups].each { |a| included_scan_targets[:asset_groups] << a.to_i unless a.nil? }
-      @excluded_scan_targets[:addresses].each { |a| excluded_scan_targets[:addresses] << a.to_s unless a.nil? }
-      @excluded_scan_targets[:asset_groups].each { |a| excluded_scan_targets[:asset_groups] << a.to_i unless a.nil? }
+      included_scan_targets = {
+          addresses: @included_scan_targets[:addresses].compact,
+          asset_groups: @included_scan_targets[:asset_groups].compact
+      }
+      excluded_scan_targets = {
+          addresses: @included_scan_targets[:addresses].compact,
+          asset_groups: @included_scan_targets[:asset_groups].compact
+      }
 
 
       {
@@ -475,7 +493,9 @@ module Nexpose
           site_credentials: @site_credentials.map {|cred| cred.to_h},
           discovery_config: @discovery_config.to_h,
           search_criteria: @search_criteria.to_h,
-          tags: @tags.map{|tag| tag.to_h}
+          tags: @tags.map{|tag| tag.to_h},
+          alerts: @alerts.map {|alert| alert.to_h },
+          users: users
       }
     end
 
@@ -490,18 +510,21 @@ module Nexpose
       uri = "/api/2.1/site_configurations/#{id}"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
-      site = new.deserialize(hash)
+      site = self.json_initializer(hash).deserialize(hash)
 
-      site.site_credentials = site.site_credentials.map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      site.shared_credentials = site.shared_credentials.map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      unless site.discovery_config.nil?
-        site.discovery_config = Nexpose::DiscoveryConnection.new.object_from_hash(nsc,site.discovery_config)
-      end
-      unless site.search_criteria.nil?
-        site.search_criteria = Nexpose::DiscoveryConnection::Criteria.parseHash(site.search_criteria)
-      end
+      #site = new(hash[:name], hash[:scan_template_id])
+      site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
+      site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
+      site.discovery_config = Nexpose::DiscoveryConfig.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
+      site.search_criteria = Nexpose::DiscoveryConfig::Criteria.parseHash(hash[:search_criteria]) unless hash[:search_criteria].nil?
+      site.alerts = Alert.load_alerts(hash[:alerts])
       site.tags = Tag.load_tags(hash[:tags])
+
       site
+    end
+
+    def self.json_initializer(data)
+      new(data[:name], data[:scan_template_id])
     end
 
     # Copy an existing configuration from a Nexpose instance.
@@ -540,6 +563,7 @@ module Nexpose
         site_config = Site.load(connection, @id)
         @engine_id = site_config.engine_id
         @shared_credentials = site_config.shared_credentials
+        @alerts = site_config.alerts
 
       @id
     end
