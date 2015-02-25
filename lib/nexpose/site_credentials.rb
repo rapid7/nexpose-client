@@ -53,6 +53,8 @@ module Nexpose
     attr_accessor :pem_format_private_key
     # for snmp v1/v2
     attr_accessor :community_name
+    # scope of credential
+    attr_accessor :scope
 
     #Create a credential object using name, id, description, host and port
     def self.for_service(name, id = -1, desc = nil, host = nil, port = nil, service = Service.CIFS)
@@ -64,6 +66,7 @@ module Nexpose
       cred.host_restriction = host
       cred.port_restriction = port
       cred.service = service
+      cred.scope = Scope.SITE_SPECIFIC
       cred
     end
 
@@ -136,7 +139,8 @@ module Nexpose
         use_windows_auth: use_windows_auth,
         sid: sid,
         pem_format_private_key: pem_format_private_key,
-        community_name: community_name
+        community_name: community_name,
+        scope: scope
       }
     end
 
@@ -183,7 +187,9 @@ module Nexpose
       return c unless c == 0
       c = pem_format_private_key <=> other.pem_format_private_key
       return c unless c == 0
-      community_name <=> other.community_name
+      c = community_name <=> other.community_name
+      return c unless c == 0
+      scope <=> other.scope
     end
 
     def ==(other)
@@ -212,7 +218,8 @@ module Nexpose
       use_windows_auth.eql?(other.use_windows_auth) &&
       sid.eql?(other.sid) &&
       pem_format_private_key.eql?(other.pem_format_private_key) &&
-      community_name.eql?(other.community_name)
+      community_name.eql?(other.community_name) &&
+      scope.eql?(other.scope)
     end
 
   end

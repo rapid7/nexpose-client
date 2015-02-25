@@ -27,6 +27,13 @@ module Nexpose
                       'db2'              => 50000 }
 
 
+    # Credential scope
+    module Scope
+      ALL_SITES_ENABLED_DEFAULT = 'A'
+      ALL_SITES_DISABLED_DEFAULT = 'G'
+      SITE_SPECIFIC = 'S'
+    end
+
     # Credential Service/Type Options.
     module Service
       CVS              = 'cvs'              # Concurrent Versioning System (CVS)
