@@ -474,7 +474,8 @@ module Nexpose
           shared_credentials: @shared_credentials.map {|cred| cred.to_h},
           site_credentials: @site_credentials.map {|cred| cred.to_h},
           discovery_config: @discovery_config.to_h,
-          search_criteria: @search_criteria.to_h
+          search_criteria: @search_criteria.to_h,
+          tags: @tags.map{|tag| tag.to_h}
       }
     end
 
@@ -499,6 +500,7 @@ module Nexpose
       unless site.search_criteria.nil?
         site.search_criteria = Nexpose::DiscoveryConfig::Criteria.parseHash(site.search_criteria)
       end
+      site.tags = Tag.load_tags(hash[:tags])
       site
     end
 
