@@ -57,7 +57,7 @@ module Nexpose
     attr_accessor :scope
 
     #Create a credential object using name, id, description, host and port
-    def self.for_service(name, id = -1, desc = nil, host = nil, port = nil, service = Service::CIFS)
+    def self.for_service(name, id = -1, desc = nil, host = nil, port = nil, service = Credential::Service::CIFS)
       cred = new
       cred.name = name
       cred.id = id.to_i
@@ -66,7 +66,7 @@ module Nexpose
       cred.host_restriction = host
       cred.port_restriction = port
       cred.service = service
-      cred.scope = Scope::SITE_SPECIFIC
+      cred.scope = Credential::Scope::SITE_SPECIFIC
       cred
     end
 
