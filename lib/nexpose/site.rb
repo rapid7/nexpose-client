@@ -118,6 +118,9 @@ module Nexpose
     # [Array] Collection of shared credentials associated with this site.
     attr_accessor :shared_credentials
 
+    # [Array] Collection of web credentials associated with the site.
+    attr_accessor :web_credentials
+
     # [Array] Collection of real-time alerts.
     # @see Alert
     # @see SMTPAlert
@@ -164,6 +167,7 @@ module Nexpose
       @excluded_scan_targets = { addresses: [], asset_groups: [] }
       @site_credentials = []
       @shared_credentials = []
+      @web_credentials = []
       @alerts = []
       @users = []
       @tags = []
@@ -513,7 +517,7 @@ module Nexpose
       site = self.json_initializer(hash).deserialize(hash)
 
       #site = new(hash[:name], hash[:scan_template_id])
-      site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
+      site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.discovery_config = Nexpose::DiscoveryConfig.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
       site.search_criteria = Nexpose::DiscoveryConfig::Criteria.parseHash(hash[:search_criteria]) unless hash[:search_criteria].nil?

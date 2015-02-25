@@ -129,7 +129,7 @@ module Nexpose
     def set_cvs_service(username = nil, password = nil)
       @user_name = username
       @password = password
-      @service = Service.CVS
+      @service = Service::CVS
     end
 
     # sets the DB2 service
@@ -137,14 +137,14 @@ module Nexpose
       @database = database
       @user_name = username
       @password = password
-      @service = Service.DB2
+      @service = Service::DB2
     end
 
     # sets the File Transfer Protocol (FTP) service
     def set_ftp_service(username = nil, password = nil)
       @user_name = username
       @password = password
-      @service = Service.FTP
+      @service = Service::FTP
     end
 
     # sets the IBM AS/400 service.
@@ -152,13 +152,13 @@ module Nexpose
       @domain = domain
       @user_name = username
       @password = password
-      @service = Service.AS400
+      @service = Service::AS400
     end
 
     # sets the Lotus Notes/Domino service.
     def set_notes_service(password = nil)
       @notes_id_password = password
-      @service = Service.NOTES
+      @service = Service::NOTES
     end
 
     # sets the Microsoft SQL Server service.
@@ -168,7 +168,7 @@ module Nexpose
       @use_windows_auth = domain.nil?
       @user_name = username
       @password = password
-      @service = Service.TDS
+      @service = Service::TDS
     end
 
     # sets the Microsoft Windows/Samba (SMB/CIFS) service.
@@ -176,7 +176,7 @@ module Nexpose
       @domain = domain
       @user_name = username
       @password = password
-      @service = Service.CIFS
+      @service = Service::CIFS
     end
 
     # sets the Microsoft Windows/Samba LM/NTLM Hash (SMB/CIFS) service.
@@ -184,7 +184,7 @@ module Nexpose
       @domain = domain
       @user_name = username
       @password = password
-      @service = Service.CIFSHASH
+      @service = Service::CIFSHASH
     end
 
     # sets the MySQL Server service.
@@ -192,7 +192,7 @@ module Nexpose
       @database = database
       @user_name = username
       @password = password
-      @service = Service.MYSQL
+      @service = Service::MYSQL
     end
 
     # sets the Oracle service.
@@ -200,14 +200,14 @@ module Nexpose
       @sid = sid
       @user_name = username
       @password = password
-      @service = Service.ORACLE
+      @service = Service::ORACLE
     end
 
     # sets the Post Office Protocol (POP) service.
     def set_pop_service(username = nil, password = nil)
       @user_name = username
       @password = password
-      @service = Service.POP
+      @service = Service::POP
     end
 
     # sets the PostgreSQL service.
@@ -215,51 +215,51 @@ module Nexpose
       @database = database
       @user_name = username
       @password = password
-      @service = Service.POSTGRESQL
+      @service = Service::POSTGRESQL
     end
 
     # sets the Remote Execution service.
     def set_remote_execution_service(username = nil, password = nil)
       @user_name = username
       @password = password
-      @service = Service.REMOTE_EXECUTION
+      @service = Service::REMOTE_EXECUTION
     end
 
     # sets the Secure Shell (SSH) service.
-    def set_ssh_service(username = nil, password = nil, elevation_type = ElevationType.NONE, elevation_user = nil, elevation_password = nil)
+    def set_ssh_service(username = nil, password = nil, elevation_type = ElevationType::NONE, elevation_user = nil, elevation_password = nil)
       @user_name = username
       @password = password
       @permission_elevation_type = elevation_type
       @permission_elevation_user = elevation_user
       @permission_elevation_password = elevation_password
-      @service = Service.SSH
+      @service = Service::SSH
     end
 
     # sets the Secure Shell (SSH) Public Key service.
-    def set_ssh_key_service(username, pemkey,  password = nil, elevation_type = ElevationType.NONE, elevation_user = nil, elevation_password = nil)
+    def set_ssh_key_service(username, pemkey,  password = nil, elevation_type = ElevationType::NONE, elevation_user = nil, elevation_password = nil)
       @user_name = username
       @password = password
       @pem_format_private_key = pemkey
       @permission_elevation_type = elevation_type
       @permission_elevation_user = elevation_user
       @permission_elevation_password = elevation_password
-      @service = Service.SSH_KEY
+      @service = Service::SSH_KEY
     end
 
     # sets the Simple Network Management Protocol v1/v2c service.
     def set_snmp_service(community_name = nil)
       @community_name = community_name
-      @service = Service.SNMP
+      @service = Service::SNMP
     end
 
     # sets the Simple Network Management Protocol v3 service.
-    def set_snmpv3_service(authentication_type = AuthenticationType.NOAUTH, username = nil, password = nil, privacy_type = PrivacyType.NOPRIV, privacy_password = nil)
+    def set_snmpv3_service(authentication_type = AuthenticationType::NOAUTH, username = nil, password = nil, privacy_type = PrivacyType::NOPRIV, privacy_password = nil)
       @authentication_type = authentication_type
       @user_name = username
       @password = password
       @privacy_type = privacy_type
       @privacy_password = privacy_password
-      @service = Service.SNMPV3
+      @service = Service::SNMPV3
     end
 
     # sets the Sybase SQL Server service.
@@ -269,14 +269,14 @@ module Nexpose
       @use_windows_auth = domain.nil?
       @user_name = username
       @password = password
-      @service = Service.SYBASE
+      @service = Service::SYBASE
     end
 
     # sets the Telnet service.
     def set_telnet_service(username = nil, password = nil)
       @user_name = username
       @password = password
-      @service = Service.TELNET
+      @service = Service::TELNET
     end
 
     # sets the Web Site HTTP Authentication service.
@@ -284,7 +284,7 @@ module Nexpose
       @domain = domain
       @user_name = username
       @password = password
-      @service = Service.HTTP
+      @service = Service::HTTP
     end
   end
 
