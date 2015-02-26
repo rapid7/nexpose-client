@@ -84,7 +84,7 @@ module Nexpose
     end
 
     def self.load_alerts(alerts)
-      alerts.map {|hash| json_initializer(hash).deserialize(hash)}
+      alerts.map {|hash| json_initializer(hash).deserialize(hash) }
       # unless alerts.nil?
       #   alerts = alerts.map do |hash|
       #     alert = self.create(hash)
@@ -168,15 +168,29 @@ module Nexpose
 
     private
     def self.create(hash)
-      case hash[:alert_type]
+      if !hash.has_key?(:name) || hash[:name].to_s == ''
+        raise 'Alert name cannot be empty.'
+      end
+
+      alert_type = hash[:alert_type]
+
+      if alert_type.nil?
+        raise 'An alert must have an alert type'
+      end
+
+      if ['SNMP', 'Syslog'].include?(alert_type) && hash[:server].to_s == ''
+        raise 'SNMP and Syslog alerts must have a server defined'
+      end
+
+      case alert_type
         when 'SMTP'
-          alert = SMTPAlert.new(hash[:name], hash[:sender], hash[:server], hash[:enabled], hash[:max_alerts], hash[:verbose], hash[:recipients])
+          alert = SMTPAlert.new(hash[:name], hash[:sender], hash[:server], hash[:recipients], hash[:enabled], hash[:max_alerts], hash[:verbose])
         when 'SNMP'
           alert = SNMPAlert.new(hash[:name], hash[:community], hash[:server],  hash[:enabled], hash[:max_alerts])
         when 'Syslog'
           alert = SyslogAlert.new(hash[:name], hash[:server], hash[:enabled], hash[:max_alerts])
         else
-          fail "Unknown alert type: #{hash[:alert_type]}"
+          fail "Unknown alert type: #{alert_type}"
       end
       alert.scan_filter = ScanFilter.new
       alert.vuln_filter = VulnFilter.new
@@ -189,7 +203,17 @@ module Nexpose
     include Alert
     attr_accessor :recipients, :sender, :verbose, :server
 
-    def initialize(name, sender, server, enabled = 1, max_alerts = -1, verbose = 0, recipients = nil)
+    def initialize(name, sender, server, recipients, enabled = 1, max_alerts = -1, verbose = 0)
+      unless recipients.is_a?(Array) && recipients.length > 0
+        raise 'An SMTP alert must contain an array of recipient emails with at least 1 recipient'
+      end
+
+      recipients.each do  |recipient|
+        unless recipient =~ /^.+@.+\..+$/
+          raise "Recipients must contain valid emails, #{recipient} has an invalid format"
+        end
+      end
+
       @alert_type = 'SMTP'
       @name = name
       @enabled = enabled
@@ -225,6 +249,9 @@ module Nexpose
 
     def initialize(name, community, server, enabled = 1, max_alerts = -1)
       @alert_type = 'SNMP'
+      if community.nil?
+        raise 'SNMP alerts must have a community defined.'
+      end
       @name = name
       @enabled = enabled
       @max_alerts = max_alerts
