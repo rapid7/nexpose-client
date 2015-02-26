@@ -1,10 +1,9 @@
 module Nexpose
 
   class Wait
-    ## Nexpose Universal Wait module.
     attr_reader :error_message, :ready, :retry_count, :timeout, :polling_interval
 
-    # Setup Default error_message, set ready state to false, and allow caller to specify a retry count if there are Timeout failures.
+
     def initialize(retry_count: nil, timeout: nil, polling_interval: nil)
       @error_message = "Default General Failure in Nexpose::Wait"
       @ready = false
@@ -13,15 +12,12 @@ module Nexpose
       @polling_interval = polling_interval
     end
 
-    # Allow class to respond in a readable way to see if we are done waiting.
+
     def is_ready?
       @ready
     end
 
 
-    # Note: Uses keyword arguments.
-    # Default Timeout is 120 seconds.
-    # Default Polling Interval is 1 second.
     def for_report(nsc: nil, report_id: nil)
       begin
         poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
@@ -66,7 +62,7 @@ module Nexpose
 
     private
 
-      # Method which contains a proc that we want to evaluate to true.
+
       def get_report_status(nsc: nil, report_id: nil)
         Proc.new { nsc.last_report(report_id).status == 'Generated' }
       end
