@@ -66,7 +66,7 @@ module Nexpose
     # API call. Then upload the archive using HTTPS to a URL that is specified
     # as an API parameter.
     #
-    # @param url Upload server to send the support log package to.
+    # @param uri Upload server to send the support log package to.
     #
     def send_log(uri = 'https://support.rapid7.com')
       url = REXML::Element.new('URL')
