@@ -1,16 +1,16 @@
-require 'pry'
-
 module Nexpose
 
   class Wait
     ## Nexpose Universal Wait module.
-    attr_reader :error_message, :ready, :retry_count
+    attr_reader :error_message, :ready, :retry_count, :timeout, :polling_interval
 
     # Setup Default error_message, set ready state to false, and allow caller to specify a retry count if there are Timeout failures.
-    def initialize(retry_count: nil)
+    def initialize(retry_count: nil, timeout: nil, polling_interval: nil)
       @error_message = "Default General Failure in Nexpose::Wait"
       @ready = false
       @retry_count = retry_count.nil? ? 0 : retry_count
+      @timeout = timeout
+      @polling_interval = polling_interval
     end
 
     # Allow class to respond in a readable way to see if we are done waiting.
@@ -22,9 +22,9 @@ module Nexpose
     # Note: Uses keyword arguments.
     # Default Timeout is 120 seconds.
     # Default Polling Interval is 1 second.
-    def for_report(nsc: nil, report_id: nil, timeout: nil, polling_interval: nil)
+    def for_report(nsc: nil, report_id: nil)
       begin
-        poller = Nexpose::Poller.new(timeout: timeout, polling_interval: polling_interval)
+        poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
         poller.wait(get_report_status(nsc: nsc, report_id: report_id))
         @ready = true
       rescue TimeoutError
@@ -38,9 +38,9 @@ module Nexpose
     end
 
 
-    def for_integration(nsc: nil, scan_id: nil, status: 'finished', timeout: nil, polling_interval: nil)
+    def for_integration(nsc: nil, scan_id: nil, status: 'finished')
       begin
-        poller = Nexpose::Poller.new(timeout: timeout, polling_interval: polling_interval)
+        poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
         poller.wait(get_integration_status(nsc: nsc, scan_id: scan_id, status: status))
         @ready = true
       rescue TimeoutError
@@ -51,6 +51,17 @@ module Nexpose
       end
     end
 
+
+    def for_judgment(proc: nil, desc: nil)
+      begin
+        poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
+        poller.wait(proc)
+        @ready = true
+      rescue TimeoutError
+        retry if timeout_retry?
+        @error_message = "Timeout Waiting for Judgment to Judge. #{desc}"
+      end
+    end
 
 
     private
