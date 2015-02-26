@@ -527,7 +527,7 @@ module Nexpose
       site.web_credentials = hash[:web_credentials].map {|webCred| (
                            webCred[:service] == Nexpose::WebCredentials::WebAppAuthType::HTTP_HEADER ?
                                Nexpose::WebCredentials::Headers.new(webCred[:name], webCred[:baseURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred) :
-                               Nexpose::WebCredentials::Headers.new(webCred[:name], webCred[:baseURL], webCred[:soft403Pattern]).object_from_hash(nsc,webCred))}
+                               Nexpose::WebCredentials::HTMLForms.new(webCred[:name], webCred[:baseURL], webCred[:loginURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred))}
 
       site
     end
