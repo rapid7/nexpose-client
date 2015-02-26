@@ -478,8 +478,8 @@ module Nexpose
           asset_groups: @included_scan_targets[:asset_groups].compact
       }
       excluded_scan_targets = {
-          addresses: @included_scan_targets[:addresses].compact,
-          asset_groups: @included_scan_targets[:asset_groups].compact
+          addresses: @excluded_scan_targets[:addresses].compact,
+          asset_groups: @excluded_scan_targets[:asset_groups].compact
       }
 
 
@@ -495,6 +495,7 @@ module Nexpose
           schedules: schedules,
           shared_credentials: @shared_credentials.map {|cred| cred.to_h},
           site_credentials: @site_credentials.map {|cred| cred.to_h},
+          web_credentials: @web_credentials.map {|webCred| webCred.to_h},
           discovery_config: @discovery_config.to_h,
           search_criteria: @search_criteria.to_h,
           tags: @tags.map{|tag| tag.to_h},
@@ -519,10 +520,14 @@ module Nexpose
       #site = new(hash[:name], hash[:scan_template_id])
       site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      site.discovery_config = Nexpose::DiscoveryConfig.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
-      site.search_criteria = Nexpose::DiscoveryConfig::Criteria.parseHash(hash[:search_criteria]) unless hash[:search_criteria].nil?
+      site.discovery_config = Nexpose::DiscoveryConnection.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
+      site.search_criteria = Nexpose::DiscoveryConnection::Criteria.parseHash(hash[:search_criteria]) unless hash[:search_criteria].nil?
       site.alerts = Alert.load_alerts(hash[:alerts])
       site.tags = Tag.load_tags(hash[:tags])
+      site.web_credentials = hash[:web_credentials].map {|webCred| (
+                           webCred[:service] == Nexpose::WebCredentials::WebAppAuthType::HTTP_HEADER ?
+                               Nexpose::WebCredentials::Headers.new(webCred[:name], webCred[:baseURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred) :
+                               Nexpose::WebCredentials::Headers.new(webCred[:name], webCred[:baseURL], webCred[:soft403Pattern]).object_from_hash(nsc,webCred))}
 
       site
     end

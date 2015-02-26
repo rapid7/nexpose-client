@@ -168,19 +168,9 @@ module Nexpose
       conn
     end
 
-    # get discovery config object from hash
-    def self.from_hash(hash)
-      config = new
-      hash.each do |k, v|
-        config.instance_variable_set("@#{k}", v)
-      end
-      config
-    end
-
     def to_json
       JSON.generate(to_h)
     end
-
 
     def to_h
       { id: id,
