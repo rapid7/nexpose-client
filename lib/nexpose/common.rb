@@ -200,7 +200,7 @@ module Nexpose
   end
 
   # Organization configuration, as used in Site and Silo.
-  class Organization
+  class Organization < APIObject
     attr_accessor :name
     attr_accessor :url
     attr_accessor :primary_contact
@@ -215,6 +215,21 @@ module Nexpose
 
     def initialize(&block)
       instance_eval(&block) if block_given?
+    end
+
+    def to_h
+      { name: name,
+        url: url,
+        primary_contact: primary_contact,
+        job_title: job_title,
+        email: email,
+        telephone: telephone,
+        address: address,
+        state: state,
+        city: city,
+        zip: zip,
+        country: country,
+      }
     end
 
     def self.parse(xml)
