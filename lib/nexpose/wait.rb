@@ -19,10 +19,9 @@ module Nexpose
 
 
     def for_report(nsc: nil, report_id: nil)
-      begin
-        poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
-        poller.wait(get_report_status(nsc: nsc, report_id: report_id))
-        @ready = true
+      poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
+      poller.wait(get_report_status(nsc: nsc, report_id: report_id))
+      @ready = true
       rescue TimeoutError
         retry if timeout_retry?
         @error_message = "Timeout Waiting for Report to Generate - Report Config ID: #{report_id}"
@@ -30,33 +29,28 @@ module Nexpose
         @error_message = "Error Report Config ID: #{report_id} :: Report Probably Does Not Exist :: #{error}"
       rescue => error
         @error_message = "Error Report Config ID: #{report_id} :: #{error}"
-      end
     end
 
 
     def for_integration(nsc: nil, scan_id: nil, status: 'finished')
-      begin
-        poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
-        poller.wait(get_integration_status(nsc: nsc, scan_id: scan_id, status: status))
-        @ready = true
+      poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
+      poller.wait(get_integration_status(nsc: nsc, scan_id: scan_id, status: status))
+      @ready = true
       rescue TimeoutError
         retry if timeout_retry?
         @error_message = "Timeout Waiting for Integration Status of '#{status}' - Scan ID: #{scan_id}"
       rescue Nexpose::APIError => error
         @error_message = "API Error Waiting for Integration Scan ID: #{scan_id} :: #{error.req.error}"
-      end
     end
 
 
     def for_judgment(proc: nil, desc: nil)
-      begin
-        poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
-        poller.wait(proc)
-        @ready = true
+      poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
+      poller.wait(proc)
+      @ready = true
       rescue TimeoutError
         retry if timeout_retry?
         @error_message = "Timeout Waiting for Judgment to Judge. #{desc}"
-      end
     end
 
 
