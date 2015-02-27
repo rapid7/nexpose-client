@@ -23,6 +23,10 @@ module Nexpose
         @value = value
       end
 
+      def to_json
+        JSON.generate(to_h)
+      end
+
       def to_h
         header = Hash.new
         header[@name] = @value
@@ -135,6 +139,10 @@ module Nexpose
         @checked = checked
       end
 
+      def to_json
+        JSON.generate(to_h)
+      end
+
       def to_h
         { name: name,
           value: value,
@@ -157,15 +165,15 @@ module Nexpose
       # The HTTP request method with which to submit the form.
       attr_reader :method
       # The HTTP encoding type with which to submit the form.
-      attr_reader :enctype
+      attr_reader :encType
       # The fields in the HTML Form
       attr_reader :fields
 
-      def initialize(name, action, method, enctype)
+      def initialize(name, action, method, encType)
         @name = name
         @action = action
         @method = method
-        @enctype = enctype
+        @encType = encType
         @fields = []
       end
 
@@ -173,11 +181,15 @@ module Nexpose
         @fields << field.to_h
       end
 
+      def to_json
+        JSON.generate(to_h)
+      end
+
       def to_h
         { name: name,
           action: action,
           method: method,
-          enctype: enctype,
+          encType: encType,
           fields: fields,
           parentPage: action
         }
@@ -228,7 +240,7 @@ module Nexpose
           service: service,
           enabled: enabled,
           name: name,
-          form: form,
+          form: form.to_h,
           baseURL: baseURL,
           loginURL: loginURL,
           soft403Pattern: soft403Pattern
