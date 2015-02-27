@@ -7,7 +7,7 @@ module Nexpose
     def initialize(retry_count: nil, timeout: nil, polling_interval: nil)
       @error_message = "Default General Failure in Nexpose::Wait"
       @ready = false
-      @retry_count = retry_count.nil? ? 0 : retry_count
+      @retry_count = retry_count.to_i
       @timeout = timeout
       @polling_interval = polling_interval
     end
