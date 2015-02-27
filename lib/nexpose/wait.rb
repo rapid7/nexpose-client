@@ -102,10 +102,10 @@ module Nexpose
     end
 
 
-    def wait(cond)
+    def wait(condition)
       @poll_begin = Time.now
       loop do
-        break if cond.call
+        break if condition.call
         raise TimeoutError if @poll_begin + @timeout < Time.now
         sleep @polling_interval
       end
