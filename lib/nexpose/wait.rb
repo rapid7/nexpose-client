@@ -13,14 +13,14 @@ module Nexpose
     end
 
 
-    def is_ready?
+    def ready?
       @ready
     end
 
 
-    def for_report(nsc: nil, report_id: nil)
+    def for_report(nexpose_connection: nil, report_id: nil)
       poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
-      poller.wait(get_report_status(nsc: nsc, report_id: report_id))
+      poller.wait(report_status_proc(nexpose_connection: nsc, report_id: report_id))
       @ready = true
       rescue TimeoutError
         retry if timeout_retry?
@@ -32,9 +32,9 @@ module Nexpose
     end
 
 
-    def for_integration(nsc: nil, scan_id: nil, status: 'finished')
+    def for_integration(nexpose_connection: nil, scan_id: nil, status: 'finished')
       poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
-      poller.wait(get_integration_status(nsc: nsc, scan_id: scan_id, status: status))
+      poller.wait(integration_status_proc(nexpose_connection: nsc, scan_id: scan_id, status: status))
       @ready = true
       rescue TimeoutError
         retry if timeout_retry?
@@ -57,12 +57,12 @@ module Nexpose
     private
 
 
-      def get_report_status(nsc: nil, report_id: nil)
+      def report_status_proc(nexpose_connection: nil, report_id: nil)
         Proc.new { nsc.last_report(report_id).status == 'Generated' }
       end
 
 
-      def get_integration_status(nsc: nil, scan_id: scan_id, status: status)
+      def integration_status_proc(nexpose_connection: nil, scan_id: scan_id, status: status)
         Proc.new { nsc.scan_status(scan_id).downcase == status.downcase }
       end
 
