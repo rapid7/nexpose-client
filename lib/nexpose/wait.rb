@@ -69,9 +69,9 @@ module Nexpose
       def timeout_retry?
         if @retry_count > 0
           @retry_count = @retry_count - 1
-          return true
+          true
         else
-          return false
+          false
         end
       end
 
