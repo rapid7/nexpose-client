@@ -4,7 +4,7 @@ module Nexpose
     attr_reader :error_message, :ready, :retry_count, :timeout, :polling_interval
 
     def initialize(retry_count: nil, timeout: nil, polling_interval: nil)
-      @error_message = "Default General Failure in Nexpose::Wait"
+      @error_message = 'Default General Failure in Nexpose::Wait'
       @ready = false
       @retry_count = retry_count.to_i
       @timeout = timeout
@@ -17,7 +17,7 @@ module Nexpose
 
     def for_report(nexpose_connection: nil, report_id: nil)
       poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
-      poller.wait(report_status_proc(nexpose_connection: nsc, report_id: report_id))
+      poller.wait(report_status_proc(nexpose_connection: nexpose_connection, report_id: report_id))
       @ready = true
       rescue TimeoutError
         retry if timeout_retry?
@@ -30,7 +30,7 @@ module Nexpose
 
     def for_integration(nexpose_connection: nil, scan_id: nil, status: 'finished')
       poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
-      poller.wait(integration_status_proc(nexpose_connection: nsc, scan_id: scan_id, status: status))
+      poller.wait(integration_status_proc(nexpose_connection: nexpose_connection, scan_id: scan_id, status: status))
       @ready = true
       rescue TimeoutError
         retry if timeout_retry?
@@ -48,30 +48,25 @@ module Nexpose
         @error_message = "Timeout Waiting for Judgment to Judge. #{desc}"
     end
 
-
     private
 
       def report_status_proc(nexpose_connection: nil, report_id: nil)
-        Proc.new { nsc.last_report(report_id).status == 'Generated' }
+        Proc.new { nexpose_connection.last_report(report_id).status == 'Generated' }
       end
 
       def integration_status_proc(nexpose_connection: nil, scan_id: scan_id, status: status)
-        Proc.new { nsc.scan_status(scan_id).downcase == status.downcase }
+        Proc.new { nexpose_connection.scan_status(scan_id).downcase == status.downcase }
       end
 
       def timeout_retry?
         if @retry_count > 0
-          @retry_count = @retry_count - 1
+          @retry_count -= 1
           true
         else
           false
         end
       end
-
   end
-
-
-
 
   class Poller
     ## Stand alone object to handle waiting logic.
@@ -105,7 +100,5 @@ module Nexpose
         default_polling = 1
         ENV['GLOBAL_POLLING_INTERVAL'].nil? ? default_polling : ENV['GLOBAL_POLLING_INTERVAL']
       end
-
   end
-
 end
