@@ -23,8 +23,8 @@ describe Nexpose::Connection, :vcr do
       end
 
       let(:basic_site) do
-        Nexpose::Site.new("test site name 1").tap do |site|
-          site.description = "test site description 1"
+        Nexpose::Site.new('test site name 1').tap do |site|
+          site.description = 'test site description 1'
 
           VCR.use_cassette('basic_site') do
             site.save(connection)
@@ -35,7 +35,10 @@ describe Nexpose::Connection, :vcr do
       it 'returns a list of site summaries' do
         sites = VCR.use_cassette('site_listing') { connection.sites }
         expected_sites.map! do
-          a_site_matching(name: basic_site.name, description: basic_site.description)
+          a_site_matching(
+            name: basic_site.name,
+            description: basic_site.description
+          )
         end
 
         expect(sites).to include(*expected_sites)

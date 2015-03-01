@@ -6,7 +6,10 @@ class MatchingSite
   def ==(other)
     attributes.all? do |attribute_name, attribute_value|
       unless other.respond_to?(attribute_name)
-        raise RSpec::ExpectationNotMetError, "Expected #{other} to respond to #{attribute_name}."
+        fail(
+          RSpec::ExpectationNotMetError,
+          "Expected #{other} to respond to #{attribute_name}."
+        )
       end
 
       attribute_value == other.public_send(attribute_name)
