@@ -1,0 +1,98 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://<NEXPOSE_CONSOLE_HOSTNAME>:3780/api/1.1/xml
+    body:
+      encoding: UTF-8
+      string: "<LoginRequest password='<NEXPOSE_CONSOLE_USERNAME>' sync-id='0' user-id='<NEXPOSE_CONSOLE_USERNAME>'></LoginRequest>"
+    headers:
+      Content-Type:
+      - text/xml
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Ua-Compatible:
+      - IE=edge,chrome=1
+      Set-Cookie:
+      - JSESSIONID=4DD8D9DA704BA4075EC1BC9594D5D71D; Path=/; Secure; HttpOnly
+      Date:
+      - Sun, 01 Mar 2015 04:03:14 GMT
+      Server:
+      - NSC/0.6.4 (JVM)
+      Cache-Control:
+      - no-cache; max-age=0
+      Pragma:
+      - no-cache
+      Content-Type:
+      - application/xml;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        <LoginResponse success="1" session-id="1D089FAAF28D7CBE27F08DB55F6F225284385692"/>
+    http_version: 
+  recorded_at: Sun, 01 Mar 2015 04:03:14 GMT
+- request:
+    method: post
+    uri: https://<NEXPOSE_CONSOLE_HOSTNAME>:3780/api/1.1/xml
+    body:
+      encoding: UTF-8
+      string: <SiteSaveRequest session-id="1D089FAAF28D7CBE27F08DB55F6F225284385692"><Site
+        description='test site description 1' id='-1' name='test site name 1' riskfactor='1.0'><Description>test
+        site description 1</Description><Hosts/><ExcludedHosts/><ScanConfig configID='-1'
+        configVersion='3' name='full-audit-without-web-spider' templateID='full-audit-without-web-spider'><Schedules/></ScanConfig></Site>
+        </SiteSaveRequest>
+    headers:
+      Content-Type:
+      - text/xml
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Ua-Compatible:
+      - IE=edge,chrome=1
+      Set-Cookie:
+      - JSESSIONID=BC09924C550F4793AC787416ACB60B58; Path=/; Secure; HttpOnly
+      Date:
+      - Sun, 01 Mar 2015 04:03:14 GMT
+      Server:
+      - NSC/0.6.4 (JVM)
+      Cache-Control:
+      - no-cache; max-age=0
+      Pragma:
+      - no-cache
+      Content-Type:
+      - application/xml;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    body:
+      encoding: ASCII-8BIT
+      string: <SiteSaveResponse success="1" site-id="32"/>
+    http_version: 
+  recorded_at: Sun, 01 Mar 2015 04:03:14 GMT
+recorded_with: VCR 2.9.3
