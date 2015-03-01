@@ -1,13 +1,6 @@
 require 'spec_helper'
 
-describe Nexpose::Connection, :vcr do
-  let(:console_hostname) { ENV['NEXPOSE_HOSTNAME'] }
-  let(:username) { ENV['NEXPOSE_USERNAME'] }
-  let(:password) { ENV['NEXPOSE_PASSWORD'] }
-  let(:connection) do
-    Nexpose::Connection.new(console_hostname, username, password).tap(&:login)
-  end
-
+describe Nexpose::Connection, :with_api_login do
   describe 'Site methods' do
     describe '#sites' do
       attr_reader :expected_sites

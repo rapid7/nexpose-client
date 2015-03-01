@@ -14,6 +14,15 @@ if ENV['CI']
   ENV['NEXPOSE_PASSWORD'] = 'password123'
 end
 
+RSpec.shared_context 'authenticated for API', :with_api_login do
+  let(:console_hostname) { ENV['NEXPOSE_HOSTNAME'] }
+  let(:username) { ENV['NEXPOSE_USERNAME'] }
+  let(:password) { ENV['NEXPOSE_PASSWORD'] }
+  let(:connection) do
+    Nexpose::Connection.new(console_hostname, username, password).tap(&:login)
+  end
+end
+
 VCR.configure do |config|
   config.cassette_library_dir = 'spec/fixtures/cassettes'
   config.filter_sensitive_data('nexpose.local') { ENV['NEXPOSE_HOSTNAME'] }
