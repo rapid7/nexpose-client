@@ -8,6 +8,12 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
   CodeClimate::TestReporter::Formatter
 ]
 
+if ENV['CI']
+  ENV['NEXPOSE_HOSTNAME'] = 'nexpose.local'
+  ENV['NEXPOSE_USERNAME'] = 'johndoe'
+  ENV['NEXPOSE_PASSWORD'] = 'password123'
+end
+
 VCR.configure do |config|
   config.cassette_library_dir = 'spec/fixtures/cassettes'
   config.filter_sensitive_data('nexpose.local') { ENV['NEXPOSE_HOSTNAME'] }
