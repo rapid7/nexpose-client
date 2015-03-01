@@ -2,11 +2,11 @@
 http_interactions:
 - request:
     method: post
-    uri: https://<NEXPOSE_CONSOLE_HOSTNAME>:3780/api/1.1/xml
+    uri: https://nexpose.local:3780/api/1.1/xml
     body:
       encoding: UTF-8
-      string: <SiteDeleteRequest session-id="1D089FAAF28D7CBE27F08DB55F6F225284385692"
-        site-id="32"/>
+      string: <SiteDeleteRequest session-id="C22DA05D8FD1D5ED1DE0137CC82DE39928590188"
+        site-id="36"/>
     headers:
       Content-Type:
       - text/xml
@@ -26,9 +26,9 @@ http_interactions:
       X-Ua-Compatible:
       - IE=edge,chrome=1
       Set-Cookie:
-      - JSESSIONID=EFCF0C733DF385042B1D401A681E1D0A; Path=/; Secure; HttpOnly
+      - JSESSIONID=942020DCEE59DDF50171F8FA8DEAE3AA; Path=/; Secure; HttpOnly
       Date:
-      - Sun, 01 Mar 2015 04:03:15 GMT
+      - Sun, 01 Mar 2015 04:50:24 GMT
       Server:
       - NSC/0.6.4 (JVM)
       Cache-Control:
@@ -45,5 +45,5 @@ http_interactions:
       encoding: ASCII-8BIT
       string: <SiteDeleteResponse success="1"/>
     http_version: 
-  recorded_at: Sun, 01 Mar 2015 04:03:15 GMT
+  recorded_at: Sun, 01 Mar 2015 04:50:24 GMT
 recorded_with: VCR 2.9.3

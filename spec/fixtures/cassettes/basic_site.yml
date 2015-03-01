@@ -2,10 +2,10 @@
 http_interactions:
 - request:
     method: post
-    uri: https://<NEXPOSE_CONSOLE_HOSTNAME>:3780/api/1.1/xml
+    uri: https://nexpose.local:3780/api/1.1/xml
     body:
       encoding: UTF-8
-      string: "<LoginRequest password='<NEXPOSE_CONSOLE_USERNAME>' sync-id='0' user-id='<NEXPOSE_CONSOLE_USERNAME>'></LoginRequest>"
+      string: "<LoginRequest password='johndoe' sync-id='0' user-id='johndoe'></LoginRequest>"
     headers:
       Content-Type:
       - text/xml
@@ -25,9 +25,9 @@ http_interactions:
       X-Ua-Compatible:
       - IE=edge,chrome=1
       Set-Cookie:
-      - JSESSIONID=4DD8D9DA704BA4075EC1BC9594D5D71D; Path=/; Secure; HttpOnly
+      - JSESSIONID=DB0B64C8B2BF531E2AA043CF29E65CAF; Path=/; Secure; HttpOnly
       Date:
-      - Sun, 01 Mar 2015 04:03:14 GMT
+      - Sun, 01 Mar 2015 04:50:24 GMT
       Server:
       - NSC/0.6.4 (JVM)
       Cache-Control:
@@ -43,15 +43,15 @@ http_interactions:
     body:
       encoding: ASCII-8BIT
       string: |
-        <LoginResponse success="1" session-id="1D089FAAF28D7CBE27F08DB55F6F225284385692"/>
+        <LoginResponse success="1" session-id="C22DA05D8FD1D5ED1DE0137CC82DE39928590188"/>
     http_version: 
-  recorded_at: Sun, 01 Mar 2015 04:03:14 GMT
+  recorded_at: Sun, 01 Mar 2015 04:50:24 GMT
 - request:
     method: post
-    uri: https://<NEXPOSE_CONSOLE_HOSTNAME>:3780/api/1.1/xml
+    uri: https://nexpose.local:3780/api/1.1/xml
     body:
       encoding: UTF-8
-      string: <SiteSaveRequest session-id="1D089FAAF28D7CBE27F08DB55F6F225284385692"><Site
+      string: <SiteSaveRequest session-id="C22DA05D8FD1D5ED1DE0137CC82DE39928590188"><Site
         description='test site description 1' id='-1' name='test site name 1' riskfactor='1.0'><Description>test
         site description 1</Description><Hosts/><ExcludedHosts/><ScanConfig configID='-1'
         configVersion='3' name='full-audit-without-web-spider' templateID='full-audit-without-web-spider'><Schedules/></ScanConfig></Site>
@@ -75,9 +75,9 @@ http_interactions:
       X-Ua-Compatible:
       - IE=edge,chrome=1
       Set-Cookie:
-      - JSESSIONID=BC09924C550F4793AC787416ACB60B58; Path=/; Secure; HttpOnly
+      - JSESSIONID=DB6905D5C0D2984BB9B0C91C7DA1F5B3; Path=/; Secure; HttpOnly
       Date:
-      - Sun, 01 Mar 2015 04:03:14 GMT
+      - Sun, 01 Mar 2015 04:50:24 GMT
       Server:
       - NSC/0.6.4 (JVM)
       Cache-Control:
@@ -92,7 +92,7 @@ http_interactions:
       - Accept-Encoding
     body:
       encoding: ASCII-8BIT
-      string: <SiteSaveResponse success="1" site-id="32"/>
+      string: <SiteSaveResponse success="1" site-id="36"/>
     http_version: 
-  recorded_at: Sun, 01 Mar 2015 04:03:14 GMT
+  recorded_at: Sun, 01 Mar 2015 04:50:24 GMT
 recorded_with: VCR 2.9.3
