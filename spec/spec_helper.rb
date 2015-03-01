@@ -8,7 +8,9 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
   CodeClimate::TestReporter::Formatter
 ]
 
-if ENV['CI']
+environment_variables_defined =
+  ENV['NEXPOSE_HOSTNAME'] && ENV['NEXPOSE_USERNAME'] && ENV['NEXPOSE_PASSWORD']
+if ENV['CI'] || !environment_variables_defined
   ENV['NEXPOSE_HOSTNAME'] = 'nexpose.local'
   ENV['NEXPOSE_USERNAME'] = 'johndoe'
   ENV['NEXPOSE_PASSWORD'] = 'password123'
