@@ -165,7 +165,6 @@ module Nexpose
       conn.protocol = xml.attributes['protocol']
       conn.port = xml.attributes['port'].to_i
       conn.status = xml.attributes['connection-status']
-      conn.type = xml.attributes['type']
       conn
     end
   end
