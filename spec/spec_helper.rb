@@ -31,6 +31,7 @@ VCR.configure do |config|
   config.filter_sensitive_data('johndoe') { ENV['NEXPOSE_USERNAME'] }
   config.filter_sensitive_data('password123') { ENV['NEXPOSE_PASSWORD'] }
   config.hook_into :webmock
+  config.ignore_hosts 'codeclimate.com'
 end
 
 SimpleCov.start
