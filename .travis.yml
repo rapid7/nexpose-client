@@ -3,7 +3,6 @@ rvm:
   - 2.1.0
   - 2.2.0
   - ruby-head
-  - rbx-head
 script: bundle exec rspec --color --format=documentation
 addons:
   code_climate:
