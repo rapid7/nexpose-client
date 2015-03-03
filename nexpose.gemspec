@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.files                 = Dir['[A-Z]*'] + Dir['lib/**/*']
   s.require_paths         = ['lib']
   s.extra_rdoc_files      = ['README.markdown']
-  s.required_ruby_version = '>= 1.9'
+  s.required_ruby_version = '>= 2.1'
   s.platform              = 'ruby'
 
   s.add_runtime_dependency('rex', '~> 2.0.5', '>= 2.0.5')
