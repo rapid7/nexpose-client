@@ -175,7 +175,7 @@ module Nexpose
 
     # Returns true when the site is dynamic.
     def isdynamic?
-      dynamic
+      @dynamic
     end
 
     # Adds an asset to this site by host name.
@@ -310,7 +310,7 @@ module Nexpose
           ip = IPRange.new(ip)
         end
         raise 'Invalid IP address specified' unless ip.is_a? IPRange
-        @included_scan_targets[:addresses] << ip
+        @excluded_scan_targets[:addresses] << ip
       rescue ArgumentError => e
         raise e.message
       end
@@ -326,7 +326,7 @@ module Nexpose
           ip = IPRange.new(ip)
         end
         raise 'Invalid IP address specified' unless ip.is_a? IPRange
-        @included_scan_targets[:addresses].reject! { |t| t.eql? ip }
+        @excluded_scan_targets[:addresses].reject! { |t| t.eql? ip }
       rescue ArgumentError => e
         raise e.message
       end
@@ -344,7 +344,7 @@ module Nexpose
         if (from_ip..to_ip).to_a.size == 0
           raise 'Invalid IP range specified'
         end
-        @included_scan_targets[:addresses] << IPRange.new(from, to)
+        @excluded_scan_targets[:addresses] << IPRange.new(from, to)
       rescue ArgumentError => e
         raise "#{e.message} in given IP range"
       end
@@ -362,7 +362,7 @@ module Nexpose
         if (from_ip..to_ip).to_a.size == 0
           raise 'Invalid IP range specified'
         end
-        @included_scan_targets[:addresses].reject! { |t| t.eql? IPRange.new(from, to) }
+        @excluded_scan_targets[:addresses].reject! { |t| t.eql? IPRange.new(from, to) }
       rescue ArgumentError => e
         raise "#{e.message} in given IP range"
       end
@@ -501,7 +501,8 @@ module Nexpose
           tags: @tags.map{|tag| tag.to_h},
           alerts: @alerts.map {|alert| alert.to_h },
           organization: @organization.to_h,
-          users: users
+          users: users,
+          dynamic: @dynamic || 0
       }
     end
 
