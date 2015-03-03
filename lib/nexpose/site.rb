@@ -287,7 +287,7 @@ module Nexpose
     #
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
-    def remove_ip_range(from, to)
+    def remove_excluded_ip_range(from, to)
       @exclude.reject! { |asset| asset == IPRange.new(from, to) }
     end
 
