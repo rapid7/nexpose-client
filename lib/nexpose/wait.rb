@@ -50,22 +50,22 @@ module Nexpose
 
     private
 
-      def report_status_proc(nexpose_connection: nil, report_id: nil)
-        Proc.new { nexpose_connection.last_report(report_id).status == 'Generated' }
-      end
+    def report_status_proc(nexpose_connection: nil, report_id: nil)
+      Proc.new { nexpose_connection.last_report(report_id).status == 'Generated' }
+    end
 
-      def integration_status_proc(nexpose_connection: nil, scan_id: scan_id, status: status)
-        Proc.new { nexpose_connection.scan_status(scan_id).downcase == status.downcase }
-      end
+    def integration_status_proc(nexpose_connection: nil, scan_id: scan_id, status: status)
+      Proc.new { nexpose_connection.scan_status(scan_id).downcase == status.downcase }
+    end
 
-      def timeout_retry?
-        if @retry_count > 0
-          @retry_count -= 1
-          true
-        else
-          false
-        end
+    def timeout_retry?
+      if @retry_count > 0
+        @retry_count -= 1
+        true
+      else
+        false
       end
+    end
   end
 
   class Poller
@@ -91,14 +91,14 @@ module Nexpose
 
     private
 
-      def set_global_timeout
-        default_timeout = 120
-        ENV['GLOBAL_TIMEOUT'].nil? ? default_timeout : ENV['GLOBAL_TIMEOUT']
-      end
+    def set_global_timeout
+      default_timeout = 120
+      ENV['GLOBAL_TIMEOUT'].nil? ? default_timeout : ENV['GLOBAL_TIMEOUT']
+    end
 
-      def set_polling_interval
-        default_polling = 1
-        ENV['GLOBAL_POLLING_INTERVAL'].nil? ? default_polling : ENV['GLOBAL_POLLING_INTERVAL']
-      end
+    def set_polling_interval
+      default_polling = 1
+      ENV['GLOBAL_POLLING_INTERVAL'].nil? ? default_polling : ENV['GLOBAL_POLLING_INTERVAL']
+    end
   end
 end
