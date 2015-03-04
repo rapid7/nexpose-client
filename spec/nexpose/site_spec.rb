@@ -23,8 +23,7 @@ describe Nexpose::Site do
     end
 
     context 'with a multiple IP address' do
-      # TODO: The IPRange class apparently doesn't handle CIDR notation on the client side
-      xit 'adds a new IPRange to the assets list' do
+      it 'adds a new IPRange to the assets list' do
         subject.add_asset('192.168.1.0/24')
 
         expect(subject.assets).to include(Nexpose::IPRange.new('192.168.1.0', '192.168.1.255'))
@@ -50,8 +49,7 @@ describe Nexpose::Site do
     end
 
     context 'with a multiple IP address' do
-      # TODO: The IPRange class apparently doesn't handle CIDR notation on the client side
-      xit 'adds a new IPRange to the assets list' do
+      it 'adds a new IPRange to the assets list' do
         subject.add_asset('192.168.1.0/24')
 
         expect(subject.assets).to include(Nexpose::IPRange.new('192.168.1.0', '192.168.1.255'))
