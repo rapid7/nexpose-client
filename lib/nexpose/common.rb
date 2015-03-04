@@ -232,6 +232,23 @@ module Nexpose
       }
     end
 
+    # Create organization object from hash
+    def self.create(hash)
+      new do |org|
+        org.name = hash[:name]
+        org.url = hash[:url]
+        org.primary_contact = hash[:primary_contact]
+        org.job_title = hash[:job_title]
+        org.email = hash[:email]
+        org.telephone = hash[:telephone]
+        org.address = hash[:address]
+        org.state = hash[:state]
+        org.city = hash[:city]
+        org.zip = hash[:zip]
+        org.country = hash[:country]
+      end
+    end
+
     def self.parse(xml)
       new do |org|
         org.name = xml.attributes['name']
