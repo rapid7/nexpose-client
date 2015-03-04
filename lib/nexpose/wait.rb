@@ -1,5 +1,4 @@
 module Nexpose
-
   class Wait
     attr_reader :error_message, :ready, :retry_count, :timeout, :polling_interval
 
