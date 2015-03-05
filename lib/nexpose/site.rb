@@ -138,10 +138,6 @@ module Nexpose
     # Configuration version. Default: 3
     attr_accessor :config_version
 
-    # Whether or not this site is dynamic.
-    # Dynamic sites are created through Asset Discovery Connections.
-    attr_accessor :dynamic
-
     # Asset filter criteria if this site is dynamic.
     attr_accessor :search_criteria
 
@@ -161,7 +157,6 @@ module Nexpose
       @id = -1
       @risk_factor = 1.0
       @config_version = 3
-      @is_dynamic = false
       @schedules = []
       @included_scan_targets = { addresses: [], asset_groups: [] }
       @excluded_scan_targets = { addresses: [], asset_groups: [] }
@@ -175,7 +170,7 @@ module Nexpose
 
     # Returns true when the site is dynamic.
     def isdynamic?
-      @dynamic
+      !@discovery_config.nil?
     end
 
     # Adds an asset to this site by host name.
@@ -501,8 +496,7 @@ module Nexpose
           tags: @tags.map{|tag| tag.to_h},
           alerts: @alerts.map {|alert| alert.to_h },
           organization: @organization.to_h,
-          users: users,
-          dynamic: @dynamic || 0
+          users: users
       }
     end
 
