@@ -514,7 +514,7 @@ module Nexpose
       site = self.json_initializer(hash).deserialize(hash)
 
       #site = new(hash[:name], hash[:scan_template_id])
-      site.organization = Nexpose::Organization.new.object_from_hash(nsc,site.organization)
+      site.organization = Organization.create(site.organization)
       site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.discovery_config = Nexpose::DiscoveryConnection.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
