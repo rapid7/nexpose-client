@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.9'
   s.platform              = 'ruby'
 
-  s.add_runtime_dependency('rex', '~> 2.0.5', '>= 2.0.5')
+  s.add_runtime_dependency('rex', '~> 2.0', '>= 2.0.8')
 
   s.add_development_dependency('bundler', '~> 1.3')
   s.add_development_dependency('codeclimate-test-reporter', '~> 0.4.6')
