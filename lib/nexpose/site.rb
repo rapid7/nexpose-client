@@ -482,27 +482,25 @@ module Nexpose
           asset_groups: @excluded_scan_targets[:asset_groups].compact
       }
 
-
       {
-          id: id,
-          name: name,
-          description: description,
+          id: @id,
+          name: @name,
+          description: @description,
           included_scan_targets: included_scan_targets,
           excluded_scan_targets: excluded_scan_targets,
-          engine_id: engine_id,
-          scan_template_id: scan_template_id,
-          risk_factor: risk_factor,
-          schedules: schedules,
-          shared_credentials: @shared_credentials.map {|cred| cred.to_h},
-          site_credentials: @site_credentials.map {|cred| cred.to_h},
-          web_credentials: @web_credentials.map {|webCred| webCred.to_h},
+          engine_id: @engine_id,
+          scan_template_id: @scan_template_id,
+          risk_factor: @risk_factor,
+          schedules: (@schedules || []).map {|schedule| schedule.to_h},
+          shared_credentials: (@shared_credentials || []).map {|cred| cred.to_h},
+          site_credentials: (@site_credentials || []).map {|cred| cred.to_h},
+          web_credentials: (@web_credentials || []).map {|webCred| webCred.to_h},
           discovery_config: @discovery_config.to_h,
           search_criteria: @search_criteria.to_h,
-          tags: @tags.map{|tag| tag.to_h},
-          alerts: @alerts.map {|alert| alert.to_h },
+          tags: (@tags || []).map{|tag| tag.to_h},
+          alerts: (@alerts || []).map {|alert| alert.to_h },
           organization: @organization.to_h,
-          users: users,
-          dynamic: @dynamic || 0
+          users: users
       }
     end
 
@@ -521,6 +519,7 @@ module Nexpose
 
       #site = new(hash[:name], hash[:scan_template_id])
       site.organization = Organization.create(site.organization)
+      site.schedules = (hash[:schedules] || []).map {|schedule| Nexpose::Schedule.from_hash(schedule) }
       site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.discovery_config = Nexpose::DiscoveryConnection.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
