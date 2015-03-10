@@ -125,6 +125,7 @@ module Nexpose
     attr_accessor :repeater_type
     attr_accessor :scan_template_id
 
+    # @param [Time] start
     def initialize(type, interval, start, enabled = true, scan_template_id = 'full-audit-without-web-spider')
       @type = type
       @interval = interval
@@ -134,21 +135,23 @@ module Nexpose
     end
 
     def self.from_hash(hash)
-      schedule = new(hash[:type], hash[:interval], hash[:start])
-      # hash.each do |k, v|
-      #   schedule.instance_variable_set("@#{k}", v)
-      # end
-      schedule.enabled = hash[:enabled]
-      schedule.type = 'daily'
-      schedule.scan_template_id = hash[:scan_template_id]
-      schedule.start = hash[:start_date]
+      start = nil
+      start = Nexpose::ISO8601.to_time(hash[:start_date]) if hash[:start_date]
+      repeat_scan_hash = hash[:repeat_scan]
+      if repeat_scan_hash.nil?
+        schedule = new('daily', 0, start)
+      else
+        schedule = new(repeat_scan_hash[:type], repeat_scan_hash[:interval], start)
+      end
+      schedule.enabled = hash[:enabled].nil? ? true : hash[:enabled]
+      schedule.scan_template_id = hash[:scan_template_id] || 'full-audit-without-web-spider'
+      schedule.start = Nexpose::ISO8601.to_time(hash[:start_date]) if hash[:start_date]
       schedule.max_duration = hash[:maximum_scan_duration] if hash[:maximum_scan_duration]
-      schedule.not_valid_after = hash[:not_valid_after_date] if hash[:not_valid_after_date]
+      schedule.not_valid_after = Nexpose::ISO8601.to_time(hash[:not_valid_after_date]) if hash[:not_valid_after_date]
       schedule.timezone = hash[:time_zone] if hash[:time_zone]
       schedule.next_run_time = hash[:next_run_time] if hash[:next_run_time]
 
-      unless hash[:repeat_scan].nil?
-        repeat_scan_hash = hash[:repeat_scan]
+      unless repeat_scan_hash.nil?
         schedule.type = repeat_scan_hash[:type]
         schedule.interval = repeat_scan_hash[:interval]
         schedule.repeater_type = 'restart' if repeat_scan_hash[:on_repeat] == 'restart-scan'
@@ -172,8 +175,8 @@ module Nexpose
           scan_template_id: @scan_template_id,
           maximum_scan_duration: @max_duration
         }
-        schedule_hash[:start_date] = @start if @start
-        schedule_hash[:not_valid_after_date] = @not_valid_after if @not_valid_after
+        schedule_hash[:start_date] = Nexpose::ISO8601.to_string(@start) if @start
+        schedule_hash[:not_valid_after_date] = Nexpose::ISO8601.to_string(@not_valid_after) if @not_valid_after
         schedule_hash[:time_zone] = @timezone if @timezone
 
         unless @type.nil? || @interval == 0
