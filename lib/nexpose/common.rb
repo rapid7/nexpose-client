@@ -179,7 +179,7 @@ module Nexpose
         schedule_hash[:not_valid_after_date] = Nexpose::ISO8601.to_string(@not_valid_after) if @not_valid_after
         schedule_hash[:time_zone] = @timezone if @timezone
 
-        unless @type.nil? || @interval == 0
+        unless (@type.nil? || @interval == 0) && !@is_extended
           repeat_scan_hash = {
             type: @type,
             interval: @interval
