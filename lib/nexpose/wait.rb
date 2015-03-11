@@ -14,7 +14,7 @@ module Nexpose
       @ready
     end
 
-    def for_report(nexpose_connection: nil, report_id: nil)
+    def for_report(nexpose_connection:, report_id:)
       poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
       poller.wait(report_status_proc(nexpose_connection: nexpose_connection, report_id: report_id))
       @ready = true
@@ -27,7 +27,7 @@ module Nexpose
         @error_message = "Error Report Config ID: #{report_id} :: #{error}"
     end
 
-    def for_integration(nexpose_connection: nil, scan_id: nil, status: 'finished')
+    def for_integration(nexpose_connection:, scan_id:, status: 'finished')
       poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
       poller.wait(integration_status_proc(nexpose_connection: nexpose_connection, scan_id: scan_id, status: status))
       @ready = true
@@ -38,7 +38,7 @@ module Nexpose
         @error_message = "API Error Waiting for Integration Scan ID: #{scan_id} :: #{error.req.error}"
     end
 
-    def for_judgment(proc: nil, desc: nil)
+    def for_judgment(proc:, desc:)
       poller = Nexpose::Poller.new(timeout: @timeout, polling_interval: @polling_interval)
       poller.wait(proc)
       @ready = true
@@ -49,11 +49,11 @@ module Nexpose
 
     private
 
-    def report_status_proc(nexpose_connection: nil, report_id: nil)
+    def report_status_proc(nexpose_connection:, report_id:)
       Proc.new { nexpose_connection.last_report(report_id).status == 'Generated' }
     end
 
-    def integration_status_proc(nexpose_connection: nil, scan_id: scan_id, status: status)
+    def integration_status_proc(nexpose_connection:, scan_id:, status:)
       Proc.new { nexpose_connection.scan_status(scan_id).downcase == status.downcase }
     end
 
