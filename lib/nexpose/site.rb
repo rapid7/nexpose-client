@@ -121,6 +121,9 @@ module Nexpose
     # [Array] Collection of web credentials associated with the site.
     attr_accessor :web_credentials
 
+    # Scan the assets with last scanned engine or not.
+    attr_accessor :auto_engine_selection_enabled
+
     # [Array] Collection of real-time alerts.
     # @see Alert
     # @see SMTPAlert
