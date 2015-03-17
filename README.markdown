@@ -9,6 +9,9 @@ Check out https://github.com/rapid7/nexpose-client/wiki for walk-throughs and re
 
 This gem is heavily used for internal, automated testing of the Nexpose product. It provides calls to the Nexpose XML APIs version 1.1 and 1.2 (except for some multi-tenant operations). It also includes a number of helper methods which are not currently exposed through alternate means.
 
+## Release Notes
+
+Release notes are available on the [Releases](https://github.com/rapid7/nexpose-client/releases) page.
 
 ## Contributions
 
