@@ -484,6 +484,7 @@ module Nexpose
           id: @id,
           name: @name,
           description: @description,
+          auto_engine_selection_enabled: @auto_engine_selection_enabled,
           included_scan_targets: included_scan_targets,
           excluded_scan_targets: excluded_scan_targets,
           engine_id: @engine_id,
