@@ -191,10 +191,6 @@ module Nexpose
       end
     end
 
-    #####
-    # ICMP device discovery methods
-    #####
-
     # Enable/disable ICMP device discovery
     # @param [Boolean] enable Enable or disable ICMP device discovery
     def enable_icmp_device_discovery=(enable)
