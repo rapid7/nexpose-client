@@ -15,10 +15,10 @@ Gem::Specification.new do |s|
   s.files                 = Dir['[A-Z]*'] + Dir['lib/**/*']
   s.require_paths         = ['lib']
   s.extra_rdoc_files      = ['README.markdown']
-  s.required_ruby_version = '>= 1.9'
+  s.required_ruby_version = '>= 2.1'
   s.platform              = 'ruby'
 
-  s.add_runtime_dependency('rex', '2.0.7')
+  s.add_runtime_dependency('rex', '~> 2.0', '>= 2.0.8')
 
   s.add_development_dependency('bundler', '~> 1.3')
   s.add_development_dependency('codeclimate-test-reporter', '~> 0.4.6')
