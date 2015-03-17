@@ -2,6 +2,7 @@ require 'codeclimate-test-reporter'
 require 'simplecov'
 require 'vcr'
 require_relative './matchers'
+require_relative './helpers'
 
 SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
   SimpleCov::Formatter::HTMLFormatter,
