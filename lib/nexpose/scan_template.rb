@@ -202,7 +202,6 @@ module Nexpose
     # @param [Array] ports to scan for device discovery
     def tcp_discovery_ports=(ports)
       tcp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/TCPHostCheck')
-      enable_tcp_discovery(true)
       REXML::XPath.first(tcp, './portList').text = ports.join(',')
     end
 
@@ -217,7 +216,6 @@ module Nexpose
     # @param [Array] posts to scan for UDP device discovery
     def udp_discovery_ports=(ports)
       udp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/UDPHostCheck')
-      enable_udp_discovery(true)
       REXML::XPath.first(udp, './portList').text = ports.join(',')
     end
 
