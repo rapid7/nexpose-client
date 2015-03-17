@@ -679,9 +679,36 @@ module Nexpose
     # End of range *Optional (If nil then IPRange is a single IP Address)
     attr_accessor :to
 
+    # @overload initialize(ip)
+    #   @param [#to_s] from the IP single IP address.
+    #   @example
+    #     Nexpose::IPRange.new('192.168.1.0')
+    #
+    # @overload initialize(start_ip, end_ip)
+    #   @param [#to_s] from the IP to start the range with.
+    #   @param [#to_s] to the IP to end the range with.
+    #   @example
+    #     Nexpose::IPRange.new('192.168.1.0', '192.168.1.255')
+    #
+    # @overload initialize(cidr_range)
+    #   @param [#to_s] from the CIDR notation IP address range.
+    #   @example
+    #     Nexpose::IPRange.new('192.168.1.0/24')
+    #   @note The range will not be stripped of reserved IP addresses (such as
+    #     x.x.x.0 and x.x.x.255).
+    #
+    # @return [IPRange] an IP address range of one or more addresses.
     def initialize(from, to = nil)
       @from = from
       @to = to unless from == to
+
+      return unless @to.nil?
+
+      range = IPAddr.new(@from.to_s).to_range
+      unless range.one?
+        @from = range.first.to_s
+        @to = range.last.to_s
+      end
     end
 
     # Size of the IP range. The total number of IP addresses represented

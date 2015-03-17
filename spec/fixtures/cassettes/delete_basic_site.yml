@@ -1,0 +1,49 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://nexpose.local:3780/api/1.1/xml
+    body:
+      encoding: UTF-8
+      string: <SiteDeleteRequest session-id="C22DA05D8FD1D5ED1DE0137CC82DE39928590188"
+        site-id="36"/>
+    headers:
+      Content-Type:
+      - text/xml
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Ua-Compatible:
+      - IE=edge,chrome=1
+      Set-Cookie:
+      - JSESSIONID=942020DCEE59DDF50171F8FA8DEAE3AA; Path=/; Secure; HttpOnly
+      Date:
+      - Sun, 01 Mar 2015 04:50:24 GMT
+      Server:
+      - NSC/0.6.4 (JVM)
+      Cache-Control:
+      - no-cache; max-age=0
+      Pragma:
+      - no-cache
+      Content-Type:
+      - application/xml;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    body:
+      encoding: ASCII-8BIT
+      string: <SiteDeleteResponse success="1"/>
+    http_version: 
+  recorded_at: Sun, 01 Mar 2015 04:50:24 GMT
+recorded_with: VCR 2.9.3

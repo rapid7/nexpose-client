@@ -176,6 +176,56 @@ module Nexpose
       host_threads.text = threads.to_s
     end
 
+    # Enable/disable IP stack fingerprinting
+    # @param [Boolean] enable or disable IP stack fingerprinting
+    def enable_ip_stack_fingerprinting=(enable)
+      ns = REXML::XPath.first(@xml, 'ScanTemplate/Plugins/Plugin[@name="java/NetworkScanners"]')
+      param = REXML::XPath.first(ns, './param[@name="ipFingerprintEnabled"]')
+      if param
+        param.text = (enable ? 1 : 0)
+      else
+        param = REXML::Element.new('param')
+        param.add_attribute('name', 'ipFingerprintEnabled')
+        param.text = (enable ? 1 : 0)
+        ns.add_element(param)
+      end
+    end
+
+    # Enable/diisable ICMP device discovery
+    # @param [Boolean] enable or disable ICMP device discovery
+    def enable_icmp_discovery=(enable)
+      icmp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/icmpHostCheck')
+      icmp.attributes['enabled'] = (enable ? 1 : 0)
+    end
+
+    # Add custom TCP ports to scan for device discovery
+    # @param [Array] ports to scan for device discovery
+    def tcp_discovery_ports=(ports)
+      tcp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/TCPHostCheck')
+      REXML::XPath.first(tcp, './portList').text = ports.join(',')
+    end
+
+    # Enable/disable TCP device discovery
+    # @param [Boolean] enable or disable TCP device discovery
+    def enable_tcp_discovery=(enable)
+      tcp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/TCPHostCheck')
+      tcp.attributes['enabled'] = (enable ? 1 : 0)
+    end
+
+    # Add custom UDP ports to scan for UDP device discovery
+    # @param [Array] posts to scan for UDP device discovery
+    def udp_discovery_ports=(ports)
+      udp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/UDPHostCheck')
+      REXML::XPath.first(udp, './portList').text = ports.join(',')
+    end
+
+    # Enable/diisable UDP device discovery
+    # @param [Boolean] enable or disable UDP device discovery
+    def enable_udp_discovery=(enable)
+      udp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/UDPHostCheck')
+      udp.attributes['enabled'] = (enable ? 1 : 0)
+    end
+
     # Add custom TCP ports to scan for services
     # @param [Array] ports to scan
     def tcp_service_ports=(ports)
@@ -200,7 +250,7 @@ module Nexpose
     end
 
     # Add custom UDP ports to scan for services
-    # @param [Array] posts to scan
+    # @param [Array] ports to scan
     def udp_service_ports=(ports)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/UDPPortScan')
       service_ports.attributes['mode'] = "custom"

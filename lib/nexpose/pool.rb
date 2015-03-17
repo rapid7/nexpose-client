@@ -93,7 +93,7 @@ module Nexpose
     #
     # @param [Connection] connection Connection to console where site exists.
     # @param [String] name The name of the engine pool.
-    # @param [String] silo The silo of the engine pool.
+    # @param [String] scope The silo of the engine pool.
     # @return [EnginePool] Engine pool configuration object.
     #
     def self.load(connection, name, scope = 'silo')

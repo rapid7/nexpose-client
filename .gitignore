@@ -1,3 +1,8 @@
 tags
 nexpose-*.gem
 Gemfile.lock
+coverage
+
+# YARD artifacts
+doc/
+.yardoc/

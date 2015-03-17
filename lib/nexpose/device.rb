@@ -64,7 +64,7 @@ module Nexpose
 
     # Get a list of all assets currently associated with a group.
     #
-    # @param [Fixnum] dev_id Unique identifier of a device (asset).
+    # @param [Fixnum] group_id Unique identifier of an asset group.
     # @return [Array[FilteredAsset]] List of group assets.
     #
     def group_assets(group_id)
