@@ -177,7 +177,7 @@ module Nexpose
     end
 
     # Enable/disable IP stack fingerprinting
-    # @param [Boolean] enable or disable IP stack fingerprinting
+    # @param [Boolean] enable Enable or disable IP stack fingerprinting
     def enable_ip_stack_fingerprinting=(enable)
       ns = REXML::XPath.first(@xml, 'ScanTemplate/Plugins/Plugin[@name="java/NetworkScanners"]')
       param = REXML::XPath.first(ns, './param[@name="ipFingerprintEnabled"]')
@@ -199,7 +199,7 @@ module Nexpose
     end
 
     # Enable/disable TCP device discovery
-    # @param [Boolean] enable or disable TCP device discovery
+    # @param [Boolean] enable Enable or disable TCP device discovery
     def enable_tcp_device_discovery=(enable)
       tcp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/TCPHostCheck')
       tcp.attributes['enabled'] = (enable ? 1 : 0)
