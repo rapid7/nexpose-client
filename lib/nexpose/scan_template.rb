@@ -181,12 +181,14 @@ module Nexpose
     def enable_ip_stack_fingerprinting(enable)
       ns = REXML::XPath.first(@xml, 'ScanTemplate/Plugins/Plugin[@name="java/NetworkScanners"]')
       param = REXML::XPath.first(ns, './param[@name="ipFingerprintEnabled"]')
-      unless param
+      if param
+        param.text = (enable ? 1 : 0)
+      else
         param = REXML::Element.new('param')
         param.add_attribute('name', 'ipFingerprintEnabled')
+        param.text = (enable ? 1 : 0)
         ns.add_element(param)
       end
-      param.text = (enable ? 1 : 0)
     end
 
     # Enable/diisable ICMP device discovery
@@ -200,8 +202,8 @@ module Nexpose
     # @param [Array] ports to scan for device discovery
     def tcp_discovery_ports=(ports)
       tcp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/TCPHostCheck')
-      enable_tcp_discovery = true
-      REXML::XPath.first(tcp, './portList').text = ports.join(",")
+      enable_tcp_discovery(true)
+      REXML::XPath.first(tcp, './portList').text = ports.join(',')
     end
 
     # Enable/disable TCP device discovery
@@ -215,8 +217,8 @@ module Nexpose
     # @param [Array] posts to scan for UDP device discovery
     def udp_discovery_ports=(ports)
       udp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/UDPHostCheck')
-      enable_udp_discovery = true
-      REXML::XPath.first(udp, './portList').text = ports.join(",")
+      enable_udp_discovery(true)
+      REXML::XPath.first(udp, './portList').text = ports.join(',')
     end
 
     # Enable/diisable UDP device discovery
