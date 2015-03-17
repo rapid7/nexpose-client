@@ -242,8 +242,8 @@ module Nexpose
       REXML::XPath.first(service_ports, './portList').text = ports.join(",")
     end
 
-    # Disable TCP port scanning.
-    # @param [Boolean] enable or disable TCP ports
+    # Enable or disable TCP port scanning.
+    # @param [Boolean] enable Enable or disable TCP ports
     def enable_tcp_ports=(enable)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/TCPPortScan')
       service_ports.attributes['mode'] = 'none' unless enable
@@ -264,8 +264,8 @@ module Nexpose
       REXML::XPath.first(service_ports, './portList').text = ports.join(",")
     end
 
-    # Disable UDP port scanning.
-    # @param [Boolean] enable or disable UDP ports
+    # Enable or disable UDP port scanning.
+    # @param [Boolean] enable Enable or disable UDP ports
     def enable_udp_ports=(enable)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/UDPPortScan')
       service_ports.attributes['mode'] = 'none' unless enable
