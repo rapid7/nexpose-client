@@ -178,7 +178,7 @@ module Nexpose
 
     # Enable/disable IP stack fingerprinting
     # @param [Boolean] enable or disable IP stack fingerprinting
-    def enable_ip_stack_fingerprinting(enable)
+    def enable_ip_stack_fingerprinting=(enable)
       ns = REXML::XPath.first(@xml, 'ScanTemplate/Plugins/Plugin[@name="java/NetworkScanners"]')
       param = REXML::XPath.first(ns, './param[@name="ipFingerprintEnabled"]')
       if param
