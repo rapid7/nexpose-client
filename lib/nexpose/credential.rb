@@ -197,7 +197,7 @@ module Nexpose
 
     # sets the Oracle service.
     def set_oracle_service(sid = nil, username = nil, password = nil)
-      @sid = sid
+      @database = sid
       @user_name = username
       @password = password
       @service = Service::ORACLE
