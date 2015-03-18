@@ -162,7 +162,9 @@ module Nexpose
 
     def initialize(name, sender, server, recipients, enabled = 1, max_alerts = -1, verbose = 0)
       raise 'An SMTP alert must contain an array of recipient emails with at least 1 recipient' unless recipients.is_a?(Array) && recipients.length > 0
-      recipients.each { |recipient| raise "Recipients must contain valid emails, #{recipient} has an invalid format" unless recipient =~ /^.+@.+\..+$/ }
+      recipients.each do |recipient| 
+        raise "Recipients must contain valid emails, #{recipient} has an invalid format" unless recipient =~ /^.+@.+\..+$/
+      end
 
       @alert_type = 'SMTP'
       @name = name
