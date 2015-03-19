@@ -144,7 +144,7 @@ module Nexpose
       end
 
       def to_h
-        { name: name,
+        {
           value: value,
           type: type,
           name: name,
