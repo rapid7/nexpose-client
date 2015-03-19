@@ -300,6 +300,53 @@ module Nexpose
     end
   end
 
+  # Configuration structure for blackouts.
+  class Blackout < APIObject
+    # Whether or not this blackout is enabled.
+    attr_accessor :enabled
+    # Valid schedule types: daily, hourly, monthly-date, monthly-day, weekly.
+    attr_accessor :type
+    # The repeat interval based upon type.
+    attr_accessor :interval
+    # The earliest date to generate the report on (in ISO 8601 format).
+    attr_accessor :start
+    # The amount of time, in minutes, a blackout period should last.
+    attr_accessor :duration
+    # The timezone in which the blackout will start
+    attr_accessor :timezone
+
+    def initialize(start, enabled=true, duration, timezone, type, interval)
+      @blackout_start = start
+      @enabled =enabled
+      @blackout_duration = duration.to_i
+      @blackout_timezone = timezone
+      @blackout_type = type
+      @blackout_interval = interval.to_i
+    end
+
+    def self.from_hash(hash)
+      repeat_scan_hash = hash[:repeat_scan]
+      blackout = new(hash[:start], hash[:duration], hash[:timezone])
+      blackout.type = repeat_scan_hash[:type]
+      blackout.interval = repeat_scan_hash[:interval]
+      blackout
+    end
+
+    def to_h
+      blackout_hash = {
+          start_date: @blackout_start,
+          enabled: @enabled,
+          blackout_duration: @blackout_duration,
+          timezone: @blackout_timezone
+      }
+      repeat_hash= {
+          type: @blackout_type,
+          interval: @blackout_interval }
+      blackout_hash[:repeat_blackout] = repeat_hash
+      blackout_hash
+    end
+  end
+
   # Organization configuration, as used in Site and Silo.
   class Organization < APIObject
     attr_accessor :name
