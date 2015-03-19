@@ -108,6 +108,9 @@ module Nexpose
     # [Array] Schedule starting dates and times for scans, and set their frequency.
     attr_accessor :schedules
 
+    # [Array] Blackout starting dates, times and duration for blackout periods.
+    attr_accessor :blackouts
+
     # The risk factor associated with this site. Default: 1.0
     attr_accessor :risk_factor
 
@@ -161,6 +164,7 @@ module Nexpose
       @risk_factor = 1.0
       @config_version = 3
       @schedules = []
+      @blackouts = []
       @included_scan_targets = { addresses: [], asset_groups: [] }
       @excluded_scan_targets = { addresses: [], asset_groups: [] }
       @site_credentials = []
@@ -473,6 +477,7 @@ module Nexpose
           scan_template_id: @scan_template_id,
           risk_factor: @risk_factor,
           schedules: (@schedules || []).map {|schedule| schedule.to_h},
+          blackouts: (@blackouts || []).map {|blackout| blackout.to_h},
           shared_credentials: (@shared_credentials || []).map {|cred| cred.to_h},
           site_credentials: (@site_credentials || []).map {|cred| cred.to_h},
           web_credentials: (@web_credentials || []).map {|webCred| webCred.to_h},
@@ -509,6 +514,7 @@ module Nexpose
 
       site.organization = Organization.create(site.organization)
       site.schedules = (hash[:schedules] || []).map {|schedule| Nexpose::Schedule.from_hash(schedule) }
+      site.blackouts = (hash[:blackouts] || []).map {|blackout| Nexpose::Schedule.from_hash(blackout) }
       site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.discovery_config = Nexpose::DiscoveryConnection.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
