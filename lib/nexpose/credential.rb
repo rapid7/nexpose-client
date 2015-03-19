@@ -226,21 +226,21 @@ module Nexpose
     end
 
     # sets the Secure Shell (SSH) service.
-    def set_ssh_service(username = nil, password = nil, elevation_type = ElevationType::NONE, elevation_user = nil, elevation_password = nil)
+    def set_ssh_service(username = nil, password = nil, elevation_type = nil, elevation_user = nil, elevation_password = nil)
       @user_name = username
       @password = password
-      @permission_elevation_type = elevation_type
+      @permission_elevation_type = elevation_type || ElevationType::NONE
       @permission_elevation_user = elevation_user
       @permission_elevation_password = elevation_password
       @service = Service::SSH
     end
 
     # sets the Secure Shell (SSH) Public Key service.
-    def set_ssh_key_service(username, pemkey,  password = nil, elevation_type = ElevationType::NONE, elevation_user = nil, elevation_password = nil)
+    def set_ssh_key_service(username, pemkey,  password = nil, elevation_type = nil, elevation_user = nil, elevation_password = nil)
       @user_name = username
       @password = password
       @pem_format_private_key = pemkey
-      @permission_elevation_type = elevation_type
+      @permission_elevation_type = elevation_type || ElevationType::NONE
       @permission_elevation_user = elevation_user
       @permission_elevation_password = elevation_password
       @service = Service::SSH_KEY
