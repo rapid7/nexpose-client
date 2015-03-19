@@ -66,6 +66,31 @@ module Nexpose
       _scan_ad_hoc(xml)
     end
 
+    # Perform an ad hoc scan of a subset of assets for a site by adding a specific runtime.
+    # Only assets from a single site should be submitted per request.
+    # Method is designed to take objects filtered from Site#assets.
+    #
+    # For example:
+    #   site = Site.load(nsc, 5)
+    #   nsc.scan_assets_with_schedule(5, site.assets.take(10), "20150320T122000000", "full-audit-without-web-spider", 60)
+    #
+    # @param [Fixnum] site_id Site ID that the assets belong to.
+    # @param [Array[HostName|IPRange]] assets List of assets to scan.
+    # @param [String] iso8601 time at which to run
+    # @param [String] id of template to use for scan
+    # @param [Fixnum] max duration of scan in minutes
+    # @return [Scan] Scan launch information.
+    #
+    def scan_assets_with_schedule(site_id, assets, start, template, max_duration)
+      xml = make_xml('SiteDevicesScanRequest', { 'site-id' => site_id })
+      hosts = REXML::Element.new('Hosts')
+      assets.each { |asset| _append_asset!(hosts, asset) }
+      xml.add_element(hosts)
+
+
+      _scan_ad_hoc(xml)
+    end
+
     # Perform an ad hoc scan of a subset of IP addresses for a site.
     # Only IPs from a single site can be submitted per request,
     # and IP addresses must already be included in the site configuration.
