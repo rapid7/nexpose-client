@@ -8,11 +8,11 @@ module Nexpose
     attr_accessor :start, :stop, :fail, :resume, :pause
 
     def initialize(start = 0, stop = 0, fail = 0, resume = 0, pause = 0)
-      @start, @stop, @fail, @resume, @pause = start, stop, fail, resume, pause
+      @start, @stop, @fail, @resume, @pause = start.to_i, stop.to_i, fail.to_i, resume.to_i, pause.to_i
     end
 
     def self.json_initializer(filter)
-      new(filter[:start], filter[:stop], filter[:failed], filter[:resume], filter[:pause])
+      new(filter[:start] ? 1 : 0, filter[:stop] ? 1 : 0, filter[:failed] ? 1 : 0, filter[:resume] ? 1 : 0, filter[:pause] ? 1 : 0)
     end
   end
 
@@ -32,11 +32,11 @@ module Nexpose
     attr_accessor :confirmed, :unconfirmed, :potential
 
     def initialize(severity = 1, confirmed = 1, unconfirmed = 1, potential = 1)
-      @severity, @confirmed, @unconfirmed, @potential = severity, confirmed, unconfirmed, potential
+      @severity, @confirmed, @unconfirmed, @potential = severity.to_i, confirmed.to_i, unconfirmed.to_i, potential.to_i
     end
 
     def self.json_initializer(filter)
-      new(filter[:severity], filter[:unconfirmed], filter[:confirmed], filter[:potential])
+      new(filter[:severity] ? 1 : 0, filter[:unconfirmed] ? 1 : 0, filter[:confirmed] ? 1 : 0, filter[:potential] ? 1 : 0)
     end
   end
 
