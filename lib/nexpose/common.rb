@@ -91,6 +91,35 @@ module Nexpose
     end
   end
 
+  # Configuration structure for ad-hoc schedules
+  class AdHocSchedule
+    # Start time in ISO8601 format
+    attr_accessor :start
+
+    # The template to use to scan the assets
+    attr_accessor :template
+
+    # The amount of time, in minutes, to allow execution before stopping.
+    attr_accessor :max_duration
+
+    def initialize(start, scan_template_id, max_duration)
+      @start = start
+      @scan_template_id = scan_template_id
+      @max_duration = max_duration
+    end
+
+    def as_xml
+      xml = REXML::Element.new('Schedule')
+      xml.attributes['start'] = @start
+      xml.attributes['maxDuration'] = @max_duration
+      xml.attributes['template'] = @scan_template_id
+    end
+
+    def to_xml
+      as_xml.to_s
+    end
+  end
+
   # Configuration structure for schedules.
   class Schedule < APIObject
     # Whether or not this schedule is enabled.
