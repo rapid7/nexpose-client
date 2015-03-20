@@ -30,16 +30,5 @@ module Nexpose
     end
     alias_method :eql?, :==
 
-=begin
-    def get_shared_secret_json(time_to_live)
-      uri = "/data/admin/global/shared-secret?time-to-live=#{time_to_live}"
-      json = AJAX.put(self, uri)
-    end
-
-    def remove_shared_secret_json(key_string)
-      uri = "/data/admin/global/remove-shared-secret?key-string=#{key_string}"
-      json = AJAX.delete(self, uri)
-    end
-=end
   end
 end
