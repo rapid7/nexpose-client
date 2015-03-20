@@ -92,7 +92,7 @@ module Nexpose
   end
 
   # Configuration structure for ad-hoc schedules
-  class AdHocSchedule
+  class AdHocSchedule < APIObject
     # Start time in ISO8601 format
     attr_accessor :start
 
@@ -109,10 +109,11 @@ module Nexpose
     end
 
     def as_xml
-      xml = REXML::Element.new('Schedule')
+      xml = REXML::Element.new('AdHocSchedule')
       xml.attributes['start'] = @start
       xml.attributes['maxDuration'] = @max_duration
       xml.attributes['template'] = @scan_template_id
+      xml
     end
 
     def to_xml
