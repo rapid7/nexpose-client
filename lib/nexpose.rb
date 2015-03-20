@@ -102,6 +102,7 @@ require 'nexpose/vuln_exception'
 require 'nexpose/connection'
 require 'nexpose/maint'
 require 'nexpose/version'
+require 'nexpose/wait'
 
 module Nexpose
 
