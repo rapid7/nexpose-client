@@ -1,5 +1,5 @@
 module Nexpose
-
+  # SharedSecret class for pairing engines
   class SharedSecret
     attr_accessor :key_string
     attr_accessor :ttl
@@ -19,7 +19,7 @@ module Nexpose
 
     def delete(console)
       uri = "/data/admin/global/remove-shared-secret?key-string=#{key_string}"
-      json = AJAX.delete(console, uri)
+      AJAX.delete(console, uri)
     end
 
     def ==(other)
@@ -29,6 +29,5 @@ module Nexpose
       true
     end
     alias_method :eql?, :==
-
   end
 end
