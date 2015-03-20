@@ -1,20 +1,18 @@
 module Nexpose
   # SharedSecret class for pairing engines
-  class SharedSecret
-    attr_accessor :key_string
-    attr_accessor :ttl
+  class SharedSecret < APIObject
+    attr_reader :key_string
+    attr_reader :ttl
 
     def initialize(console, time_to_live)
       uri = "/data/admin/global/shared-secret?time-to-live=#{time_to_live}"
-      json = AJAX.put(console, uri)
-      from_json(json)
+      json = JSON.parse(AJAX.put(console, uri))
+      self.from_json(json)
     end
 
-    def self.from_json(json)
-      new.tap do |shared_secret|
-        shared_secret.key_string = json['keyString']
-        shared_secret.ttl = json['timeToLiveInSeconds']
-      end
+    def from_json(json)
+      @key_string = json['keyString']
+      @ttl = json['timeToLiveInSeconds']
     end
 
     def delete(console)
