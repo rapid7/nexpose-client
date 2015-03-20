@@ -520,6 +520,17 @@ module Nexpose
                                Nexpose::WebCredentials::Headers.new(webCred[:name], webCred[:baseURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred) :
                                Nexpose::WebCredentials::HTMLForms.new(webCred[:name], webCred[:baseURL], webCred[:loginURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred))}
 
+      # Convert each string address to either a HostName or IPRange object
+      included_scan_targets = { addresses: [], asset_groups: [] }
+      site.included_scan_targets[:addresses].each { |asset| included_scan_targets[:addresses] << HostOrIP.convert(asset) }
+      included_scan_targets[:asset_groups] = site.included_scan_targets[:asset_groups]
+      site.included_scan_targets = included_scan_targets
+
+      excluded_scan_targets = { addresses: [], asset_groups: [] }
+      site.excluded_scan_targets[:addresses].each { |asset| excluded_scan_targets[:addresses] << HostOrIP.convert(asset) }
+      excluded_scan_targets[:asset_groups] = site.excluded_scan_targets[:asset_groups]
+      site.excluded_scan_targets = excluded_scan_targets
+
       site
     end
 
