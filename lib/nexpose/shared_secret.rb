@@ -1,13 +1,13 @@
 module Nexpose
 
-  class SharedSecret 
+  class SharedSecret
     attr_accessor :key_string
     attr_accessor :ttl
 
     def initialize(console, time_to_live)
       uri = "/data/admin/global/shared-secret?time-to-live=#{time_to_live}"
       json = AJAX.put(console, uri)
-      self.from_json(json)
+      from_json(json)
     end
 
     def self.from_json(json)
