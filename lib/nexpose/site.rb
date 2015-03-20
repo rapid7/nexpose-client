@@ -171,34 +171,54 @@ module Nexpose
       @tags = []
     end
 
+    # Returns the array of included scan target addresses.
+    # @return [Array[IPRange|HostName]] Array of included addresses.
     def included_addresses
       @included_scan_targets[:addresses]
     end
 
+    # Sets the array of included scan target addresses.
+    # @param [Array[IPRange|HostName]] new_addresses The new array of scan target addresses.
+    # @return [Array[IPRange|HostName]] Array of updated scan target addresses.
     def included_addresses=(new_addresses)
       @included_scan_targets[:addresses] = new_addresses
     end
 
+    # Returns the array of IDs for included scan target asset groups.
+    # @return [Array[Fixnum]] Array of included asset groups.
     def included_asset_groups
       @included_scan_targets[:asset_groups]
     end
 
+    # Sets the array of IDs for included scan target asset groups.
+    # @param [Array[Fixnum] new_asset_groups The new array of IDs for scan target asset groups.
+    # @return [Array[Fixnum] Array of IDs of the updated scan target asset groups.
     def included_asset_groups=(new_asset_groups)
       @included_scan_targets[:asset_groups] = new_asset_groups
     end
 
+    # Returns the array of excluded scan target addresses.
+    # @return [Array[IPRange|HostName]] Array of excluded addresses.
     def excluded_addresses
       @excluded_scan_targets[:addresses]
     end
 
+    # Sets the array of excluded scan target addresses.
+    # @param [Array[IPRange|HostName]] new_addresses The new array of scan target addresses.
+    # @return [Array[IPRange|HostName]] Array of updated scan target addresses.
     def excluded_addresses=(new_addresses)
       @excluded_scan_targets[:addresses] = new_addresses
     end
 
+    # Returns the array of IDs for excluded scan target asset groups.
+    # @return [Array[Fixnum]] Array of IDs for excluded asset groups.
     def excluded_asset_groups
       @excluded_scan_targets[:asset_groups]
     end
 
+    # Sets the array IDs for excluded scan target asset groups.
+    # @param [Array[Fixnum]] new_asset_groups The new array of IDs for scan target asset groups.
+    # @return [Array[Fixnum]] Array of IDs of the updated scan target asset groups.
     def excluded_asset_groups=(new_asset_groups)
       @excluded_scan_targets[:asset_groups] = new_asset_groups
     end
