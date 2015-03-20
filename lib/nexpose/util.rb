@@ -55,9 +55,11 @@ module Nexpose
     #
     def convert(asset)
       begin
-        # Use IPAddr construtor validation to see if it's an IP.
-        IPAddr.new(asset)
-        IPRange.new(asset)
+        # Use IPAddr constructor validation to see if it's an IP.
+        ips = asset.split(' - ')
+        IPAddr.new(ips[0])
+        IPAddr.new(ips[1]) if ips[1]
+        IPRange.new(ips[0], ips[1])
       rescue ArgumentError => e
         if e.message == 'invalid address'
           HostName.new(asset)

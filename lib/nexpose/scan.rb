@@ -11,6 +11,17 @@ module Nexpose
       scan_devices([device])
     end
 
+    # Perform an ad hoc scan of a single device at a specific time.
+    #
+    # @param [Device] device Device to scan.
+    # @param [Array[adhoc_schedules]] list of scheduled times at which to run
+    # @return [Status] whether the request was successful
+    #
+    def scan_device_with_schedule(device, schedule)
+      site_id = devices.map { |d| d.site_id }.uniq.first
+      scan_devices_with_schedule(site_id, [device], schedule)
+    end
+
     # Perform an ad hoc scan of a subset of devices for a site.
     # Nexpose only allows devices from a single site to be submitted per
     # request.
@@ -45,9 +56,10 @@ module Nexpose
     #   nsc.scan_devices(devices.take(10))
     #
     # @param [Array[Device]] devices List of devices to scan.
+    # @param [Array[adhoc_schedules]] list of scheduled times at which to run
     # @return [Status] whether the request was successful
     #
-    def scan_devices_with_schedule(site_id, assets, schedules)
+    def scan_devices_with_schedule(site_id, devices, schedules)
       xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
       elem = REXML::Element.new('Devices')
       devices.each do |device|
@@ -55,7 +67,7 @@ module Nexpose
       end
       xml.add_element(elem)
       scheds = REXML::Element.new('Schedules')
-      schedules.each { |sched| xml.add_element('schedule', sched) }
+      schedules.each { |sched| scheds.add_element(sched.as_xml) }
       xml.add_element(scheds)
 
       _scan_ad_hoc_with_schedules(xml)
@@ -69,6 +81,17 @@ module Nexpose
     #
     def scan_asset(site_id, asset)
       scan_assets(site_id, [asset])
+    end
+
+    # Perform an ad hoc scan of a single asset of a site at a specific time
+    #
+    # @param [Fixnum] site_id Site ID that the assets belong to.
+    # @param [HostName|IPRange] asset Asset to scan.
+    # @param [Array[adhoc_schedules]] list of scheduled times at which to run
+    # @return [Status] whether the request was successful
+    #
+    def scan_asset_with_schedule(site_id, asset, schedule)
+      scan_assets_with_schedule(site_id, [asset], schedule)
     end
 
     # Perform an ad hoc scan of a subset of assets for a site.
@@ -111,7 +134,7 @@ module Nexpose
       assets.each { |asset| _append_asset!(hosts, asset) }
       xml.add_element(hosts)
       scheds = REXML::Element.new('Schedules')
-      schedules.each { |sched| xml.add_element('schedule', sched) }
+      schedules.each { |sched| scheds.add_element(sched.as_xml) }
       xml.add_element(scheds)
 
       _scan_ad_hoc_with_schedules(xml)
@@ -131,7 +154,7 @@ module Nexpose
     # @param [Array[String]] ip_addresses Array of IP addresses to scan.
     # @return [Status] whether the request was successful
     #
-    def scan_ips_with_schedule(site_id, assets, schedules)
+    def scan_ips_with_schedule(site_id, ip_addresses, schedules)
       xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
       hosts = REXML::Element.new('Hosts')
       ip_addresses.each do |ip|
@@ -139,7 +162,7 @@ module Nexpose
       end
       xml.add_element(hosts)
       scheds = REXML::Element.new('Schedules')
-      schedules.each { |sched| xml.add_element('schedule', sched) }
+      schedules.each { |sched| scheds.add_element(sched.as_xml) }
       xml.add_element(scheds)
 
       _scan_ad_hoc_with_schedules(xml)
