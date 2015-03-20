@@ -10,7 +10,7 @@ describe Nexpose::Site do
       it 'adds a new HostName to the assets list' do
         subject.include_asset('nexpose.local')
 
-        expect(subject.included_scan_targets[:addresses]).to include(Nexpose::HostName.new('nexpose.local'))
+        expect(subject.included_addresses).to include(Nexpose::HostName.new('nexpose.local'))
       end
     end
 
@@ -18,7 +18,7 @@ describe Nexpose::Site do
       it 'adds a new IPRange to the assets list' do
         subject.include_asset('192.168.1.1')
 
-        expect(subject.included_scan_targets[:addresses]).to include(Nexpose::IPRange.new('192.168.1.1'))
+        expect(subject.included_addresses).to include(Nexpose::IPRange.new('192.168.1.1'))
       end
     end
 
@@ -26,7 +26,7 @@ describe Nexpose::Site do
       it 'adds a new IPRange to the assets list' do
         subject.include_asset('192.168.1.0/24')
 
-        expect(subject.included_scan_targets[:addresses]).to include(Nexpose::IPRange.new('192.168.1.0', '192.168.1.255'))
+        expect(subject.included_addresses).to include(Nexpose::IPRange.new('192.168.1.0', '192.168.1.255'))
       end
     end
   end
@@ -35,7 +35,7 @@ describe Nexpose::Site do
     it 'adds a new HostName to the assets list' do
       subject.include_asset('nexpose.local')
 
-      expect(subject.included_scan_targets[:addresses]).to include(Nexpose::HostName.new('nexpose.local'))
+      expect(subject.included_addresses).to include(Nexpose::HostName.new('nexpose.local'))
     end
   end
 
@@ -44,7 +44,7 @@ describe Nexpose::Site do
       it 'adds a new IPRange to the assets list' do
         subject.include_asset('192.168.1.1')
 
-        expect(subject.included_scan_targets[:addresses]).to include(Nexpose::IPRange.new('192.168.1.1'))
+        expect(subject.included_addresses).to include(Nexpose::IPRange.new('192.168.1.1'))
       end
     end
 
@@ -52,7 +52,7 @@ describe Nexpose::Site do
       it 'adds a new IPRange to the assets list' do
         subject.include_asset('192.168.1.0/24')
 
-        expect(subject.included_scan_targets[:addresses]).to include(Nexpose::IPRange.new('192.168.1.0', '192.168.1.255'))
+        expect(subject.included_addresses).to include(Nexpose::IPRange.new('192.168.1.0', '192.168.1.255'))
       end
     end
   end

@@ -171,6 +171,38 @@ module Nexpose
       @tags = []
     end
 
+    def included_addresses
+      @included_scan_targets[:addresses]
+    end
+
+    def included_addresses=(new_addresses)
+      @included_scan_targets[:addresses] = new_addresses
+    end
+
+    def included_asset_groups
+      @included_scan_targets[:asset_groups]
+    end
+
+    def included_asset_groups=(new_asset_groups)
+      @included_scan_targets[:asset_groups] = new_asset_groups
+    end
+
+    def excluded_addresses
+      @excluded_scan_targets[:addresses]
+    end
+
+    def excluded_addresses=(new_addresses)
+      @excluded_scan_targets[:addresses] = new_addresses
+    end
+
+    def excluded_asset_groups
+      @excluded_scan_targets[:asset_groups]
+    end
+
+    def excluded_asset_groups=(new_asset_groups)
+      @excluded_scan_targets[:asset_groups] = new_asset_groups
+    end
+
     # Returns true when the site is dynamic.
     def isdynamic?
       !@discovery_config.nil?
