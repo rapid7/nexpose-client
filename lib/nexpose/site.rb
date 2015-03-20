@@ -516,7 +516,15 @@ module Nexpose
       hash = JSON.parse(resp, symbolize_names: true)
       site = self.json_initializer(hash).deserialize(hash)
 
-      #site = new(hash[:name], hash[:scan_template_id])
+      # Convert each string address to either a HostName or IPRange object
+      included_addresses = hash[:included_scan_targets][:addresses]
+      site.included_scan_targets[:addresses] = []
+      included_addresses.each { |asset| site.include_asset(asset) }
+
+      excluded_addresses = hash[:excluded_scan_targets][:addresses]
+      site.excluded_scan_targets[:addresses] = []
+      excluded_addresses.each { |asset| site.exclude_asset(asset) }
+
       site.organization = Organization.create(site.organization)
       site.schedules = (hash[:schedules] || []).map {|schedule| Nexpose::Schedule.from_hash(schedule) }
       site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
