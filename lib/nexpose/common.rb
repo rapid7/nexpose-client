@@ -97,7 +97,7 @@ module Nexpose
     attr_accessor :start
 
     # The template to use to scan the assets
-    attr_accessor :template
+    attr_accessor :scan_template_id
 
     # The amount of time, in minutes, to allow execution before stopping.
     attr_accessor :max_duration
