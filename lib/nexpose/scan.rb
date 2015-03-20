@@ -18,8 +18,7 @@ module Nexpose
     # @return [Status] whether the request was successful
     #
     def scan_device_with_schedule(device, schedule)
-      site_id = devices.map { |d| d.site_id }.uniq.first
-      scan_devices_with_schedule(site_id, [device], schedule)
+      scan_devices_with_schedule(device, schedule)
     end
 
     # Perform an ad hoc scan of a subset of devices for a site.
@@ -59,7 +58,8 @@ module Nexpose
     # @param [Array[adhoc_schedules]] list of scheduled times at which to run
     # @return [Status] whether the request was successful
     #
-    def scan_devices_with_schedule(site_id, devices, schedules)
+    def scan_devices_with_schedule(devices, schedules)
+      site_id = devices.map { |d| d.site_id }.uniq.first
       xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
       elem = REXML::Element.new('Devices')
       devices.each do |device|
