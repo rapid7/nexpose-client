@@ -56,6 +56,11 @@ module Nexpose
     attr_accessor :max_alerts
     # Alert type and its configuration. One of SMTPAlert, SyslogAlert, SNMPAlert
     attr_accessor :alert_type
+    # Server target the alerts
+    attr_accessor :server
+    # Server port
+    attr_accessor :server_port
+
     # Send alerts based upon scan status.
     typed_accessor :scan_filter, ScanFilter
     # Send alerts based upon vulnerability finding status.
@@ -158,7 +163,7 @@ module Nexpose
   # SMTP (e-mail) Alert
   class SMTPAlert
     include Alert
-    attr_accessor :recipients, :sender, :verbose, :server
+    attr_accessor :recipients, :sender, :verbose
 
     def initialize(name, sender, server, recipients, enabled = 1, max_alerts = -1, verbose = 0)
       raise 'An SMTP alert must contain an array of recipient emails with at least 1 recipient' unless recipients.is_a?(Array) && recipients.length > 0
@@ -188,7 +193,7 @@ module Nexpose
   # SNMP Alert
   class SNMPAlert
     include Alert
-    attr_accessor :community, :server
+    attr_accessor :community
 
     def initialize(name, community, server, enabled = 1, max_alerts = -1)
       raise 'SNMP alerts must have a community defined.' if community.nil?
@@ -205,7 +210,6 @@ module Nexpose
   # Syslog Alert
   class SyslogAlert
     include Alert
-    attr_accessor :server
 
     def initialize(name, server, enabled = 1, max_alerts = -1)
       @alert_type = 'Syslog'
