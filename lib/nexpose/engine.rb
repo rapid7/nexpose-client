@@ -29,7 +29,7 @@ module Nexpose
     def reverse_engine_connection(engine_id)
       uri = "/api/2.1/engine/#{engine_id}/reverseConnection"
       response = AJAX.put(self, uri)
-      response
+      response.eql?("true")
     end
 
     # Provide a list of current scan activities for a specific Scan Engine.
