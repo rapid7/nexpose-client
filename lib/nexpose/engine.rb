@@ -16,6 +16,22 @@ module Nexpose
       response.success
     end
 
+    # Reverses the direction of a connection to an engine
+    # If the connection is currently initiated from the console this method
+    # will have the engine initiate the connection. If the connection is
+    # currently initiated by the engine this method with initiate the connection
+    # from the console instead. Requires a restart of the console for the
+    # connection to be properly established.
+    #
+    # @param [Fixnum] engine_id Unique ID of the engine.
+    # @return [Boolean] true if the connection is successfully reversed.
+    #
+    def reverse_engine_connection(engine_id)
+      uri = "/api/2.1/engine/#{engine_id}/reverseConnection"
+      response = AJAX.put(self, uri)
+      response.success
+    end
+
     # Provide a list of current scan activities for a specific Scan Engine.
     #
     # @return [Array[ScanSummary]] Array of ScanSummary objects associated with
