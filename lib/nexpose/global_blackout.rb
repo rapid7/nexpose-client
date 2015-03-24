@@ -6,8 +6,8 @@ module Nexpose
     # [Array] Blackout starting dates, times and duration for blackout periods.
     attr_accessor :blackout
 
-    def initialize (blackout)
-      @global_blackout = Array(blackout)
+    def initialize(blackout)
+     @global_blackout = Array(blackout)
     end
 
     def save(nsc)
