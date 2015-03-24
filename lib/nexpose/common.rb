@@ -142,7 +142,7 @@ module Nexpose
     # The date after which the schedule is disabled, in ISO 8601 format.
     attr_accessor :not_valid_after
 
-    #TODO Remove this unused attribute
+    # TODO: Remove this unused attribute
     attr_accessor :incremental
 
     # Extended attributes added with the new scheduler implementation
@@ -205,37 +205,37 @@ module Nexpose
     end
 
     def to_h
-        schedule_hash = {
-          enabled: @enabled,
-          scan_template_id: @scan_template_id,
-          maximum_scan_duration: @max_duration
+      schedule_hash = {
+        enabled: @enabled,
+        scan_template_id: @scan_template_id,
+        maximum_scan_duration: @max_duration
+      }
+      schedule_hash[:start_date] = Nexpose::ISO8601.to_string(@start) if @start
+      schedule_hash[:not_valid_after_date] = Nexpose::ISO8601.to_string(@not_valid_after) if @not_valid_after
+      schedule_hash[:time_zone] = @timezone if @timezone
+
+      unless (@type.nil? || @interval == 0) && !@is_extended
+        repeat_scan_hash = {
+          type: @type,
+          interval: @interval
         }
-        schedule_hash[:start_date] = Nexpose::ISO8601.to_string(@start) if @start
-        schedule_hash[:not_valid_after_date] = Nexpose::ISO8601.to_string(@not_valid_after) if @not_valid_after
-        schedule_hash[:time_zone] = @timezone if @timezone
+        repeat_scan_hash[:on_repeat] = 'restart-scan' if @repeater_type == 'restart'
+        repeat_scan_hash[:on_repeat] = 'resume-scan' if @repeater_type == 'continue'
 
-        unless (@type.nil? || @interval == 0) && !@is_extended
-          repeat_scan_hash = {
-            type: @type,
-            interval: @interval
-          }
-          repeat_scan_hash[:on_repeat] = 'restart-scan' if @repeater_type == 'restart'
-          repeat_scan_hash[:on_repeat] = 'resume-scan' if @repeater_type == 'continue'
-
-          if @is_extended
-            repeat_scan_hash[:is_extended] = @is_extended
-            repeat_scan_hash[:hour] = @hour if @hour
-            repeat_scan_hash[:minute] = @minute if @minute
-            repeat_scan_hash[:date] = @date if @date
-            repeat_scan_hash[:day] = @day if @day
-            repeat_scan_hash[:occurrence] = @occurrence if @occurrence
-            repeat_scan_hash[:start_month] = @start_month if @start_month
-          end
-
-          schedule_hash[:repeat_scan] = repeat_scan_hash
+        if @is_extended
+          repeat_scan_hash[:is_extended] = @is_extended
+          repeat_scan_hash[:hour] = @hour if @hour
+          repeat_scan_hash[:minute] = @minute if @minute
+          repeat_scan_hash[:date] = @date if @date
+          repeat_scan_hash[:day] = @day if @day
+          repeat_scan_hash[:occurrence] = @occurrence if @occurrence
+          repeat_scan_hash[:start_month] = @start_month if @start_month
         end
 
-        schedule_hash
+        schedule_hash[:repeat_scan] = repeat_scan_hash
+      end
+
+      schedule_hash
     end
 
     def as_xml
@@ -329,7 +329,7 @@ module Nexpose
         state: state,
         city: city,
         zip: zip,
-        country: country,
+        country: country
       }
     end
 

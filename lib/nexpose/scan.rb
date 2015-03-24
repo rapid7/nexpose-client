@@ -34,11 +34,11 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_devices(devices)
-      site_id = devices.map { |d| d.site_id }.uniq.first
-      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      site_id = devices.map(&:site_id).uniq.first
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       elem = REXML::Element.new('Devices')
       devices.each do |device|
-        elem.add_element('device', {'id' => "#{device.id}"})
+        elem.add_element('device', 'id' => "#{device.id}")
       end
       xml.add_element(elem)
 
@@ -59,11 +59,11 @@ module Nexpose
     # @return [Status] whether the request was successful
     #
     def scan_devices_with_schedule(devices, schedules)
-      site_id = devices.map { |d| d.site_id }.uniq.first
-      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      site_id = devices.map(&:site_id).uniq.first
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       elem = REXML::Element.new('Devices')
       devices.each do |device|
-        elem.add_element('device', {'id' => "#{device.id}"})
+        elem.add_element('device', 'id' => "#{device.id}")
       end
       xml.add_element(elem)
       scheds = REXML::Element.new('Schedules')
@@ -107,7 +107,7 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_assets(site_id, assets)
-      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       hosts = REXML::Element.new('Hosts')
       assets.each { |asset| _append_asset!(hosts, asset) }
       xml.add_element(hosts)
@@ -129,7 +129,7 @@ module Nexpose
     # @return [Status] whether the request was successful
     #
     def scan_assets_with_schedule(site_id, assets, schedules)
-      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       hosts = REXML::Element.new('Hosts')
       assets.each { |asset| _append_asset!(hosts, asset) }
       xml.add_element(hosts)
@@ -155,10 +155,10 @@ module Nexpose
     # @return [Status] whether the request was successful
     #
     def scan_ips_with_schedule(site_id, ip_addresses, schedules)
-      xml = make_xml('SiteDevicesScanRequest', {'site-id' => site_id})
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       hosts = REXML::Element.new('Hosts')
       ip_addresses.each do |ip|
-        xml.add_element('range', { 'from' => ip })
+        xml.add_element('range', 'from' => ip)
       end
       xml.add_element(hosts)
       scheds = REXML::Element.new('Schedules')
@@ -183,10 +183,10 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_ips(site_id, ip_addresses)
-      xml = make_xml('SiteDevicesScanRequest', { 'site-id' => site_id })
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       hosts = REXML::Element.new('Hosts')
       ip_addresses.each do |ip|
-        xml.add_element('range', { 'from' => ip })
+        xml.add_element('range', 'from' => ip)
       end
       xml.add_element(hosts)
 
@@ -199,7 +199,7 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_site(site_id)
-      xml = make_xml('SiteScanRequest', { 'site-id' => site_id })
+      xml = make_xml('SiteScanRequest', 'site-id' => site_id)
       response = execute(xml)
       Scan.parse(response.res) if response.success
     end
@@ -212,7 +212,7 @@ module Nexpose
     #
     def _append_asset!(xml, asset)
       if asset.is_a? Nexpose::IPRange
-        xml.add_element('range', { 'from' => asset.from, 'to' => asset.to })
+        xml.add_element('range', 'from' => asset.from, 'to' => asset.to)
       else  # Assume HostName
         host = REXML::Element.new('host')
         host.text = asset.host
@@ -231,7 +231,6 @@ module Nexpose
       Scan.parse(r.res)
     end
 
-
     # Utility method for executing prepared XML for adhoc with schedules
     #
     # @param [REXML::Document] xml Prepared API call to execute.
@@ -248,7 +247,7 @@ module Nexpose
     #   updated.
     #
     def stop_scan(scan_id, wait_sec = 0)
-      r = execute(make_xml('ScanStopRequest', {'scan-id' => scan_id}))
+      r = execute(make_xml('ScanStopRequest', 'scan-id' => scan_id))
       if r.success
         so_far = 0
         while so_far < wait_sec
@@ -267,7 +266,7 @@ module Nexpose
     # @return [String] Current status of the scan. See Nexpose::Scan::Status.
     #
     def scan_status(scan_id)
-      r = execute(make_xml('ScanStatusRequest', {'scan-id' => scan_id}))
+      r = execute(make_xml('ScanStatusRequest', 'scan-id' => scan_id))
       r.success ? r.attributes['status'] : nil
     end
 
@@ -276,7 +275,7 @@ module Nexpose
     # @param [Fixnum] scan_id The scan ID.
     #
     def resume_scan(scan_id)
-      r = execute(make_xml('ScanResumeRequest', {'scan-id' => scan_id}), '1.1', timeout: 60)
+      r = execute(make_xml('ScanResumeRequest', 'scan-id' => scan_id), '1.1', timeout: 60)
       r.success ? r.attributes['success'] == '1' : false
     end
 
@@ -285,7 +284,7 @@ module Nexpose
     # @param [Fixnum] scan_id The scan ID.
     #
     def pause_scan(scan_id)
-      r = execute(make_xml('ScanPauseRequest', {'scan-id' => scan_id}))
+      r = execute(make_xml('ScanPauseRequest', 'scan-id' => scan_id))
       r.success ? r.attributes['success'] == '1' : false
     end
 
@@ -330,7 +329,7 @@ module Nexpose
     # @return [ScanSummary] ScanSummary object providing statistics for the scan.
     #
     def scan_statistics(scan_id)
-      r = execute(make_xml('ScanStatisticsRequest', {'scan-id' => scan_id}))
+      r = execute(make_xml('ScanStatisticsRequest', 'scan-id' => scan_id))
       if r.success
         ScanSummary.parse(r.res.elements['//ScanSummary'])
       else
@@ -351,7 +350,7 @@ module Nexpose
     def past_scans(limit = nil)
       uri = '/data/scan/global/scan-history'
       rows = AJAX.row_pref_of(limit)
-      params = {'sort' => 'endTime', 'dir' => 'DESC', 'startIndex' => 0}
+      params = { 'sort' => 'endTime', 'dir' => 'DESC', 'startIndex' => 0 }
       AJAX.preserving_preference(self, 'global-completed-scans') do
         data = DataTable._get_json_table(self, uri, params, rows, limit)
         data.map(&CompletedScan.method(:parse_json))
@@ -368,8 +367,8 @@ module Nexpose
     #
     def export_scan(scan_id, zip_file = nil)
       http = AJAX.https(self)
-      headers = {'Cookie' => "nexposeCCSessionID=#{@session_id}",
-                 'Accept-Encoding' => 'identity'}
+      headers = { 'Cookie' => "nexposeCCSessionID=#{@session_id}",
+                  'Accept-Encoding' => 'identity' }
       resp = http.get("/data/scan/#{scan_id}/export", headers)
 
       case resp
@@ -495,7 +494,6 @@ module Nexpose
   # Object that represents a summary of a scan.
   #
   class ScanSummary < ScanData
-
     # The reason the scan was stopped or failed, if applicable.
     attr_reader :message
 
@@ -553,7 +551,6 @@ module Nexpose
     # Value class to tracking task counts.
     #
     class Tasks
-
       attr_reader :pending, :active, :completed
 
       def initialize(pending, active, completed)
@@ -576,7 +573,6 @@ module Nexpose
     # Value class for tracking node counts.
     #
     class Nodes
-
       attr_reader :live, :dead, :filtered, :unresolved, :other
 
       def initialize(live, dead, filtered, unresolved, other)
@@ -601,7 +597,6 @@ module Nexpose
     # Value class for tracking vulnerability counts.
     #
     class Vulnerabilities
-
       attr_reader :vuln_exploit, :vuln_version, :vuln_potential,
                   :not_vuln_exploit, :not_vuln_version,
                   :error, :disabled, :other
@@ -613,8 +608,8 @@ module Nexpose
             @not_vuln_exploit, @not_vuln_version,
             @error, @disabled, @other =
             vuln_exploit, vuln_version, vuln_potential,
-                not_vuln_exploit, not_vuln_version,
-                error, disabled, other
+            not_vuln_exploit, not_vuln_version,
+            error, disabled, other
       end
 
       # Parse REXML to Vulnerabilities object.
