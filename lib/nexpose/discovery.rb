@@ -31,18 +31,18 @@ module Nexpose
     include XMLUtils
 
     module Protocol
-      HTTP = 'HTTP'
+      HTTP  = 'HTTP'
       HTTPS = 'HTTPS'
-      LDAP = 'LDAP'
+      LDAP  = 'LDAP'
       LDAPS = 'LDAPS'
     end
 
     module Type
-      VSPHERE = 'VSPHERE'
-      AWS = 'AWS'
-      ACTIVESYNC = 'ACTIVESYNC'
+      VSPHERE               = 'VSPHERE'
+      AWS                   = 'AWS'
+      ACTIVESYNC            = 'ACTIVESYNC'
       ACTIVESYNC_POWERSHELL = 'ACTIVESYNC_POWERSHELL'
-      ACTIVESYNC_OFFICE365 = 'ACTIVESYNC_OFFICE365'
+      ACTIVESYNC_OFFICE365  = 'ACTIVESYNC_OFFICE365'
     end
 
     # A unique identifier for this connection.
@@ -154,16 +154,16 @@ module Nexpose
 
     def as_xml
       xml = REXML::Element.new('DiscoveryConnection')
-      xml.attributes['name']      = @name
-      xml.attributes['address']   = @address
-      xml.attributes['port']      = @port
-      xml.attributes['protocol']  = @protocol
-      xml.attributes['user-name'] = @user
-      xml.attributes['password']  = @password
-      xml.attributes['exchange-hostname']  = @exchange_hostname if @exchange_hostname
-      xml.attributes['exchange-username']  = @exchange_username if @exchange_username
-      xml.attributes['exchange-password']  = @exchange_password if @exchange_password
-      xml.attributes['type']      = @type if @type
+      xml.attributes['name']              = @name
+      xml.attributes['address']           = @address
+      xml.attributes['port']              = @port
+      xml.attributes['protocol']          = @protocol
+      xml.attributes['user-name']         = @user
+      xml.attributes['password']          = @password
+      xml.attributes['exchange-hostname'] = @exchange_hostname if @exchange_hostname
+      xml.attributes['exchange-username'] = @exchange_username if @exchange_username
+      xml.attributes['exchange-password'] = @exchange_password if @exchange_password
+      xml.attributes['type']              = @type if @type
       xml
     end
 
@@ -303,7 +303,7 @@ module Nexpose
       @name, @protocol, @address, @user, @password = name, protocol, address, user, password
       @type = Type::ACTIVESYNC
       @id = -1
-      @port = 443   #port not used for mobile connection
+      @port = 443 # port not used for mobile connection
     end
   end
   
@@ -319,13 +319,13 @@ module Nexpose
     # @param [String] exchange_username Exchange User name for exchange credentials on this connection.
     # @param [String] exchange_password Exchange password for exchange credentials on this connection.
     #
-    def initialize(name, address, user, password, exchange_hostname, exchange_username, exchange_password )
+    def initialize(name, address, user, password, exchange_hostname, exchange_username, exchange_password)
       @name, @address, @user, @password = name, address, user, password
       @protocol = Protocol::HTTPS
       @exchange_hostname, @exchange_username, @exchange_password = exchange_hostname, exchange_username, exchange_password
       @type = Type::ACTIVESYNC_POWERSHELL
       @id = -1
-      @port = 443   #port not used for mobile connection
+      @port = 443 # port not used for mobile connection
     end
   end
 
@@ -340,14 +340,14 @@ module Nexpose
     # @param [String] exchange_username Exchange User name for exchange credentials on this connection.
     # @param [String] exchange_password Exchange password for exchange credentials on this connection.
     #
-    def initialize(name, address, user, password, exchange_username, exchange_password )
+    def initialize(name, address, user, password, exchange_username, exchange_password)
       @name, @address, @user, @password = name, address, user, password
       @protocol = Protocol::HTTPS
-      @exchange_hostname = '';   # nexpose will set to office365 server
+      @exchange_hostname = ''; # nexpose will set to office365 server
       @exchange_username, @exchange_password = exchange_username, exchange_password
       @type = Type::ACTIVESYNC_OFFICE365
       @id = -1
-      @port = 443   #port not used for mobile connection
+      @port = 443 # port not used for mobile connection
     end
   end
 end
