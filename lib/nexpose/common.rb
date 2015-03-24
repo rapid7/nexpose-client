@@ -102,10 +102,14 @@ module Nexpose
     # The amount of time, in minutes, to allow execution before stopping.
     attr_accessor :max_duration
 
-    def initialize(start, scan_template_id, max_duration)
+    # Force the scan to run during a blackout
+    attr_accessor :force
+
+    def initialize(start, scan_template_id, max_duration, force = false)
       @start = start
       @scan_template_id = scan_template_id
       @max_duration = max_duration
+      @force = force
     end
 
     def as_xml
@@ -113,6 +117,7 @@ module Nexpose
       xml.attributes['start'] = @start
       xml.attributes['maxDuration'] = @max_duration
       xml.attributes['template'] = @scan_template_id
+      xml.attributes['force'] = @force if @force
       xml
     end
 
