@@ -325,11 +325,8 @@ module Nexpose
     end
 
     def self.from_hash(hash)
-      repeat_scan_hash = hash[:repeat_scan]
-      blackout = new(hash[:start], hash[:duration], hash[:timezone])
-      blackout.type = repeat_scan_hash[:type]
-      blackout.interval = repeat_scan_hash[:interval]
-      blackout
+      repeat_blackout_hash = hash[:repeat_blackout]
+      blackout = new(hash[:start], hash[:duration], hash[:timezone], repeat_blackout_hash[:type], repeat_blackout_hash[:interval])
     end
 
     def to_h
