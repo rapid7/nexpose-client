@@ -18,7 +18,7 @@ module Nexpose
     # @return [Status] whether the request was successful
     #
     def scan_device_with_schedule(device, schedule)
-      scan_devices_with_schedule(device, schedule)
+      scan_devices_with_schedule([device], schedule)
     end
 
     # Perform an ad hoc scan of a subset of devices for a site.
