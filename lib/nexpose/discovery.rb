@@ -57,6 +57,9 @@ module Nexpose
     # The IP address or fully qualified domain name of the server.
     attr_accessor :address
 
+    # The engine ID to use for this connection.
+    attr_accessor :engine_id
+
     # A user name that can be used to log into the server.
     attr_accessor :user
 
@@ -164,6 +167,7 @@ module Nexpose
       xml.attributes['exchange-username'] = @exchange_username if @exchange_username
       xml.attributes['exchange-password'] = @exchange_password if @exchange_password
       xml.attributes['type']              = @type if @type
+      xml.attributes['engine-id']         = @engine_id if @engine_id && @engine_id != -1
       xml
     end
 
