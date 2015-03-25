@@ -305,15 +305,15 @@ module Nexpose
     # Whether or not this blackout is enabled.
     attr_accessor :enabled
     # Valid schedule types: daily, hourly, monthly-date, monthly-day, weekly.
-    attr_accessor :type
+    attr_accessor :blackout_type
     # The repeat interval based upon type.
-    attr_accessor :interval
+    attr_accessor :blackout_interval
     # The earliest date to generate the report on (in ISO 8601 format).
-    attr_accessor :start
+    attr_accessor :blackout_start
     # The amount of time, in minutes, a blackout period should last.
-    attr_accessor :duration
+    attr_accessor :blackout_duration
     # The timezone in which the blackout will start
-    attr_accessor :timezone
+    attr_accessor :blackout_timezone
 
     def initialize(start, enabled=true, duration, timezone, type, interval)
       @blackout_start = start
@@ -326,7 +326,8 @@ module Nexpose
 
     def self.from_hash(hash)
       repeat_blackout_hash = hash[:repeat_blackout]
-      blackout = new(hash[:start], hash[:duration], hash[:timezone], repeat_blackout_hash[:type], repeat_blackout_hash[:interval])
+      blackout = new(hash[:start_date], hash[:blackout_duration], hash[:timezone], repeat_blackout_hash[:type], repeat_blackout_hash[:interval])
+      blackout
     end
 
     def to_h
