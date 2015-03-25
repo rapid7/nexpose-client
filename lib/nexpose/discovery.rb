@@ -31,16 +31,18 @@ module Nexpose
     include XMLUtils
 
     module Protocol
-      HTTP = 'HTTP'
+      HTTP  = 'HTTP'
       HTTPS = 'HTTPS'
-      LDAP = 'LDAP'
+      LDAP  = 'LDAP'
       LDAPS = 'LDAPS'
     end
 
     module Type
-      VSPHERE = 'VSPHERE'
-      AWS = 'AWS'
-      ACTIVESYNC = 'ACTIVESYNC'
+      VSPHERE               = 'VSPHERE'
+      AWS                   = 'AWS'
+      ACTIVESYNC            = 'ACTIVESYNC'
+      ACTIVESYNC_POWERSHELL = 'ACTIVESYNC_POWERSHELL'
+      ACTIVESYNC_OFFICE365  = 'ACTIVESYNC_OFFICE365'
     end
 
     # A unique identifier for this connection.
@@ -61,11 +63,20 @@ module Nexpose
     # The password to use when connecting with the defined user.
     attr_accessor :password
 
-    # The protocol used for conneting to the server. One of DiscoveryConnection::Protocol
+    # The protocol used for connecting to the server. One of DiscoveryConnection::Protocol
     attr_accessor :protocol
 
     # The port used for connecting to the server. A valid port from 1 to 65535.
     attr_accessor :port
+
+    # The hostname of the exchange server to connect for exchange powershell connections
+    attr_accessor :exchange_hostname
+
+    # The exchange username to connect for exchange powershell connections
+    attr_accessor :exchange_username
+
+    # The exchange password to connect for exchange powershell connections
+    attr_accessor :exchange_password
 
     # Whether or not the connection is active.
     # Discovery is only possible when the connection is active.
@@ -143,13 +154,16 @@ module Nexpose
 
     def as_xml
       xml = REXML::Element.new('DiscoveryConnection')
-      xml.attributes['name']      = @name
-      xml.attributes['address']   = @address
-      xml.attributes['port']      = @port
-      xml.attributes['protocol']  = @protocol
-      xml.attributes['user-name'] = @user
-      xml.attributes['password']  = @password
-      xml.attributes['type']      = @type if @type
+      xml.attributes['name']              = @name
+      xml.attributes['address']           = @address
+      xml.attributes['port']              = @port
+      xml.attributes['protocol']          = @protocol
+      xml.attributes['user-name']         = @user
+      xml.attributes['password']          = @password
+      xml.attributes['exchange-hostname'] = @exchange_hostname if @exchange_hostname
+      xml.attributes['exchange-username'] = @exchange_username if @exchange_username
+      xml.attributes['exchange-password'] = @exchange_password if @exchange_password
+      xml.attributes['type']              = @type if @type
       xml
     end
 
@@ -289,8 +303,51 @@ module Nexpose
       @name, @protocol, @address, @user, @password = name, protocol, address, user, password
       @type = Type::ACTIVESYNC
       @id = -1
-      @port = 443   #port not used for mobile connection
+      @port = 443 # port not used for mobile connection
     end
+  end
+  
+  class MobilePowershellDiscoveryConnection < DiscoveryConnection
+    # Create a new Mobile Powershell discovery connection.
+    #
+    # @param [String] name Name to assign to this connection.
+    # @param [String] address IP or fully qualified domain name of the
+    #    WinRM server.
+    # @param [String] user WinRM User name for credentials on this connection.
+    # @param [String] password WinRM password for credentials on this connection.
+    # @param [String] exchange_hostname fully qualified domain name of the exchange server
+    # @param [String] exchange_username Exchange User name for exchange credentials on this connection.
+    # @param [String] exchange_password Exchange password for exchange credentials on this connection.
+    #
+    def initialize(name, address, user, password, exchange_hostname, exchange_username, exchange_password)
+      @name, @address, @user, @password = name, address, user, password
+      @protocol = Protocol::HTTPS
+      @exchange_hostname, @exchange_username, @exchange_password = exchange_hostname, exchange_username, exchange_password
+      @type = Type::ACTIVESYNC_POWERSHELL
+      @id = -1
+      @port = 443 # port not used for mobile connection
+    end
+  end
 
+  class MobileOffice365DiscoveryConnection < DiscoveryConnection
+    # Create a new Mobile Office365 discovery connection.
+    #
+    # @param [String] name Name to assign to this connection.
+    # @param [String] address IP or fully qualified domain name of the
+    #    WinRM server.
+    # @param [String] user WinRM User name for credentials on this connection.
+    # @param [String] password WinRM password for credentials on this connection.
+    # @param [String] exchange_username Exchange User name for exchange credentials on this connection.
+    # @param [String] exchange_password Exchange password for exchange credentials on this connection.
+    #
+    def initialize(name, address, user, password, exchange_username, exchange_password)
+      @name, @address, @user, @password = name, address, user, password
+      @protocol = Protocol::HTTPS
+      @exchange_hostname = '' # nexpose will set to office365 server
+      @exchange_username, @exchange_password = exchange_username, exchange_password
+      @type = Type::ACTIVESYNC_OFFICE365
+      @id = -1
+      @port = 443 # port not used for mobile connection
+    end
   end
 end
