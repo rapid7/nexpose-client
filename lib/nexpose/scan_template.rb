@@ -177,7 +177,7 @@ module Nexpose
     end
 
     # Enable/disable IP stack fingerprinting
-    # @param [Boolean] enable or disable IP stack fingerprinting
+    # @param [Boolean] enable Enable or disable IP stack fingerprinting
     def enable_ip_stack_fingerprinting=(enable)
       ns = REXML::XPath.first(@xml, 'ScanTemplate/Plugins/Plugin[@name="java/NetworkScanners"]')
       param = REXML::XPath.first(ns, './param[@name="ipFingerprintEnabled"]')
@@ -191,82 +191,82 @@ module Nexpose
       end
     end
 
-    # Enable/diisable ICMP device discovery
-    # @param [Boolean] enable or disable ICMP device discovery
-    def enable_icmp_discovery=(enable)
+    # Enable/disable ICMP device discovery
+    # @param [Boolean] enable Enable or disable ICMP device discovery
+    def enable_icmp_device_discovery=(enable)
       icmp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/icmpHostCheck')
       icmp.attributes['enabled'] = (enable ? 1 : 0)
     end
 
-    # Add custom TCP ports to scan for device discovery
-    # @param [Array] ports to scan for device discovery
-    def tcp_discovery_ports=(ports)
-      tcp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/TCPHostCheck')
-      REXML::XPath.first(tcp, './portList').text = ports.join(',')
-    end
-
     # Enable/disable TCP device discovery
-    # @param [Boolean] enable or disable TCP device discovery
-    def enable_tcp_discovery=(enable)
+    # @param [Boolean] enable Enable or disable TCP device discovery
+    def enable_tcp_device_discovery=(enable)
       tcp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/TCPHostCheck')
       tcp.attributes['enabled'] = (enable ? 1 : 0)
     end
 
-    # Add custom UDP ports to scan for UDP device discovery
-    # @param [Array] posts to scan for UDP device discovery
-    def udp_discovery_ports=(ports)
-      udp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/UDPHostCheck')
-      REXML::XPath.first(udp, './portList').text = ports.join(',')
+    # Set custom TCP ports to scan for device discovery
+    # @param [Array] ports Ports to scan for device discovery
+    def tcp_device_discovery_ports=(ports)
+      tcp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/TCPHostCheck')
+      REXML::XPath.first(tcp, './portList').text = ports.join(',')
     end
 
-    # Enable/diisable UDP device discovery
-    # @param [Boolean] enable or disable UDP device discovery
-    def enable_udp_discovery=(enable)
+    # Enable/disable UDP device discovery
+    # @param [Boolean] enable Enable or disable UDP device discovery
+    def enable_udp_device_discovery=(enable)
       udp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/UDPHostCheck')
       udp.attributes['enabled'] = (enable ? 1 : 0)
     end
 
-    # Add custom TCP ports to scan for services
-    # @param [Array] ports to scan
-    def tcp_service_ports=(ports)
+    # Set custom UDP ports to scan for UDP device discovery
+    # @param [Array] ports Ports to scan for UDP device discovery
+    def udp_device_discovery_ports=(ports)
+      udp = REXML::XPath.first(@xml, 'ScanTemplate/DeviceDiscovery/CheckHosts/UDPHostCheck')
+      REXML::XPath.first(udp, './portList').text = ports.join(',')
+    end
+
+    # Enable or disable TCP port scanning.
+    # @param [Boolean] enable Enable or disable TCP ports
+    def enable_tcp_service_discovery=(enable)
+      service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/TCPPortScan')
+      service_ports.attributes['mode'] = 'none' unless enable
+    end
+
+    # Set custom TCP ports to scan for TCP service discovery
+    # @param [Array] ports Ports to scan for TCP service discovery
+    def tcp_service_discovery_ports=(ports)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/TCPPortScan')
       service_ports.attributes['mode'] = "custom"
       service_ports.attributes['method'] = "syn"
       REXML::XPath.first(service_ports, './portList').text = ports.join(",")
     end
 
-    # Exclude TCP ports when scanning for services
-    # @param [Array] ports to exclude from scan
-    def exclude_tcp_service_ports=(ports)
+    # Exclude TCP ports during TCP service discovery
+    # @param [Array] ports TCP ports to exclude from TCP service discovery
+    def exclude_tcp_service_discovery_ports=(ports)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/ExcludedTCPPortScan')
       REXML::XPath.first(service_ports, './portList').text = ports.join(",")
     end
 
-    # Disable TCP port scanning.
-    # @param [Boolean] enable or disable TCP ports
-    def enable_tcp_ports=(enable)
-      service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/TCPPortScan')
-      service_ports.attributes['mode'] = 'none' unless enable
-    end
-
-    # Add custom UDP ports to scan for services
-    # @param [Array] ports to scan
-    def udp_service_ports=(ports)
+    # Set custom UDP ports to scan for UDP service discovery
+    # @param [Array] ports Ports to scan during UDP service discovery
+    def udp_service_discovery_ports=(ports)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/UDPPortScan')
       service_ports.attributes['mode'] = "custom"
       REXML::XPath.first(service_ports, './portList').text = ports.join(",")
     end
 
-    # Exclude UDP ports when scanning for services
-    # @param [Array] ports to exclude from scan
-    def exclude_udp_service_ports=(ports)
+    # Exclude UDP ports when performing UDP service discovery
+    # @param [Array] ports UDP ports to exclude from UDP service discovery
+    def exclude_udp_service_discovery_ports=(ports)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/ExcludedUDPPortScan')
       REXML::XPath.first(service_ports, './portList').text = ports.join(",")
     end
 
-    # Disable UDP port scanning.
-    # @param [Boolean] enable or disable UDP ports
-    def enable_udp_ports=(enable)
+    # Enable or disable UDP service discovery
+    # @param [Boolean] enable Enable or disable UDP service discovery
+    def enable_udp_service_discovery=(enable)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/UDPPortScan')
       service_ports.attributes['mode'] = 'none' unless enable
     end
