@@ -343,7 +343,7 @@ module Nexpose
     def initialize(name, address, user, password, exchange_username, exchange_password)
       @name, @address, @user, @password = name, address, user, password
       @protocol = Protocol::HTTPS
-      @exchange_hostname = ''; # nexpose will set to office365 server
+      @exchange_hostname = '' # nexpose will set to office365 server
       @exchange_username, @exchange_password = exchange_username, exchange_password
       @type = Type::ACTIVESYNC_OFFICE365
       @id = -1
