@@ -108,6 +108,9 @@ module Nexpose
     # [Array] Schedule starting dates and times for scans, and set their frequency.
     attr_accessor :schedules
 
+    # [Array] Blackout starting dates, times and duration for blackout periods.
+    attr_accessor :blackouts
+
     # The risk factor associated with this site. Default: 1.0
     attr_accessor :risk_factor
 
@@ -161,6 +164,7 @@ module Nexpose
       @risk_factor = 1.0
       @config_version = 3
       @schedules = []
+      @blackouts = []
       @included_scan_targets = { addresses: [], asset_groups: [] }
       @excluded_scan_targets = { addresses: [], asset_groups: [] }
       @site_credentials = []
@@ -473,6 +477,7 @@ module Nexpose
           scan_template_id: @scan_template_id,
           risk_factor: @risk_factor,
           schedules: (@schedules || []).map {|schedule| schedule.to_h},
+          blackouts: (@blackouts || []).map {|blackout| blackout.to_h},
           shared_credentials: (@shared_credentials || []).map {|cred| cred.to_h},
           site_credentials: (@site_credentials || []).map {|cred| cred.to_h},
           web_credentials: (@web_credentials || []).map {|webCred| webCred.to_h},
@@ -509,6 +514,7 @@ module Nexpose
 
       site.organization = Organization.create(site.organization)
       site.schedules = (hash[:schedules] || []).map {|schedule| Nexpose::Schedule.from_hash(schedule) }
+      site.blackouts = (hash[:blackouts] || []).map {|blackout| Nexpose::Blackout.from_hash(blackout) }
       site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.discovery_config = Nexpose::DiscoveryConnection.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
@@ -516,9 +522,9 @@ module Nexpose
       site.alerts = Alert.load_alerts(hash[:alerts])
       site.tags = Tag.load_tags(hash[:tags])
       site.web_credentials = hash[:web_credentials].map {|webCred| (
-                           webCred[:service] == Nexpose::WebCredentials::WebAppAuthType::HTTP_HEADER ?
-                               Nexpose::WebCredentials::Headers.new(webCred[:name], webCred[:baseURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred) :
-                               Nexpose::WebCredentials::HTMLForms.new(webCred[:name], webCred[:baseURL], webCred[:loginURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred))}
+      webCred[:service] == Nexpose::WebCredentials::WebAppAuthType::HTTP_HEADER ?
+          Nexpose::WebCredentials::Headers.new(webCred[:name], webCred[:baseURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred) :
+          Nexpose::WebCredentials::HTMLForms.new(webCred[:name], webCred[:baseURL], webCred[:loginURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred))}
 
       site
     end
@@ -550,20 +556,20 @@ module Nexpose
     # @return [Fixnum] Site ID assigned to this configuration, if successful.
     #
     def save(connection)
-        new_site = @id == -1
+      new_site = @id == -1
 
-        if new_site
-          resp = AJAX.post(connection, '/api/2.1/site_configurations/', to_json, AJAX::CONTENT_TYPE::JSON)
-          @id = resp.to_i
-        else
-          resp = AJAX.put(connection, "/api/2.1/site_configurations/#{@id}", to_json, AJAX::CONTENT_TYPE::JSON)
-        end
+      if new_site
+        resp = AJAX.post(connection, '/api/2.1/site_configurations/', to_json, AJAX::CONTENT_TYPE::JSON)
+        @id = resp.to_i
+      else
+        resp = AJAX.put(connection, "/api/2.1/site_configurations/#{@id}", to_json, AJAX::CONTENT_TYPE::JSON)
+      end
 
-        # Retrieve the scan engine and shared credentials and add them to the site configuration
-        site_config = Site.load(connection, @id)
-        @engine_id = site_config.engine_id
-        @shared_credentials = site_config.shared_credentials
-        @alerts = site_config.alerts
+      # Retrieve the scan engine and shared credentials and add them to the site configuration
+      site_config = Site.load(connection, @id)
+      @engine_id = site_config.engine_id
+      @shared_credentials = site_config.shared_credentials
+      @alerts = site_config.alerts
 
       @id
     end
