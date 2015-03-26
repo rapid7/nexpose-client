@@ -1,5 +1,4 @@
 module Nexpose
-
   module Sanitize
     def replace_entities(str)
       str.to_s.gsub(/&/, '&amp;').gsub(/'/, '&apos;').gsub(/"/, '&quot;').gsub(/</, '&lt;').gsub(/>/, '&gt;')
@@ -7,21 +6,18 @@ module Nexpose
   end
 
   module XMLUtils
-
     def parse_xml(xml)
       ::REXML::Document.new(xml.to_s)
     end
 
     def make_xml(name, opts = {}, data = '', append_session_id = true)
       xml = REXML::Element.new(name)
-      if @session_id and append_session_id
+      if @session_id && append_session_id
         xml.attributes['session-id'] = @session_id
       end
 
       opts.keys.each do |k|
-        if opts[k] != nil
-          xml.attributes[k] = "#{opts[k]}"
-        end
+        xml.attributes[k] = "#{opts[k]}" unless opts[k].nil?
       end
 
       xml.text = data
@@ -54,16 +50,15 @@ module Nexpose
     # @return [IPRange|HostName] Valid class, if it can be converted.
     #
     def convert(asset)
-      begin
-        # Use IPAddr construtor validation to see if it's an IP.
-        IPAddr.new(asset)
-        IPRange.new(asset)
-      rescue ArgumentError => e
-        if e.message == 'invalid address'
-          HostName.new(asset)
-        else
-          raise "Unable to parse asset: '#{asset}'. #{e.message}"
-        end
+      ips = asset.split(' - ')
+      IPAddr.new(ips[0])
+      IPAddr.new(ips[1]) if ips[1]
+      IPRange.new(ips[0], ips[1])
+    rescue ArgumentError => e
+      if e.message == 'invalid address'
+        HostName.new(asset)
+      else
+        raise "Unable to parse asset: '#{asset}'. #{e.message}"
       end
     end
 

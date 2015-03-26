@@ -218,7 +218,48 @@ module Nexpose
       end 
 
       @color = hex 
-    end 
+    end
+
+    # Create list of tag objects from hash
+    def self.load_tags(tags)
+      unless tags.nil?
+        tags = tags.map do |hash|
+          self.create(hash)
+        end
+      end
+      tags
+    end
+
+    # Create tag object from hash
+    def self.create(hash)
+      attributes = hash[:attributes]
+      color = attributes.find { |attr| attr[:tag_attribute_name] == 'COLOR' }
+      color = color[:tag_attribute_value] if color
+      source = attributes.find { |attr| attr[:tag_attribute_name] == 'SOURCE' }
+      source = source[:tag_attribute_value] if source
+      tag = Tag.new(hash[:tag_name], hash[:tag_type], hash[:tag_id])
+      tag.color = color
+      tag.source = source
+      tag
+    end
+
+    def to_h
+      {
+        tag_id: id,
+        tag_name: name,
+        tag_type: type,
+        attributes:[
+          {
+            tag_attribute_name: "COLOR",
+            tag_attribute_value: color
+          },
+          {
+            tag_attribute_name: "SOURCE",
+            tag_attribute_value: source
+          }
+        ]
+      }
+    end
 
     # Creates and saves a tag to Nexpose console
     #

@@ -77,8 +77,8 @@ module Nexpose
   # Configuration object representing a Nexpose site.
   #
   # For a basic walk-through, see {https://github.com/rapid7/nexpose-client/wiki/Using-Sites}
-  class Site
-
+  class Site < APIObject
+    include JsonSerializer
     # The site ID. An ID of -1 is used to designate a site that has not been
     # saved to a Nexpose console.
     attr_accessor :id
@@ -89,23 +89,21 @@ module Nexpose
     # Description of the site.
     attr_accessor :description
 
-    # [Array] Collection of assets. May be IPv4, IPv6, or DNS names.
-    # @see HostName
-    # @see IPRange
-    attr_accessor :assets
+    # Included scan targets. May be IPv4, IPv6, DNS names, IPRanges or assetgroup ids.
+    attr_accessor :included_scan_targets
 
-    # [Array] Collection of excluded assets. May be IPv4, IPv6, or DNS names.
-    attr_accessor :exclude
+    # Excluded scan targets. May be IPv4, IPv6, DNS names, IPRanges or assetgroup ids.
+    attr_accessor :excluded_scan_targets
 
-    # Scan template to use when starting a scan job. Default: full-audit
-    attr_accessor :scan_template
+    # Scan template to use when starting a scan job. Default: full-audit-without-web-spider
+    attr_accessor :scan_template_id
 
     # Friendly name of scan template to use when starting a scan job.
     # Value is populated when a site is saved or loaded from a console.
     attr_accessor :scan_template_name
 
     # Scan Engine to use. Will use the default engine if nil or -1.
-    attr_accessor :engine
+    attr_accessor :engine_id
 
     # [Array] Schedule starting dates and times for scans, and set their frequency.
     attr_accessor :schedules
@@ -115,7 +113,16 @@ module Nexpose
 
     # [Array] Collection of credentials associated with this site. Does not
     # include shared credentials.
-    attr_accessor :credentials
+    attr_accessor :site_credentials
+
+    # [Array] Collection of shared credentials associated with this site.
+    attr_accessor :shared_credentials
+
+    # [Array] Collection of web credentials associated with the site.
+    attr_accessor :web_credentials
+
+    # Scan the assets with last scanned engine or not.
+    attr_accessor :auto_engine_selection_enabled
 
     # [Array] Collection of real-time alerts.
     # @see Alert
@@ -134,15 +141,11 @@ module Nexpose
     # Configuration version. Default: 3
     attr_accessor :config_version
 
-    # Whether or not this site is dynamic.
-    # Dynamic sites are created through Asset Discovery Connections.
-    attr_accessor :is_dynamic
-
     # Asset filter criteria if this site is dynamic.
-    attr_accessor :criteria
+    attr_accessor :search_criteria
 
-    # ID of the discovery connection associated with this site if it is dynamic.
-    attr_accessor :discovery_connection_id
+    # discovery config of the discovery connection associated with this site if it is dynamic.
+    attr_accessor :discovery_config
 
     # [Array[TagSummary]] Collection of TagSummary
     attr_accessor :tags
@@ -150,164 +153,378 @@ module Nexpose
     # Site constructor. Both arguments are optional.
     #
     # @param [String] name Unique name of the site.
-    # @param [String] scan_template ID of the scan template to use.
-    def initialize(name = nil, scan_template = 'full-audit-without-web-spider')
+    # @param [String] scan_template_id ID of the scan template to use.
+    def initialize(name = nil, scan_template_id = 'full-audit-without-web-spider')
       @name = name
-      @scan_template = scan_template
-
+      @scan_template_id = scan_template_id
       @id = -1
       @risk_factor = 1.0
       @config_version = 3
-      @is_dynamic = false
-      @assets = []
       @schedules = []
-      @credentials = []
+      @included_scan_targets = { addresses: [], asset_groups: [] }
+      @excluded_scan_targets = { addresses: [], asset_groups: [] }
+      @site_credentials = []
+      @shared_credentials = []
+      @web_credentials = []
       @alerts = []
-      @exclude = []
       @users = []
       @tags = []
     end
 
+    # Returns the array of included scan target addresses.
+    # @return [Array[IPRange|HostName]] Array of included addresses.
+    def included_addresses
+      @included_scan_targets[:addresses]
+    end
+
+    # Sets the array of included scan target addresses.
+    # @param [Array[IPRange|HostName]] new_addresses The new array of scan target addresses.
+    # @return [Array[IPRange|HostName]] Array of updated scan target addresses.
+    def included_addresses=(new_addresses)
+      @included_scan_targets[:addresses] = new_addresses
+    end
+
+    # Returns the array of IDs for included scan target asset groups.
+    # @return [Array[Fixnum]] Array of included asset groups.
+    def included_asset_groups
+      @included_scan_targets[:asset_groups]
+    end
+
+    # Sets the array of IDs for included scan target asset groups.
+    # @param [Array[Fixnum] new_asset_groups The new array of IDs for scan target asset groups.
+    # @return [Array[Fixnum] Array of IDs of the updated scan target asset groups.
+    def included_asset_groups=(new_asset_groups)
+      @included_scan_targets[:asset_groups] = new_asset_groups
+    end
+
+    # Returns the array of excluded scan target addresses.
+    # @return [Array[IPRange|HostName]] Array of excluded addresses.
+    def excluded_addresses
+      @excluded_scan_targets[:addresses]
+    end
+
+    # Sets the array of excluded scan target addresses.
+    # @param [Array[IPRange|HostName]] new_addresses The new array of scan target addresses.
+    # @return [Array[IPRange|HostName]] Array of updated scan target addresses.
+    def excluded_addresses=(new_addresses)
+      @excluded_scan_targets[:addresses] = new_addresses
+    end
+
+    # Returns the array of IDs for excluded scan target asset groups.
+    # @return [Array[Fixnum]] Array of IDs for excluded asset groups.
+    def excluded_asset_groups
+      @excluded_scan_targets[:asset_groups]
+    end
+
+    # Sets the array IDs for excluded scan target asset groups.
+    # @param [Array[Fixnum]] new_asset_groups The new array of IDs for scan target asset groups.
+    # @return [Array[Fixnum]] Array of IDs of the updated scan target asset groups.
+    def excluded_asset_groups=(new_asset_groups)
+      @excluded_scan_targets[:asset_groups] = new_asset_groups
+    end
+
     # Returns true when the site is dynamic.
-    def dynamic?
-      is_dynamic
-    end
-
-    def discovery_connection_id=(value)
-      @is_dynamic = true
-      @discovery_connection_id = value.to_i
-    end
-
-    # Adds an asset to this site by host name.
-    #
-    # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
-    def add_host(hostname)
-      @assets << HostName.new(hostname)
-    end
-
-    # Remove an asset to this site by host name.
-    #
-    # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
-    def remove_host(hostname)
-      @assets = assets.reject { |asset| asset == HostName.new(hostname) }
-    end
-
-    # Adds an asset to this site by IP address.
-    #
-    # @param [String] ip IP address of an asset.
-    def add_ip(ip)
-      @assets << IPRange.new(ip)
-    end
-
-    # Remove an asset to this site by IP address.
-    #
-    # @param [String] ip IP address of an asset.
-    def remove_ip(ip)
-      @assets = assets.reject { |asset| asset == IPRange.new(ip) }
+    def isdynamic?
+      !@discovery_config.nil?
     end
 
     # Adds assets to this site by IP address range.
     #
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
+    def include_ip_range(from, to)
+      begin
+        from_ip = IPAddr.new(from)
+        to_ip = IPAddr.new(to)
+        (from_ip..to_ip)
+        if (from_ip..to_ip).to_a.size == 0
+          raise 'Invalid IP range specified'
+        end
+        @included_scan_targets[:addresses] << IPRange.new(from, to)
+      rescue ArgumentError => e
+        raise "#{e.message} in given IP range"
+      end
+    end
+
+    # @deprecated Use {#include_ip_range} instead.
     def add_ip_range(from, to)
-      @assets << IPRange.new(from, to)
+      warn "[DEPRECATED] Use #{self.class}#include_ip_range instead of #{self.class}#add_ip_range."
+      include_ip_range(from, to)
     end
 
     # Remove assets to this site by IP address range.
     #
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
-    def remove_ip_range(from, to)
-      @assets = assets.reject { |asset| asset == IPRange.new(from, to) }
-    end
-
-    # Adds an asset to this site, resolving whether an IP or hostname is
-    # provided.
-    #
-    # @param [String] asset Identifier of an asset, either IP or host name.
-    #
-    def add_asset(asset)
-      obj = HostOrIP.convert(asset)
-      @assets << obj
-    end
-
-    # Remove an asset to this site, resolving whether an IP or hostname is
-    # provided.
-    #
-    # @param [String] asset Identifier of an asset, either IP or host name.
-    #
-    def remove_asset(asset)
+    def remove_included_ip_range(from, to)
       begin
-        # If the asset registers as a valid IP, remove as IP.
-        IPAddr.new(asset)
-        remove_ip(asset)
-      rescue ArgumentError => e
-        if e.message == 'invalid address'
-          remove_host(asset)
-        else
-          raise "Unable to parse asset: '#{asset}'. #{e.message}"
+        from_ip = IPAddr.new(from)
+        to_ip = IPAddr.new(to)
+        (from_ip..to_ip)
+        if (from_ip..to_ip).to_a.size == 0
+          raise 'Invalid IP range specified'
         end
+        @included_scan_targets[:addresses].reject! { |t| t.eql? IPRange.new(from, to) }
+      rescue ArgumentError => e
+        raise "#{e.message} in given IP range"
       end
     end
 
-    # Adds an asset to this site's exclude list, resolving whether an IP or 
-    # hostname is provided.
+    # @deprecated Use {#remove_included_ip_range} instead.
+    def remove_ip_range(from, to)
+      warn "[DEPRECATED] Use #{self.class}#remove_included_ip_range instead of #{self.class}#remove_ip_range."
+      remove_included_ip_range(from, to)
+    end
+
+    # Adds an asset to this site included scan targets, resolving whether an IP or hostname is
+    # provided.
     #
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
-    def exclude_asset(asset)
-      @exclude << HostOrIP.convert(asset)
+    def include_asset(asset)
+      @included_scan_targets[:addresses] << HostOrIP.convert(asset)
     end
 
-    alias_method :exclude_host, :exclude_asset
-    alias_method :exclude_ip, :exclude_asset
+    # @deprecated Use {#include_asset} instead.
+    def add_asset(asset)
+      warn "[DEPRECATED] Use #{self.class}#include_asset instead of #{self.class}#add_asset."
+      include_asset(asset)
+    end
 
-    # Remove an asset from this site's exclude list, resolving whether an IP 
-    # or hostname is provided.
+    alias_method :add_host, :add_asset
+    alias_method :add_ip, :add_asset
+
+    # Remove an asset to this site included scan targets, resolving whether an IP or hostname is
+    # provided.
     #
     # @param [String] asset Identifier of an asset, either IP or host name.
     #
-    def remove_excluded_asset(asset)
-      @exclude.reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
+    def remove_included_asset(asset)
+      @included_scan_targets[:addresses].reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
     end
 
-    alias_method :remove_excluded_host, :remove_excluded_asset
-    alias_method :remove_excluded_ip, :remove_excluded_asset
+    # @deprecated Use {#remove_included_asset} instead.
+    def remove_asset(asset)
+      warn "[DEPRECATED] Use #{self.class}#remove_included_asset instead of #{self.class}#remove_asset."
+      remove_included_asset(asset)
+    end
 
-    # Adds assets to this site's exclude list by IP address range.
+    alias_method :remove_host, :remove_asset
+    alias_method :remove_ip, :remove_asset
+
+    # Adds assets to this site excluded scan targets by IP address range.
     #
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def exclude_ip_range(from, to)
-      @exclude << IPRange.new(from, to)
+      begin
+        from_ip = IPAddr.new(from)
+        to_ip = IPAddr.new(to)
+        (from_ip..to_ip)
+        if (from_ip..to_ip).to_a.size == 0
+          raise 'Invalid IP range specified'
+        end
+        @excluded_scan_targets[:addresses] << IPRange.new(from, to)
+      rescue ArgumentError => e
+        raise "#{e.message} in given IP range"
+      end
     end
 
-    # Remove assets from this site's exclude list by IP address range.
+    # Remove assets from this site excluded scan targets by IP address range.
     #
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def remove_excluded_ip_range(from, to)
-      @exclude.reject! { |asset| asset == IPRange.new(from, to) }
+      begin
+        from_ip = IPAddr.new(from)
+        to_ip = IPAddr.new(to)
+        (from_ip..to_ip)
+        if (from_ip..to_ip).to_a.size == 0
+          raise 'Invalid IP range specified'
+        end
+        @excluded_scan_targets[:addresses].reject! { |t| t.eql? IPRange.new(from, to) }
+      rescue ArgumentError => e
+        raise "#{e.message} in given IP range"
+      end
     end
 
-    # Load an existing configuration from a Nexpose instance.
+    # Adds an asset to this site excluded scan targets, resolving whether an IP or hostname is
+    # provided.
     #
-    # @param [Connection] connection Connection to console where site exists.
-    # @param [Fixnum] id Site ID of an existing site.
-    # @return [Site] Site configuration loaded from a Nexpose console.
+    # @param [String] asset Identifier of an asset, either IP or host name.
     #
-    def self.load(connection, id, is_extended = false)
-      if is_extended
-        r = APIRequest.execute(connection.url,
-                               %(<SiteConfigRequest session-id="#{connection.session_id}" site-id="#{id}" is_extended="true"/>))
-      else
-        r = APIRequest.execute(connection.url,
-                               %(<SiteConfigRequest session-id="#{connection.session_id}" site-id="#{id}"/>))
+    def exclude_asset(asset)
+      @excluded_scan_targets[:addresses] << HostOrIP.convert(asset)
+    end
+
+    # Removes an asset to this site excluded scan targets, resolving whether an IP or hostname is
+    # provided.
+    #
+    # @param [String] asset Identifier of an asset, either IP or host name.
+    #
+    def remove_excluded_asset(asset)
+      @excluded_scan_targets[:addresses].reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
+    end
+
+    # Adds an asset group ID to this site included scan targets.
+    #
+    # @param [Integer] asset_group_id Identifier of an assetGroupID.
+    #
+    def include_asset_group(asset_group_id)
+      validate_asset_group(asset_group_id)
+      @included_scan_targets[:asset_groups] << asset_group_id.to_i
+    end
+
+    # Adds an asset group ID to this site included scan targets.
+    #
+    # @param [Integer] asset_group_id Identifier of an assetGroupID.
+    #
+    def remove_included_asset_group(asset_group_id)
+      validate_asset_group(asset_group_id)
+      @included_scan_targets[:asset_groups].reject! { |t| t.eql? asset_group_id.to_i }
+    end
+
+    # Adds an asset group ID to this site excluded scan targets.
+    #
+    # @param [Integer] asset_group_id Identifier of an assetGroupID.
+    #
+    def exclude_asset_group(asset_group_id)
+      validate_asset_group(asset_group_id)
+      @excluded_scan_targets[:asset_groups] << asset_group_id.to_i
+    end
+
+    # Adds an asset group ID to this site excluded scan targets.
+    #
+    # @param [Integer] asset_group_id Identifier of an assetGroupID.
+    #
+    def remove_excluded_asset_group(asset_group_id)
+      validate_asset_group(asset_group_id)
+      @excluded_scan_targets[:asset_groups].reject! { |t| t.eql? asset_group_id.to_i }
+    end
+
+    def validate_asset_group(asset_group_id)
+      begin
+        Integer(asset_group_id)
+      rescue ArgumentError => e
+        raise "Invalid asset_group id. #{e.message}"
       end
-      site = parse(r.res)
-      site.load_dynamic_attributes(connection) if site.dynamic?
+
+      raise 'Invalid asset_group id. Must be positive number.' if asset_group_id.to_i < 1
+    end
+
+    def add_user(user_id)
+      unless user_id.is_a?(Numeric) && user_id > 0
+        raise 'Invalid user id. A user id must be a positive number and refer to an existing system user.'
+      end
+
+      @users << { id: user_id}
+    end
+
+    def remove_user(user_id)
+      unless user_id.is_a?(Numeric) && user_id > 0
+        raise 'Invalid user id. A user id must be a positive number and refer to an existing system user.'
+      end
+
+      @users.delete_if { |h| h[:id] == user_id }
+    end
+
+    def self.from_hash(hash)
+      site = new(hash[:name], hash[:scan_template_id])
+      hash.each do |k, v|
+        site.instance_variable_set("@#{k}", v)
+      end
+
+      # Convert each string address to either a HostName or IPRange object
+      included_scan_targets = { addresses: [], asset_groups: [] }
+      site.included_scan_targets[:addresses].each { |asset| included_scan_targets[:addresses] << HostOrIP.convert(asset) }
+      included_scan_targets[:asset_groups] = site.included_scan_targets[:asset_groups]
+      site.included_scan_targets = included_scan_targets
+
+      excluded_scan_targets = { addresses: [], asset_groups: [] }
+      site.excluded_scan_targets[:addresses].each { |asset| excluded_scan_targets[:addresses] << HostOrIP.convert(asset) }
+      excluded_scan_targets[:asset_groups] = site.excluded_scan_targets[:asset_groups]
+      site.excluded_scan_targets = excluded_scan_targets
+
       site
+    end
+
+    def to_json
+      JSON.generate(to_h)
+    end
+
+    def to_h
+      included_scan_targets = {
+          addresses: @included_scan_targets[:addresses].compact,
+          asset_groups: @included_scan_targets[:asset_groups].compact
+      }
+      excluded_scan_targets = {
+          addresses: @excluded_scan_targets[:addresses].compact,
+          asset_groups: @excluded_scan_targets[:asset_groups].compact
+      }
+
+      {
+          id: @id,
+          name: @name,
+          description: @description,
+          auto_engine_selection_enabled: @auto_engine_selection_enabled,
+          included_scan_targets: included_scan_targets,
+          excluded_scan_targets: excluded_scan_targets,
+          engine_id: @engine_id,
+          scan_template_id: @scan_template_id,
+          risk_factor: @risk_factor,
+          schedules: (@schedules || []).map {|schedule| schedule.to_h},
+          shared_credentials: (@shared_credentials || []).map {|cred| cred.to_h},
+          site_credentials: (@site_credentials || []).map {|cred| cred.to_h},
+          web_credentials: (@web_credentials || []).map {|webCred| webCred.to_h},
+          discovery_config: @discovery_config.to_h,
+          search_criteria: @search_criteria.to_h,
+          tags: (@tags || []).map{|tag| tag.to_h},
+          alerts: (@alerts || []).map {|alert| alert.to_h },
+          organization: @organization.to_h,
+          users: users
+      }
+    end
+
+    require 'json'
+    # Load an site from the provided console.
+    #
+    # @param [Connection] nsc Active connection to a Nexpose console.
+    # @param [String] id Unique identifier of a site.
+    # @return [Site] The requested site, if found.
+    #
+    def self.load(nsc, id)
+      uri = "/api/2.1/site_configurations/#{id}"
+      resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
+      hash = JSON.parse(resp, symbolize_names: true)
+      site = self.json_initializer(hash).deserialize(hash)
+
+      # Convert each string address to either a HostName or IPRange object
+      included_addresses = hash[:included_scan_targets][:addresses]
+      site.included_scan_targets[:addresses] = []
+      included_addresses.each { |asset| site.include_asset(asset) }
+
+      excluded_addresses = hash[:excluded_scan_targets][:addresses]
+      site.excluded_scan_targets[:addresses] = []
+      excluded_addresses.each { |asset| site.exclude_asset(asset) }
+
+      site.organization = Organization.create(site.organization)
+      site.schedules = (hash[:schedules] || []).map {|schedule| Nexpose::Schedule.from_hash(schedule) }
+      site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
+      site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
+      site.discovery_config = Nexpose::DiscoveryConnection.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
+      site.search_criteria = Nexpose::DiscoveryConnection::Criteria.parseHash(hash[:search_criteria]) unless hash[:search_criteria].nil?
+      site.alerts = Alert.load_alerts(hash[:alerts])
+      site.tags = Tag.load_tags(hash[:tags])
+      site.web_credentials = hash[:web_credentials].map {|webCred| (
+                           webCred[:service] == Nexpose::WebCredentials::WebAppAuthType::HTTP_HEADER ?
+                               Nexpose::WebCredentials::Headers.new(webCred[:name], webCred[:baseURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred) :
+                               Nexpose::WebCredentials::HTMLForms.new(webCred[:name], webCred[:baseURL], webCred[:loginURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred))}
+
+      site
+    end
+
+    def self.json_initializer(data)
+      new(data[:name], data[:scan_template_id])
     end
 
     # Copy an existing configuration from a Nexpose instance.
@@ -333,23 +550,21 @@ module Nexpose
     # @return [Fixnum] Site ID assigned to this configuration, if successful.
     #
     def save(connection)
-      if dynamic?
-        raise APIError.new(nil, 'Cannot save a dynamic site without a discovery connection configured.') unless @discovery_connection_id
-
         new_site = @id == -1
-        save_dynamic_criteria(connection) if new_site
 
-        # Have to retrieve and attach shared creds, or saving will fail.
-        xml = _append_shared_creds_to_xml(connection, as_xml)
-        response = AJAX.post(connection, '/data/site/config', xml)
-        saved = REXML::XPath.first(REXML::Document.new(response), 'ajaxResponse')
-        raise APIError.new(response, 'Failed to save dynamic site.') if saved.nil? || saved.attributes['success'].to_i != 1
+        if new_site
+          resp = AJAX.post(connection, '/api/2.1/site_configurations/', to_json, AJAX::CONTENT_TYPE::JSON)
+          @id = resp.to_i
+        else
+          resp = AJAX.put(connection, "/api/2.1/site_configurations/#{@id}", to_json, AJAX::CONTENT_TYPE::JSON)
+        end
 
-        save_dynamic_criteria(connection) unless new_site
-      else
-        r = connection.execute('<SiteSaveRequest session-id="' + connection.session_id + '">' + to_xml + ' </SiteSaveRequest>')
-        @id = r.attributes['site-id'].to_i if r.success
-      end
+        # Retrieve the scan engine and shared credentials and add them to the site configuration
+        site_config = Site.load(connection, @id)
+        @engine_id = site_config.engine_id
+        @shared_credentials = site_config.shared_credentials
+        @alerts = site_config.alerts
+
       @id
     end
 
@@ -377,209 +592,6 @@ module Nexpose
 
       response = connection.execute(xml, '1.1', timeout: 60)
       Scan.parse(response.res) if response.success
-    end
-
-    # Save only the criteria of a dynamic site.
-    #
-    # @param [Connection] nsc Connection to a console.
-    # @return [Fixnum] Site ID.
-    #
-    def save_dynamic_criteria(nsc)
-      # Several parameters are passed through the URI
-      params = { 'configID' => @discovery_connection_id,
-                 'entityid' => @id > 0 ? @id : false,
-                 'mode' => @id > 0 ? 'edit' : false }
-      uri = AJAX.parameterize_uri('/data/site/saveSite', params)
-
-      # JSON body of POST request contains details.
-      details = { 'dynamic' => true,
-                  'name' => @name,
-                  'tag' => @description.nil? ? '' : @description,
-                  'riskFactor' => @risk_factor,
-                  # 'vCenter' => @discovery_connection_id,
-                  'searchCriteria' => @criteria.nil? ? { 'operator' => 'AND' } : @criteria.to_h }
-      json = JSON.generate(details)
-
-      response = AJAX.post(nsc, uri, json, AJAX::CONTENT_TYPE::JSON)
-      json = JSON.parse(response)
-      if json['response'] =~ /success/
-        if @id < 1
-          @id = json['entityID'].to_i
-        end
-      else
-        raise APIError.new(response, json['message'])
-      end
-      @id
-    end
-
-    # Retrieve the currrent filter criteria used by a dynamic site.
-    #
-    # @param [Connection] nsc Connection to a console.
-    # @return [Criteria] Current criteria for the site.
-    #
-    def load_dynamic_attributes(nsc)
-      response = AJAX.get(nsc, "/data/site/loadDynamicSite?entityid=#{@id}")
-      json = JSON.parse(response)
-      @discovery_connection_id = json['discoveryConfigs']['id']
-      @criteria = Criteria.parse(json['searchCriteria'])
-    end
-
-    include Sanitize
-
-    # Generate an XML representation of this site configuration
-    #
-    # @return [String] XML valid for submission as part of other requests.
-    #
-    def as_xml
-      xml = REXML::Element.new('Site')
-      xml.attributes['id'] = @id
-      xml.attributes['name'] = @name
-      xml.attributes['description'] = @description
-      xml.attributes['riskfactor'] = @risk_factor
-      xml.attributes['isDynamic'] = '1' if dynamic?
-      # TODO This should be set to 'Amazon Web Services' for AWS.
-      xml.attributes['dynamicConfigType'] = 'vSphere' if dynamic?
-
-      if @description && !@description.empty?
-        elem = REXML::Element.new('Description')
-        elem.add_text(@description)
-        xml.add_element(elem)
-      end
-
-      unless @users.empty?
-        elem = REXML::Element.new('Users')
-        @users.each { |user| elem.add_element('user', { 'id' => user }) }
-        xml.add_element(elem)
-      end
-
-      xml.add_element(@organization.as_xml) if @organization
-
-      elem = REXML::Element.new('Hosts')
-      @assets.each { |a| elem.add_element(a.as_xml) }
-      xml.add_element(elem)
-
-      elem = REXML::Element.new('ExcludedHosts')
-      @exclude.each { |e| elem.add_element(e.as_xml) }
-      xml.add_element(elem)
-
-      unless credentials.empty?
-        elem = REXML::Element.new('Credentials')
-        @credentials.each { |c| elem.add_element(c.as_xml) }
-        xml.add_element(elem)
-      end
-
-      unless alerts.empty?
-        elem = REXML::Element.new('Alerting')
-        alerts.each { |a| elem.add_element(a.as_xml) }
-        xml.add_element(elem)
-      end
-
-      elem = REXML::Element.new('ScanConfig')
-      elem.add_attributes({ 'configID' => @id,
-                            'name' => @scan_template_name || @scan_template,
-                            'templateID' => @scan_template,
-                            'configVersion' => @config_version || 3,
-                            'engineID' => @engine })
-      sched = REXML::Element.new('Schedules')
-      @schedules.each { |s| sched.add_element(s.as_xml) }
-      elem.add_element(sched)
-      xml.add_element(elem)
-
-      unless tags.empty?
-        tag_xml = xml.add_element(REXML::Element.new('Tags'))
-        @tags.each { |tag| tag_xml.add_element(tag.as_xml) }
-      end
-
-      xml
-    end
-
-    def to_xml
-      as_xml.to_s
-    end
-
-    # Parse a response from a Nexpose console into a valid Site object.
-    #
-    # @param [REXML::Document] rexml XML document to parse.
-    # @return [Site] Site object represented by the XML.
-    #  ## TODO What is returned on failure?
-    #
-    def self.parse(rexml)
-      rexml.elements.each('//Site') do |s|
-        site = Site.new(s.attributes['name'])
-        site.id = s.attributes['id'].to_i
-        site.description = s.attributes['description']
-        site.risk_factor = s.attributes['riskfactor'] || 1.0
-        site.is_dynamic = true if s.attributes['isDynamic'] == '1'
-
-        s.elements.each('Description') do |desc|
-          site.description = desc.text
-        end
-
-        s.elements.each('Users/user') do |user|
-          site.users << user.attributes['id'].to_i
-        end
-
-        s.elements.each('Organization') do |org|
-          site.organization = Organization.parse(org)
-        end
-
-        s.elements.each('Hosts/range') do |r|
-          site.assets << IPRange.new(r.attributes['from'], r.attributes['to'])
-        end
-        s.elements.each('Hosts/host') do |host|
-          site.assets << HostName.new(host.text)
-        end
-
-        s.elements.each('ExcludedHosts/range') do |r|
-          site.exclude << IPRange.new(r.attributes['from'], r.attributes['to'])
-        end
-        s.elements.each('ExcludedHosts/host') do |host|
-          site.exclude << HostName.new(host.text)
-        end
-
-        s.elements.each('Credentials/adminCredentials') do |cred|
-          site.credentials << SiteCredential.parse(cred)
-        end
-
-        s.elements.each('ScanConfig') do |scan_config|
-          site.scan_template_name = scan_config.attributes['name']
-          site.scan_template = scan_config.attributes['templateID']
-          site.config_version = scan_config.attributes['configVersion'].to_i
-          site.engine = scan_config.attributes['engineID'].to_i
-          scan_config.elements.each('Schedules/Schedule') do |schedule|
-            site.schedules << Schedule.parse(schedule)
-          end
-        end
-
-        s.elements.each('Alerting/Alert') do |alert|
-          site.alerts << Alert.parse(alert)
-        end
-
-        s.elements.each('Tags/Tag') do |tag|
-          site.tags << TagSummary.parse_xml(tag)
-        end
-
-        return site
-      end
-      nil
-    end
-
-    def _append_shared_creds_to_xml(connection, xml)
-      xml_w_creds = AJAX.get(connection, "/data/site/config?siteid=#{@id}")
-      cred_xml = REXML::XPath.first(REXML::Document.new(xml_w_creds), 'Site/Credentials')
-      unless cred_xml.nil?
-        creds = REXML::XPath.first(xml, 'Credentials')
-        if creds.nil?
-          xml.add_element(cred_xml)
-        else
-          cred_xml.elements.each do |cred|
-            if cred.attributes['shared'].to_i == 1
-              creds.add_element(cred)
-            end
-          end
-        end
-      end
-      xml
     end
   end
 
@@ -641,6 +653,10 @@ module Nexpose
 
     def to_xml
       to_xml_elem.to_s
+    end
+
+    def to_s
+      @host.to_s
     end
   end
 
@@ -751,6 +767,11 @@ module Nexpose
 
     def to_xml
       as_xml.to_s
+    end
+
+    def to_s
+      return from.to_s if to.nil?
+      "#{from.to_s} - #{to.to_s}"
     end
   end
 end
