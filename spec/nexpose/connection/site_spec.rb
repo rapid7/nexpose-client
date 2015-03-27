@@ -18,8 +18,9 @@ describe Nexpose::Connection, :with_api_login do
       let(:basic_site) do
         Nexpose::Site.new('test site name 1').tap do |site|
           site.description = 'test site description 1'
+          site.included_scan_targets[:addresses] = ['localhost']
 
-          VCR.use_cassette('basic_site') do
+          VCR.use_cassette('basic_site', record: :new_episodes) do
             site.save(connection)
           end
         end
