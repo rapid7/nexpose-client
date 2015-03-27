@@ -1,6 +1,6 @@
 module Nexpose
 
-  class Global_Blackout < APIObject
+  class GlobalBlackout < APIObject
     include JsonSerializer
 
     # [Array] Blackout starting dates, times and duration for blackout periods.
