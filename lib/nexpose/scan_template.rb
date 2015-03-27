@@ -4,7 +4,7 @@ module Nexpose
 
     # List the scan templates currently configured on the console.
     #
-    # @return [Array[String]] list of scan templates IDs.
+    # @return [Array[ScanTemplateSummary]] list of scan template summary objects.
     #
     def list_scan_templates
       templates = JSON.parse(AJAX.get(self, '/api/2.0/scan_templates'))
