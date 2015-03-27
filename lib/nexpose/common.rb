@@ -161,7 +161,7 @@ module Nexpose
     attr_accessor :scan_template_id
 
     # @param [Time] start
-    def initialize(type, interval, start, enabled = true, scan_template_id = 'full-audit-without-web-spider')
+    def initialize(type, interval, start, enabled = true, scan_template_id = nil)
       @type = type
       @interval = interval
       @start = start
@@ -179,7 +179,7 @@ module Nexpose
         schedule = new(repeat_scan_hash[:type], repeat_scan_hash[:interval], start)
       end
       schedule.enabled = hash[:enabled].nil? ? true : hash[:enabled]
-      schedule.scan_template_id = hash[:scan_template_id] || 'full-audit-without-web-spider'
+      schedule.scan_template_id = hash[:scan_template_id]
       schedule.start = Nexpose::ISO8601.to_time(hash[:start_date]) if hash[:start_date]
       schedule.max_duration = hash[:maximum_scan_duration] if hash[:maximum_scan_duration]
       schedule.not_valid_after = Nexpose::ISO8601.to_time(hash[:not_valid_after_date]) if hash[:not_valid_after_date]
