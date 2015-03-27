@@ -105,20 +105,27 @@ module Nexpose
     # Force the scan to run during a blackout
     attr_accessor :force
 
-    def initialize(start, scan_template_id, max_duration, force = false)
+    def initialize(start, scan_template_id, max_duration = nil, force = nil)
       @start = start
       @scan_template_id = scan_template_id
-      @max_duration = max_duration
-      @force = force
+      @max_duration = max_duration if max_duration
+      @force = force if force
     end
 
     def as_xml
       xml = REXML::Element.new('AdHocSchedule')
       xml.attributes['start'] = @start
-      xml.attributes['maxDuration'] = @max_duration
+      xml.attributes['maxDuration'] = @max_duration if @max_duration
       xml.attributes['template'] = @scan_template_id
       xml.attributes['force'] = @force if @force
       xml
+    end
+
+    def from_hash(hash)
+      schedule = AdHocSchedule.new(hash[:start], hash[:scan_template_id])
+      schedule.max_duration = hash[:max_duration] if hash[:max_duration]
+      schedule.force = hash[:force] if hash[:force]
+      schedule
     end
 
     def to_xml
