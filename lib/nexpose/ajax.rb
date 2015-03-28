@@ -158,12 +158,26 @@ module Nexpose
           raise Nexpose::AuthenticationFailed.new(response)
         else
           req_type = request.class.name.split('::').last.upcase
-          raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
+          raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{get_reason(request, response)}", response.code)
         end
       else
         req_type = request.class.name.split('::').last.upcase
-        raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
+        raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{get_reason(request, response)}", response.code)
       end
+    end
+
+    def get_api_version(request)
+      begin
+        matches = request.path.match(/\/api\/(?<version>[\d\.]+)\//)
+        matches[:version].to_f
+      rescue
+        0.0
+      end
+    end
+
+    def get_reason(request, response)
+      version = get_api_version(request)
+      (version >= 2.1 && response.body) ? response.body : request.body
     end
 
     # Execute a block of code while presenving the preferences for any
