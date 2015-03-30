@@ -729,7 +729,9 @@ module Nexpose
       to = @to.nil? ? from : IPAddr.new(@to)
       other = IPAddr.new(single_ip)
 
-      if other < from
+      if other == from || other == to
+        true
+      elsif other < from
         false
       elsif to < other
         false
