@@ -8,6 +8,9 @@ module Nexpose
   module AJAX
     module_function
 
+    API_PATTERN = %r{/api/(?<version>[\d\.]+)}
+    private_constant :API_PATTERN
+
     # Content type strings acceptect by Nexpose.
     #
     module CONTENT_TYPE
@@ -157,13 +160,35 @@ module Nexpose
         if response.header['location'] =~ /login/
           raise Nexpose::AuthenticationFailed.new(response)
         else
-          req_type = request.class.name.split('::').last.upcase
-          raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
+          raise get_api_error(request, response)
         end
       else
-        req_type = request.class.name.split('::').last.upcase
-        raise Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{request.body}", response.code)
+        raise get_api_error(request, response)
       end
+    end
+
+    def get_api_error(request, response)
+      req_type = request.class.name.split('::').last.upcase
+      error_message = get_error_message(request, response)
+      Nexpose::APIError.new(response, "#{req_type} request to #{request.path} failed. #{error_message}", response.code)
+    end
+
+    # Get the version of the api target by request
+    #
+    # @param [HTTPRequest] request
+    def get_request_api_version(request)
+        matches = request.path.match(API_PATTERN)
+        matches[:version].to_f
+      rescue
+        0.0
+    end
+
+    # Get an error message from the response body if the request url api version
+    # is 2.1 or greater otherwise use the request body
+    def get_error_message(request, response)
+      version = get_request_api_version(request)
+
+      (version >= 2.1 && response.body) ? "response body: #{response.body}" : "request body: #{request.body}"
     end
 
     # Execute a block of code while presenving the preferences for any
