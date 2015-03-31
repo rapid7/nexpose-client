@@ -725,19 +725,12 @@ module Nexpose
 
     def include?(single_ip)
       return false unless single_ip.respond_to? :from
-      from = IPAddr.new(@from)
-      to = @to.nil? ? from : IPAddr.new(@to)
-      other = IPAddr.new(single_ip)
+      from = IPAddr.new(@from).to_i
+      to = @to.nil? ? from : IPAddr.new(@to).to_i
+      other = IPAddr.new(single_ip.from).to_i
 
-      if other == from || other == to
-        true
-      elsif other < from
-        false
-      elsif to < other
-        false
-      else
-        true
-      end
+      (from..to).include?(other)
+
     end
 
     def hash
