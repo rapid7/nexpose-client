@@ -56,4 +56,35 @@ describe Nexpose::Site do
       end
     end
   end
+
+  describe '#remove_asset' do
+    context 'with multiple IP addresses and ranges' do
+      before do
+        subject.add_ip_range('192.168.0.100', '192.168.0.105')
+        subject.add_ip_range('172.16.0.1', '172.16.0.3')
+        subject.add_asset('172.16.0.5')
+        subject.add_asset('example.local')
+      end
+
+      it 'deletes a hostname' do
+        subject.remove_asset('example.local')
+        expect(subject).to_not include_asset('example.local')
+      end
+
+      it 'deletes a lone IP' do
+        subject.remove_asset('172.16.0.5')
+        expect(subject).to_not include_asset('172.16.0.5')
+      end
+
+      it 'deletes an IP embedded in a range' do
+        subject.remove_asset('172.16.0.1')
+        expect(subject).to_not include_asset('172.16.0.1')
+      end
+
+      it 'deletes a lone IP' do
+        subject.remove_asset('192.168.0.100')
+        expect(subject).to_not include_asset('192.168.0.100')
+      end
+    end
+  end
 end

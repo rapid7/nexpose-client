@@ -178,6 +178,19 @@ module Nexpose
       @discovery_connection_id = value.to_i
     end
 
+    def include_asset?(asset)
+      include_hostname?(asset) || include_ip_range?(asset)
+    end
+
+    def include_hostname?(host)
+      host = HostName.new(host) unless host.is_a?(HostName)
+      assets.grep(HostName) { |asset| asset.eql?(host) }.any?
+    end
+
+    def include_ip_range?(range)
+      assets.grep(IPRange) { |asset| asset.include?(range) }.any?
+    end
+
     # Adds an asset to this site by host name.
     #
     # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
