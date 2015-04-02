@@ -74,6 +74,34 @@ describe Nexpose::IPRange do
     end
   end
 
+  describe '#include?' do
+    subject { Nexpose::IPRange.new('192.168.1.0', '192.168.1.255') }
+
+    context 'with a invalid IP string' do
+      it 'returns false' do
+        expect(subject).to_not include('127.0.0.1')
+      end
+    end
+
+    context 'with a valid IP string' do
+      it 'returns true' do
+        expect(subject).to include('192.168.1.1')
+      end
+    end
+
+    context 'with an invalid IPRange' do
+      it 'returns false' do
+        expect(subject).to_not include(Nexpose::IPRange.new('127.0.0.1'))
+      end
+    end
+
+    context 'with a subset in an IPRange' do
+      it 'returns true' do
+        expect(subject).to include(Nexpose::IPRange.new('192.168.1.1'))
+      end
+    end
+  end
+
   describe '#size' do
     context 'with a single IP address' do
       subject { Nexpose::IPRange.new('192.168.1.0') }
