@@ -102,14 +102,10 @@ module Nexpose
     # The amount of time, in minutes, to allow execution before stopping.
     attr_accessor :max_duration
 
-    # Force the scan to run during a blackout
-    attr_accessor :force
-
-    def initialize(start, scan_template_id, max_duration = nil, force = nil)
+    def initialize(start, scan_template_id, max_duration = nil)
       @start = start
       @scan_template_id = scan_template_id
       @max_duration = max_duration if max_duration
-      @force = force if force
     end
 
     def as_xml
@@ -117,14 +113,12 @@ module Nexpose
       xml.attributes['start'] = @start
       xml.attributes['maxDuration'] = @max_duration if @max_duration
       xml.attributes['template'] = @scan_template_id
-      xml.attributes['force'] = @force if @force
       xml
     end
 
     def from_hash(hash)
       schedule = AdHocSchedule.new(hash[:start], hash[:scan_template_id])
       schedule.max_duration = hash[:max_duration] if hash[:max_duration]
-      schedule.force = hash[:force] if hash[:force]
       schedule
     end
 
@@ -304,51 +298,6 @@ module Nexpose
       WEEKLY = 'weekly'
       MONTHLY_DATE = 'monthly-date'
       MONTHLY_DAY = 'monthly-day'
-    end
-  end
-
-  # Configuration structure for blackouts.
-  class Blackout < APIObject
-    # Whether or not this blackout is enabled.
-    attr_accessor :enabled
-    # Valid schedule types: daily, hourly, monthly-date, monthly-day, weekly.
-    attr_accessor :blackout_type
-    # The repeat interval based upon type.
-    attr_accessor :blackout_interval
-    # The earliest date to generate the report on (in ISO 8601 format).
-    attr_accessor :blackout_start
-    # The amount of time, in minutes, a blackout period should last.
-    attr_accessor :blackout_duration
-    # The timezone in which the blackout will start
-    attr_accessor :blackout_timezone
-
-    def initialize(start, enabled=true, duration, timezone, type, interval)
-      @blackout_start = start
-      @enabled =enabled
-      @blackout_duration = duration.to_i
-      @blackout_timezone = timezone
-      @blackout_type = type
-      @blackout_interval = interval.to_i
-    end
-
-    def self.from_hash(hash)
-      repeat_blackout_hash = hash[:repeat_blackout]
-      blackout = new(hash[:start_date], hash[:blackout_duration], hash[:timezone], repeat_blackout_hash[:type], repeat_blackout_hash[:interval])
-      blackout
-    end
-
-    def to_h
-      blackout_hash = {
-          start_date: @blackout_start,
-          enabled: @enabled,
-          blackout_duration: @blackout_duration,
-          timezone: @blackout_timezone
-      }
-      repeat_hash= {
-          type: @blackout_type,
-          interval: @blackout_interval }
-      blackout_hash[:repeat_blackout] = repeat_hash
-      blackout_hash
     end
   end
 
