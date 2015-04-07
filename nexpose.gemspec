@@ -27,6 +27,4 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rubocop', '~> 0.29.0')
   s.add_development_dependency('webmock', '~> 1.20.4')
   s.add_development_dependency('vcr', '~> 2.9.3')
-  s.add_development_dependency('pry')
-  s.add_development_dependency('pry-byebug')
 end
