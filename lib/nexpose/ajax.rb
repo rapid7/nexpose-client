@@ -177,8 +177,8 @@ module Nexpose
     #
     # @param [HTTPRequest] request
     def get_request_api_version(request)
-        matches = request.path.match(API_PATTERN)
-        matches[:version].to_f
+      matches = request.path.match(API_PATTERN)
+      matches[:version].to_f
       rescue
         0.0
     end

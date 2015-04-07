@@ -12,7 +12,11 @@ module Nexpose
     end
 
     def self.json_initializer(filter)
-      new(filter[:start] ? 1 : 0, filter[:stop] ? 1 : 0, filter[:failed] ? 1 : 0, filter[:resume] ? 1 : 0, filter[:pause] ? 1 : 0)
+      new(filter[:start] ? 1 : 0,
+          filter[:stop] ? 1 : 0,
+          filter[:failed] ? 1 : 0,
+          filter[:resume] ? 1 : 0,
+          filter[:pause] ? 1 : 0)
     end
   end
 
@@ -32,11 +36,15 @@ module Nexpose
     attr_accessor :confirmed, :unconfirmed, :potential
 
     def initialize(severity = 1, confirmed = 1, unconfirmed = 1, potential = 1)
-      @severity, @confirmed, @unconfirmed, @potential = severity.to_i, confirmed.to_i, unconfirmed.to_i, potential.to_i
+      @severity, @confirmed = severity.to_i, confirmed.to_i
+      @unconfirmed, @potential = unconfirmed.to_i, potential.to_i
     end
 
     def self.json_initializer(filter)
-      new(filter[:severity] ? 1 : 0, filter[:unconfirmed] ? 1 : 0, filter[:confirmed] ? 1 : 0, filter[:potential] ? 1 : 0)
+      new(filter[:severity] ? 1 : 0,
+          filter[:unconfirmed] ? 1 : 0,
+          filter[:confirmed] ? 1 : 0,
+          filter[:potential] ? 1 : 0)
     end
   end
 
@@ -87,7 +95,7 @@ module Nexpose
       uri = "/api/2.1/site_configurations/#{site_id}/alerts"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       data = JSON.parse(resp, symbolize_names: true)
-      self.load_alerts(data) unless data.nil?
+      load_alerts(data) unless data.nil?
     end
 
     def self.json_initializer(hash)
@@ -99,12 +107,12 @@ module Nexpose
     end
 
     def to_json
-      serialize()
+      serialize
     end
 
     # delete an alert from the given site
     def delete(nsc, site_id)
-      uri = "/api/2.1/site_configurations/#{site_id}/alerts/#{self.id}"
+      uri = "/api/2.1/site_configurations/#{site_id}/alerts/#{id}"
       AJAX.delete(nsc, uri, AJAX::CONTENT_TYPE::JSON)
     end
 
@@ -166,9 +174,13 @@ module Nexpose
     attr_accessor :recipients, :sender, :verbose
 
     def initialize(name, sender, server, recipients, enabled = 1, max_alerts = -1, verbose = 0)
-      raise 'An SMTP alert must contain an array of recipient emails with at least 1 recipient' unless recipients.is_a?(Array) && recipients.length > 0
+      unless recipients.is_a?(Array) && recipients.length > 0
+        raise 'An SMTP alert must contain an array of recipient emails with at least 1 recipient'
+      end
       recipients.each do |recipient| 
-        raise "Recipients must contain valid emails, #{recipient} has an invalid format" unless recipient =~ /^.+@.+\..+$/
+        unless recipient =~ /^.+@.+\..+$/
+          raise "Recipients must contain valid emails, #{recipient} has an invalid format"
+        end
       end
 
       @alert_type = 'SMTP'
@@ -178,7 +190,7 @@ module Nexpose
       @sender = sender
       @server = server
       @verbose = verbose
-      @recipients = recipients.nil? ? []: recipients
+      @recipients = recipients.nil? ? [] : recipients
     end
 
     def add_email_recipient(recipient)
