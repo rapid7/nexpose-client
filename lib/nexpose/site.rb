@@ -203,8 +203,49 @@ module Nexpose
     #
     # @param [String] ip IP address of an asset.
     def remove_ip(ip)
-      @assets = assets.reject { |asset| asset == IPRange.new(ip) }
+      ip = IPRange.new(ip)
+      @assets.each do |asset_range|
+        next if asset_range.is_a?(Nexpose::HostName)
+        if asset_range.include?(ip)
+          asset = split_ip_range(asset_range, ip)
+          @assets.delete(asset_range)
+          @assets.push(asset)
+          @assets.flatten!
+        end
+      end
     end
+
+
+    def split_ip_range(ip_range, split_ip)
+      split_ip = IPAddr.new(split_ip.from)
+      start_ip, end_ip = IPAddr.new(ip_range.from), IPAddr.new(ip_range.to)
+      all_ip_range = (start_ip..end_ip)
+
+      case split_ip
+      when all_ip_range.min
+        new_start = IPAddr.new(start_ip.to_i + 1, start_ip.family).to_s
+        asset = Nexpose::IPRange.new(new_start, ip_range.to)
+      when all_ip_range.max
+        new_end = IPAddr.new(end_ip.to_i - 1, end_ip.family).to_s
+        asset = Nexpose::IPRange.new(ip_range.from, new_end)
+      else
+        asset = ip_range_split_calc(start_ip, end_ip, split_ip)
+      end
+      return asset
+    end
+
+
+    def ip_range_split_calc(start_ip, end_ip, split_ip)
+      low_split  = IPAddr.new(split_ip.to_i - 1, start_ip.family).to_s
+      high_split = IPAddr.new(split_ip.to_i + 1, end_ip.family).to_s
+
+      low_range  = Nexpose::IPRange.new(start_ip.to_s, low_split)
+      high_range = Nexpose::IPRange.new(high_split, end_ip.to_s)
+
+      return [ low_range, high_range ]
+    end
+
+
 
     # Adds assets to this site by IP address range.
     #
@@ -728,9 +769,7 @@ module Nexpose
       from = IPAddr.new(@from).to_i
       to = @to.nil? ? from : IPAddr.new(@to).to_i
       other = IPAddr.new(single_ip.from).to_i
-
       (from..to).include?(other)
-
     end
 
     def hash
