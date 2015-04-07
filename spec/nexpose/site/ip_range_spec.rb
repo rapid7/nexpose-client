@@ -83,12 +83,6 @@ describe Nexpose::IPRange do
       end
     end
 
-    context 'with a valid IP string' do
-      it 'returns true' do
-        expect(subject).to include('192.168.1.1')
-      end
-    end
-
     context 'with an invalid IPRange' do
       it 'returns false' do
         expect(subject).to_not include(Nexpose::IPRange.new('127.0.0.1'))

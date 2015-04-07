@@ -218,11 +218,13 @@ module Nexpose
     def remove_ip(ip)
       ip = IPRange.new(ip)
       @assets.each do |asset_range|
-        next unless asset_range.include?(ip)
-        asset = split_ip_range(asset_range, ip)
-        @assets.delete(asset_range)
-        @assets.push(asset)
-        @assets.flatten!
+        return if asset_range.is_a?(Nexpose::HostName)
+        if asset_range.include?(ip)
+          asset = split_ip_range(asset_range, ip)
+          @assets.delete(asset_range)
+          @assets.push(asset)
+          @assets.flatten!
+        end
       end
     end
 
