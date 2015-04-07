@@ -81,7 +81,7 @@ describe Nexpose::Site do
         expect(subject).to_not include_asset('172.16.0.1')
       end
 
-      it 'deletes a lone IP' do
+      it 'splits a range after deleting an IP' do
         subject.remove_asset('192.168.0.100')
         expect(subject).to_not include_asset('192.168.0.100')
       end
