@@ -219,7 +219,9 @@ module Nexpose
       ip = IPRange.new(ip)
       @assets.each do |asset_range|
         return if asset_range.is_a?(Nexpose::HostName)
-        if asset_range.include?(ip)
+        if asset_range == ip
+          @assets.delete(asset_range)
+        elsif asset_range.include?(ip)
           asset = split_ip_range(asset_range, ip)
           @assets.delete(asset_range)
           @assets.push(asset)
