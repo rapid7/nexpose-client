@@ -25,9 +25,9 @@ http_interactions:
       X-Ua-Compatible:
       - IE=edge,chrome=1
       Set-Cookie:
-      - JSESSIONID=DB0B64C8B2BF531E2AA043CF29E65CAF; Path=/; Secure; HttpOnly
+      - JSESSIONID=6D064F67374C1663E32D088987E90ED5; Path=/; Secure; HttpOnly
       Date:
-      - Sun, 01 Mar 2015 04:50:24 GMT
+      - Fri, 27 Mar 2015 19:44:40 GMT
       Server:
       - NSC/0.6.4 (JVM)
       Cache-Control:
@@ -43,28 +43,72 @@ http_interactions:
     body:
       encoding: ASCII-8BIT
       string: |
-        <LoginResponse success="1" session-id="C22DA05D8FD1D5ED1DE0137CC82DE39928590188"/>
+        <LoginResponse success="1" session-id="8CD4D7B7E0A7FABFA85C45D37AC952640CE471B3"/>
     http_version: 
-  recorded_at: Sun, 01 Mar 2015 04:50:24 GMT
+  recorded_at: Fri, 27 Mar 2015 19:44:40 GMT
 - request:
     method: post
-    uri: https://nexpose.local:3780/api/1.1/xml
+    uri: https://nexpose.local:3780/api/2.1/site_configurations/
     body:
       encoding: UTF-8
-      string: <SiteSaveRequest session-id="C22DA05D8FD1D5ED1DE0137CC82DE39928590188"><Site
-        description='test site description 1' id='-1' name='test site name 1' riskfactor='1.0'><Description>test
-        site description 1</Description><Hosts/><ExcludedHosts/><ScanConfig configID='-1'
-        configVersion='3' name='full-audit-without-web-spider' templateID='full-audit-without-web-spider'><Schedules/></ScanConfig></Site>
-        </SiteSaveRequest>
+      string: '{"id":-1,"name":"test site name 1","description":"test site description
+        1","auto_engine_selection_enabled":null,"included_scan_targets":{"addresses":["localhost"],"asset_groups":[]},"excluded_scan_targets":{"addresses":[],"asset_groups":[]},"engine_id":null,"scan_template_id":"full-audit-without-web-spider","risk_factor":1.0,"schedules":[],"shared_credentials":[],"site_credentials":[],"web_credentials":[],"discovery_config":{},"search_criteria":{},"tags":[],"alerts":[],"organization":{},"users":[]}'
     headers:
-      Content-Type:
-      - text/xml
       Accept-Encoding:
       - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
       Accept:
       - "*/*"
       User-Agent:
       - Ruby
+      Content-Type:
+      - application/json; charset-utf-8
+      Nexposeccsessionid:
+      - 8CD4D7B7E0A7FABFA85C45D37AC952640CE471B3
+      Cookie:
+      - nexposeCCSessionID=8CD4D7B7E0A7FABFA85C45D37AC952640CE471B3
+  response:
+    status:
+      code: 201
+      message: Created
+    headers:
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Ua-Compatible:
+      - IE=edge,chrome=1
+      Content-Type:
+      - application/json;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      Date:
+      - Fri, 27 Mar 2015 19:44:41 GMT
+      Server:
+      - NSC/0.6.4 (JVM)
+    body:
+      encoding: ASCII-8BIT
+      string: '3'
+    http_version: 
+  recorded_at: Fri, 27 Mar 2015 19:44:41 GMT
+- request:
+    method: get
+    uri: https://nexpose.local:3780/api/2.1/site_configurations/3
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Content-Type:
+      - application/json; charset-utf-8
+      Nexposeccsessionid:
+      - 8CD4D7B7E0A7FABFA85C45D37AC952640CE471B3
+      Cookie:
+      - nexposeCCSessionID=8CD4D7B7E0A7FABFA85C45D37AC952640CE471B3
   response:
     status:
       code: 200
@@ -74,25 +118,20 @@ http_interactions:
       - SAMEORIGIN
       X-Ua-Compatible:
       - IE=edge,chrome=1
-      Set-Cookie:
-      - JSESSIONID=DB6905D5C0D2984BB9B0C91C7DA1F5B3; Path=/; Secure; HttpOnly
-      Date:
-      - Sun, 01 Mar 2015 04:50:24 GMT
-      Server:
-      - NSC/0.6.4 (JVM)
-      Cache-Control:
-      - no-cache; max-age=0
-      Pragma:
-      - no-cache
       Content-Type:
-      - application/xml;charset=UTF-8
+      - application/json;charset=UTF-8
       Transfer-Encoding:
       - chunked
       Vary:
       - Accept-Encoding
+      Date:
+      - Fri, 27 Mar 2015 19:44:41 GMT
+      Server:
+      - NSC/0.6.4 (JVM)
     body:
       encoding: ASCII-8BIT
-      string: <SiteSaveResponse success="1" site-id="36"/>
+      string: '{"name":"test site name 1","id":3,"organization":{"address":null,"name":null,"url":null,"state":null,"country":null,"city":null,"primary_contact":null,"job_title":null,"email":null,"telephone":null,"zip":null},"users":[],"description":"test
+        site description 1","version":3,"tags":[],"alerts":[],"url":"https://nexpose.local:3780/api/2.1/site_configurations/3","search_criteria":null,"scan_template_id":"full-audit-without-web-spider","engine_id":3,"configuration_id":5,"site_credentials":[],"risk_factor":1.0,"auto_engine_selection_enabled":false,"discovery_config":null,"schedules":[],"web_credentials":[],"configuration_name":null,"included_scan_targets":{"addresses":["localhost"],"asset_groups":[]},"excluded_scan_targets":{"addresses":[],"asset_groups":[]},"shared_credentials":[],"blackouts":[]}'
     http_version: 
-  recorded_at: Sun, 01 Mar 2015 04:50:24 GMT
+  recorded_at: Fri, 27 Mar 2015 19:44:41 GMT
 recorded_with: VCR 2.9.3

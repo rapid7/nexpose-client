@@ -91,8 +91,44 @@ module Nexpose
     end
   end
 
+  # Configuration structure for ad-hoc schedules
+  class AdHocSchedule < APIObject
+    # Start time in ISO8601 format
+    attr_accessor :start
+
+    # The template to use to scan the assets
+    attr_accessor :scan_template_id
+
+    # The amount of time, in minutes, to allow execution before stopping.
+    attr_accessor :max_duration
+
+    def initialize(start, scan_template_id, max_duration = nil)
+      @start = start
+      @scan_template_id = scan_template_id
+      @max_duration = max_duration if max_duration
+    end
+
+    def as_xml
+      xml = REXML::Element.new('AdHocSchedule')
+      xml.attributes['start'] = @start
+      xml.attributes['maxDuration'] = @max_duration if @max_duration
+      xml.attributes['template'] = @scan_template_id
+      xml
+    end
+
+    def from_hash(hash)
+      schedule = AdHocSchedule.new(hash[:start], hash[:scan_template_id])
+      schedule.max_duration = hash[:max_duration] if hash[:max_duration]
+      schedule
+    end
+
+    def to_xml
+      as_xml.to_s
+    end
+  end
+
   # Configuration structure for schedules.
-  class Schedule
+  class Schedule < APIObject
     # Whether or not this schedule is enabled.
     attr_accessor :enabled
     # Valid schedule types: daily, hourly, monthly-date, monthly-day, weekly.
@@ -107,8 +143,8 @@ module Nexpose
     # The date after which the schedule is disabled, in ISO 8601 format.
     attr_accessor :not_valid_after
 
+    # TODO: Remove this unused attribute
     attr_accessor :incremental
-    attr_accessor :repeater_type
 
     # Extended attributes added with the new scheduler implementation
     attr_accessor :is_extended
@@ -120,21 +156,87 @@ module Nexpose
     attr_accessor :start_month
     attr_accessor :timezone
     attr_accessor :next_run_time
-    attr_accessor :template
 
-    def initialize(type, interval, start, enabled = true)
+    # scan-schedule attributes
+    attr_accessor :repeater_type
+    attr_accessor :scan_template_id
+
+    # @param [Time] start
+    def initialize(type, interval, start, enabled = true, scan_template_id = nil)
       @type = type
       @interval = interval
       @start = start
       @enabled = enabled
+      @scan_template_id = scan_template_id
     end
 
     def self.from_hash(hash)
-      schedule = new(hash[:type], hash[:interval], hash[:start])
-      hash.each do |k, v|
-        schedule.instance_variable_set("@#{k}", v)
+      start = nil
+      start = Nexpose::ISO8601.to_time(hash[:start_date]) if hash[:start_date]
+      repeat_scan_hash = hash[:repeat_scan]
+      if repeat_scan_hash.nil?
+        schedule = new('daily', 0, start)
+      else
+        schedule = new(repeat_scan_hash[:type], repeat_scan_hash[:interval], start)
       end
+      schedule.enabled = hash[:enabled].nil? ? true : hash[:enabled]
+      schedule.scan_template_id = hash[:scan_template_id]
+      schedule.start = Nexpose::ISO8601.to_time(hash[:start_date]) if hash[:start_date]
+      schedule.max_duration = hash[:maximum_scan_duration] if hash[:maximum_scan_duration]
+      schedule.not_valid_after = Nexpose::ISO8601.to_time(hash[:not_valid_after_date]) if hash[:not_valid_after_date]
+      schedule.timezone = hash[:time_zone] if hash[:time_zone]
+      schedule.next_run_time = hash[:next_run_time] if hash[:next_run_time]
+
+      unless repeat_scan_hash.nil?
+        schedule.type = repeat_scan_hash[:type]
+        schedule.interval = repeat_scan_hash[:interval]
+        schedule.repeater_type = 'restart' if repeat_scan_hash[:on_repeat] == 'restart-scan'
+        schedule.repeater_type = 'continue' if repeat_scan_hash[:on_repeat] == 'resume-scan'
+
+        schedule.is_extended = repeat_scan_hash[:is_extended] if repeat_scan_hash[:is_extended]
+        schedule.hour = repeat_scan_hash[:hour] if repeat_scan_hash[:hour]
+        schedule.minute = repeat_scan_hash[:minute] if repeat_scan_hash[:minute]
+        schedule.date = repeat_scan_hash[:date] if repeat_scan_hash[:date]
+        schedule.day = repeat_scan_hash[:day] if repeat_scan_hash[:day]
+        schedule.occurrence = repeat_scan_hash[:occurrence] if repeat_scan_hash[:occurrence]
+        schedule.start_month = repeat_scan_hash[:start_month] if repeat_scan_hash[:start_month]
+      end
+
       schedule
+    end
+
+    def to_h
+      schedule_hash = {
+        enabled: @enabled,
+        scan_template_id: @scan_template_id,
+        maximum_scan_duration: @max_duration
+      }
+      schedule_hash[:start_date] = Nexpose::ISO8601.to_string(@start) if @start
+      schedule_hash[:not_valid_after_date] = Nexpose::ISO8601.to_string(@not_valid_after) if @not_valid_after
+      schedule_hash[:time_zone] = @timezone if @timezone
+
+      unless (@type.nil? || @interval == 0) && !@is_extended
+        repeat_scan_hash = {
+          type: @type,
+          interval: @interval
+        }
+        repeat_scan_hash[:on_repeat] = 'restart-scan' if @repeater_type == 'restart'
+        repeat_scan_hash[:on_repeat] = 'resume-scan' if @repeater_type == 'continue'
+
+        if @is_extended
+          repeat_scan_hash[:is_extended] = @is_extended
+          repeat_scan_hash[:hour] = @hour if @hour
+          repeat_scan_hash[:minute] = @minute if @minute
+          repeat_scan_hash[:date] = @date if @date
+          repeat_scan_hash[:day] = @day if @day
+          repeat_scan_hash[:occurrence] = @occurrence if @occurrence
+          repeat_scan_hash[:start_month] = @start_month if @start_month
+        end
+
+        schedule_hash[:repeat_scan] = repeat_scan_hash
+      end
+
+      schedule_hash
     end
 
     def as_xml
@@ -155,7 +257,7 @@ module Nexpose
       xml.attributes['occurrence'] = @occurrence if @occurrence
       xml.attributes['start_month'] = @start_month if @start_month
       xml.attributes['timezone'] = @timezone if @timezone
-      xml.attributes['template'] = @template if @template
+      xml.attributes['template'] = @scan_template_id if @scan_template_id
       xml
     end
 
@@ -183,7 +285,7 @@ module Nexpose
       schedule.start_month = xml.attributes['start_month'] if xml.attributes['start_month']
       schedule.timezone = xml.attributes['timezone'] if xml.attributes['timezone']
       schedule.next_run_time = xml.attributes['next_run_time'] if xml.attributes['next_run_time']
-      schedule.template = xml.attributes['template'] if xml.attributes['template']
+      schedule.scan_template_id = xml.attributes['template'] if xml.attributes['template']
       schedule
     end
 
@@ -200,7 +302,7 @@ module Nexpose
   end
 
   # Organization configuration, as used in Site and Silo.
-  class Organization
+  class Organization < APIObject
     attr_accessor :name
     attr_accessor :url
     attr_accessor :primary_contact
@@ -215,6 +317,38 @@ module Nexpose
 
     def initialize(&block)
       instance_eval(&block) if block_given?
+    end
+
+    def to_h
+      { name: name,
+        url: url,
+        primary_contact: primary_contact,
+        job_title: job_title,
+        email: email,
+        telephone: telephone,
+        address: address,
+        state: state,
+        city: city,
+        zip: zip,
+        country: country
+      }
+    end
+
+    # Create organization object from hash
+    def self.create(hash)
+      new do |org|
+        org.name = hash[:name]
+        org.url = hash[:url]
+        org.primary_contact = hash[:primary_contact]
+        org.job_title = hash[:job_title]
+        org.email = hash[:email]
+        org.telephone = hash[:telephone]
+        org.address = hash[:address]
+        org.state = hash[:state]
+        org.city = hash[:city]
+        org.zip = hash[:zip]
+        org.country = hash[:country]
+      end
     end
 
     def self.parse(xml)

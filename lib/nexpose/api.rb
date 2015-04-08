@@ -82,4 +82,22 @@ module Nexpose
       Object.const_get('Nexpose').const_get(str)
     end
   end
+
+  module TypedAccessor
+    def typed_accessor(name, type)
+
+      # here we dynamically define accessor methods
+      define_method(name) do
+        instance_variable_get("@#{name}")
+      end
+
+      define_method("#{name}=") do |value|
+        instance_variable_set("@#{name}", value)
+      end
+
+      define_method("#{name}_type") do
+        type
+      end
+    end
+  end
 end

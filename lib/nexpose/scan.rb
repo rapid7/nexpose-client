@@ -11,6 +11,16 @@ module Nexpose
       scan_devices([device])
     end
 
+    # Perform an ad hoc scan of a single device at a specific time.
+    #
+    # @param [Device] device Device to scan.
+    # @param [Array[adhoc_schedules]] list of scheduled times at which to run
+    # @return [Status] whether the request was successful
+    #
+    def scan_device_with_schedule(device, schedule)
+      scan_devices_with_schedule([device], schedule)
+    end
+
     # Perform an ad hoc scan of a subset of devices for a site.
     # Nexpose only allows devices from a single site to be submitted per
     # request.
@@ -24,15 +34,43 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_devices(devices)
-      site_id = devices.map { |d| d.site_id }.uniq.first
-      xml = make_xml('SiteDevicesScanRequest', { 'site-id' => site_id })
+      site_id = devices.map(&:site_id).uniq.first
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       elem = REXML::Element.new('Devices')
       devices.each do |device|
-        elem.add_element('device', { 'id' => "#{device.id}" })
+        elem.add_element('device', 'id' => "#{device.id}")
       end
       xml.add_element(elem)
 
       _scan_ad_hoc(xml)
+    end
+
+    # Perform an ad hoc scan of a subset of devices for a site.
+    # Nexpose only allows devices from a single site to be submitted per
+    # request.
+    # Method is designed to take objects from a Device listing.
+    #
+    # For example:
+    #   devices = nsc.devices(5)
+    #   nsc.scan_devices(devices.take(10))
+    #
+    # @param [Array[Device]] devices List of devices to scan.
+    # @param [Array[adhoc_schedules]] list of scheduled times at which to run
+    # @return [Status] whether the request was successful
+    #
+    def scan_devices_with_schedule(devices, schedules)
+      site_id = devices.map(&:site_id).uniq.first
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
+      elem = REXML::Element.new('Devices')
+      devices.each do |device|
+        elem.add_element('device', 'id' => "#{device.id}")
+      end
+      xml.add_element(elem)
+      scheds = REXML::Element.new('Schedules')
+      schedules.each { |sched| scheds.add_element(sched.as_xml) }
+      xml.add_element(scheds)
+
+      _scan_ad_hoc_with_schedules(xml)
     end
 
     # Perform an ad hoc scan of a single asset of a site.
@@ -43,6 +81,17 @@ module Nexpose
     #
     def scan_asset(site_id, asset)
       scan_assets(site_id, [asset])
+    end
+
+    # Perform an ad hoc scan of a single asset of a site at a specific time
+    #
+    # @param [Fixnum] site_id Site ID that the assets belong to.
+    # @param [HostName|IPRange] asset Asset to scan.
+    # @param [Array[adhoc_schedules]] list of scheduled times at which to run
+    # @return [Status] whether the request was successful
+    #
+    def scan_asset_with_schedule(site_id, asset, schedule)
+      scan_assets_with_schedule(site_id, [asset], schedule)
     end
 
     # Perform an ad hoc scan of a subset of assets for a site.
@@ -58,12 +107,65 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_assets(site_id, assets)
-      xml = make_xml('SiteDevicesScanRequest', { 'site-id' => site_id })
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       hosts = REXML::Element.new('Hosts')
       assets.each { |asset| _append_asset!(hosts, asset) }
       xml.add_element(hosts)
 
       _scan_ad_hoc(xml)
+    end
+
+    # Perform an ad hoc scan of a subset of assets for a site by adding a specific runtime.
+    # Only assets from a single site should be submitted per request.
+    # Method is designed to take objects filtered from Site#assets.
+    #
+    # For example:
+    #   site = Site.load(nsc, 5)
+    #   nsc.scan_assets_with_schedule(5, site.assets.take(10), schedules)
+    #
+    # @param [Fixnum] site_id Site ID that the assets belong to.
+    # @param [Array[HostName|IPRange]] assets List of assets to scan.
+    # @param [Array[adhoc_schedules]] list of scheduled times at which to run
+    # @return [Status] whether the request was successful
+    #
+    def scan_assets_with_schedule(site_id, assets, schedules)
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
+      hosts = REXML::Element.new('Hosts')
+      assets.each { |asset| _append_asset!(hosts, asset) }
+      xml.add_element(hosts)
+      scheds = REXML::Element.new('Schedules')
+      schedules.each { |sched| scheds.add_element(sched.as_xml) }
+      xml.add_element(scheds)
+
+      _scan_ad_hoc_with_schedules(xml)
+    end
+
+    # Perform an ad hoc scan of a subset of IP addresses for a site at a specific time.
+    # Only IPs from a single site can be submitted per request,
+    # and IP addresses must already be included in the site configuration.
+    # Method is designed for scanning when the targets are coming from an
+    # external source that does not have access to internal identfiers.
+    #
+    # For example:
+    #   to_scan = ['192.168.2.1', '192.168.2.107']
+    #   nsc.scan_ips(5, to_scan)
+    #
+    # @param [Fixnum] site_id Site ID that the assets belong to.
+    # @param [Array[String]] ip_addresses Array of IP addresses to scan.
+    # @return [Status] whether the request was successful
+    #
+    def scan_ips_with_schedule(site_id, ip_addresses, schedules)
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
+      hosts = REXML::Element.new('Hosts')
+      ip_addresses.each do |ip|
+        xml.add_element('range', 'from' => ip)
+      end
+      xml.add_element(hosts)
+      scheds = REXML::Element.new('Schedules')
+      schedules.each { |sched| scheds.add_element(sched.as_xml) }
+      xml.add_element(scheds)
+
+      _scan_ad_hoc_with_schedules(xml)
     end
 
     # Perform an ad hoc scan of a subset of IP addresses for a site.
@@ -81,10 +183,10 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_ips(site_id, ip_addresses)
-      xml = make_xml('SiteDevicesScanRequest', { 'site-id' => site_id })
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       hosts = REXML::Element.new('Hosts')
       ip_addresses.each do |ip|
-        xml.add_element('range', { 'from' => ip })
+        xml.add_element('range', 'from' => ip)
       end
       xml.add_element(hosts)
 
@@ -97,7 +199,7 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_site(site_id)
-      xml = make_xml('SiteScanRequest', { 'site-id' => site_id })
+      xml = make_xml('SiteScanRequest', 'site-id' => site_id)
       response = execute(xml)
       Scan.parse(response.res) if response.success
     end
@@ -110,7 +212,7 @@ module Nexpose
     #
     def _append_asset!(xml, asset)
       if asset.is_a? Nexpose::IPRange
-        xml.add_element('range', { 'from' => asset.from, 'to' => asset.to })
+        xml.add_element('range', 'from' => asset.from, 'to' => asset.to)
       else  # Assume HostName
         host = REXML::Element.new('host')
         host.text = asset.host
@@ -129,6 +231,15 @@ module Nexpose
       Scan.parse(r.res)
     end
 
+    # Utility method for executing prepared XML for adhoc with schedules
+    #
+    # @param [REXML::Document] xml Prepared API call to execute.
+    #
+    def _scan_ad_hoc_with_schedules(xml)
+      r = execute(xml, '1.1', timeout: 60)
+      r.success
+    end
+
     # Stop a running or paused scan.
     #
     # @param [Fixnum] scan_id ID of the scan to stop.
@@ -136,7 +247,7 @@ module Nexpose
     #   updated.
     #
     def stop_scan(scan_id, wait_sec = 0)
-      r = execute(make_xml('ScanStopRequest', { 'scan-id' => scan_id }))
+      r = execute(make_xml('ScanStopRequest', 'scan-id' => scan_id))
       if r.success
         so_far = 0
         while so_far < wait_sec
@@ -155,7 +266,7 @@ module Nexpose
     # @return [String] Current status of the scan. See Nexpose::Scan::Status.
     #
     def scan_status(scan_id)
-      r = execute(make_xml('ScanStatusRequest', { 'scan-id' => scan_id }))
+      r = execute(make_xml('ScanStatusRequest', 'scan-id' => scan_id))
       r.success ? r.attributes['status'] : nil
     end
 
@@ -164,7 +275,7 @@ module Nexpose
     # @param [Fixnum] scan_id The scan ID.
     #
     def resume_scan(scan_id)
-      r = execute(make_xml('ScanResumeRequest', { 'scan-id' => scan_id }), '1.1', timeout: 60)
+      r = execute(make_xml('ScanResumeRequest', 'scan-id' => scan_id), '1.1', timeout: 60)
       r.success ? r.attributes['success'] == '1' : false
     end
 
@@ -173,7 +284,7 @@ module Nexpose
     # @param [Fixnum] scan_id The scan ID.
     #
     def pause_scan(scan_id)
-      r = execute(make_xml('ScanPauseRequest', { 'scan-id' => scan_id }))
+      r = execute(make_xml('ScanPauseRequest', 'scan-id' => scan_id))
       r.success ? r.attributes['success'] == '1' : false
     end
 
@@ -218,7 +329,7 @@ module Nexpose
     # @return [ScanSummary] ScanSummary object providing statistics for the scan.
     #
     def scan_statistics(scan_id)
-      r = execute(make_xml('ScanStatisticsRequest', { 'scan-id' => scan_id }))
+      r = execute(make_xml('ScanStatisticsRequest', 'scan-id' => scan_id))
       if r.success
         ScanSummary.parse(r.res.elements['//ScanSummary'])
       else
@@ -353,6 +464,7 @@ module Nexpose
     def initialize(scan_id, site_id, engine_id, status, start_time, end_time)
       @scan_id, @site_id, @engine_id, @status, @start_time, @end_time = scan_id, site_id, engine_id, status, start_time, end_time
     end
+
     def self.parse(xml)
       # Start time can be empty in some error conditions.
       start_time = nil
@@ -382,7 +494,6 @@ module Nexpose
   # Object that represents a summary of a scan.
   #
   class ScanSummary < ScanData
-
     # The reason the scan was stopped or failed, if applicable.
     attr_reader :message
 
@@ -408,7 +519,7 @@ module Nexpose
       tasks = Tasks.parse(xml.elements['tasks'])
       nodes = Nodes.parse(xml.elements['nodes'])
       vulns = Vulnerabilities.parse(xml.attributes['scan-id'], xml)
-      msg = xml.elements['message'] ?  xml.elements['message'].text : nil
+      msg = xml.elements['message'] ? xml.elements['message'].text : nil
 
       # Start time can be empty in some error conditions.
       start_time = nil
@@ -440,7 +551,6 @@ module Nexpose
     # Value class to tracking task counts.
     #
     class Tasks
-
       attr_reader :pending, :active, :completed
 
       def initialize(pending, active, completed)
@@ -463,7 +573,6 @@ module Nexpose
     # Value class for tracking node counts.
     #
     class Nodes
-
       attr_reader :live, :dead, :filtered, :unresolved, :other
 
       def initialize(live, dead, filtered, unresolved, other)
@@ -488,7 +597,6 @@ module Nexpose
     # Value class for tracking vulnerability counts.
     #
     class Vulnerabilities
-
       attr_reader :vuln_exploit, :vuln_version, :vuln_potential,
                   :not_vuln_exploit, :not_vuln_version,
                   :error, :disabled, :other
@@ -497,11 +605,11 @@ module Nexpose
                      not_vuln_exploit, not_vuln_version,
                      error, disabled, other)
         @vuln_exploit, @vuln_version, @vuln_potential,
-          @not_vuln_exploit, @not_vuln_version,
-          @error, @disabled, @other =
-          vuln_exploit, vuln_version, vuln_potential,
-          not_vuln_exploit, not_vuln_version,
-          error, disabled, other
+            @not_vuln_exploit, @not_vuln_version,
+            @error, @disabled, @other =
+            vuln_exploit, vuln_version, vuln_potential,
+            not_vuln_exploit, not_vuln_version,
+            error, disabled, other
       end
 
       # Parse REXML to Vulnerabilities object.
