@@ -225,7 +225,7 @@ module Nexpose
     end
 
     # Returns true when the site is dynamic.
-    def isdynamic?
+    def is_dynamic?
       !@discovery_config.nil?
     end
 
