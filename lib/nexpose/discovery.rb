@@ -198,15 +198,6 @@ module Nexpose
       }
     end
 
-    def <=>(other)
-      c = id <=> other.id
-      return c unless c == 0
-      c = name <=> other.name
-      return c unless c == 0
-      type <=> other.type
-      # TODO Add remaining instance fields, once it is introduced in resource object
-    end
-
     def ==(other)
       eql?(other)
     end

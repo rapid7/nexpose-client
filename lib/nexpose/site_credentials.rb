@@ -144,54 +144,6 @@ module Nexpose
       }
     end
 
-    def <=>(other)
-      c = id <=> other.id
-      return c unless c == 0
-      c = service <=> other.service
-      return c unless c == 0
-      c = host_restriction <=> other.host_restriction
-      return c unless c == 0
-      c = port_restriction <=> other.port_restriction
-      return c unless c == 0
-      c = password <=> other.password
-      return c unless c == 0
-      c = name <=> other.name
-      return c unless c == 0
-      c = enabled <=> other.enabled
-      return c unless c == 0
-      c = description <=> other.description
-      return c unless c == 0
-      c = domain <=> other.domain
-      return c unless c == 0
-      c = database <=> other.database
-      return c unless c == 0
-      c = permission_elevation_type <=> other.permission_elevation_type
-      return c unless c == 0
-      c = permission_elevation_user <=> other.permission_elevation_user
-      return c unless c == 0
-      c = permission_elevation_password <=> other.permission_elevation_password
-      return c unless c == 0
-      c = authentication_type <=> other.authentication_type
-      return c unless c == 0
-      c = privacy_type <=> other.privacy_type
-      return c unless c == 0
-      c = privacy_password <=> other.privacy_password
-      return c unless c == 0
-      c = user_name <=> other.user_name
-      return c unless c == 0
-      c = notes_id_password <=> other.notes_id_password
-      return c unless c == 0
-      c = use_windows_auth <=> other.use_windows_auth
-      return c unless c == 0
-      c = sid <=> other.sid
-      return c unless c == 0
-      c = pem_format_private_key <=> other.pem_format_private_key
-      return c unless c == 0
-      c = community_name <=> other.community_name
-      return c unless c == 0
-      scope <=> other.scope
-    end
-
     def ==(other)
       eql?(other)
     end

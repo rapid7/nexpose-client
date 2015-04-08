@@ -83,22 +83,6 @@ module Nexpose
         }
       end
 
-      def <=>(other)
-        c = id <=> other.id
-        return c unless c == 0
-        c = service <=> other.service
-        return c unless c == 0
-        c = enabled <=> other.enabled
-        return c unless c == 0
-        c = name <=> other.name
-        return c unless c == 0
-        c = headers <=> other.headers
-        return c unless c == 0
-        c = baseURL <=> other.baseURL
-        return c unless c == 0
-        soft403Pattern <=> other.soft403Pattern
-      end
-
       def ==(other)
         eql?(other)
       end
@@ -245,24 +229,6 @@ module Nexpose
           loginURL: loginURL,
           soft403Pattern: soft403Pattern
         }
-      end
-
-      def <=>(other)
-        c = id <=> other.id
-        return c unless c == 0
-        c = service <=> other.service
-        return c unless c == 0
-        c = enabled <=> other.enabled
-        return c unless c == 0
-        c = name <=> other.name
-        return c unless c == 0
-        c = form <=> other.form
-        return c unless c == 0
-        c = baseURL <=> other.baseURL
-        return c unless c == 0
-        c = loginURL <=> other.loginURL
-        return c unless c == 0
-        soft403Pattern <=> other.soft403Pattern
       end
 
       def ==(other)
