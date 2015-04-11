@@ -1,13 +1,13 @@
 # Nexpose-Client
 [![Gem Version](https://badge.fury.io/rb/nexpose.svg)](http://badge.fury.io/rb/nexpose) [![Build Status](https://travis-ci.org/rapid7/nexpose-client.svg?branch=master)](https://travis-ci.org/rapid7/nexpose-client) [![Test Coverage](https://codeclimate.com/github/rapid7/nexpose-client/badges/coverage.svg)](https://codeclimate.com/github/rapid7/nexpose-client) [![Inline docs](http://inch-ci.org/github/rapid7/nexpose-client.svg?branch=master)](http://inch-ci.org/github/rapid7/nexpose-client) [![Code Climate](https://codeclimate.com/github/rapid7/nexpose-client/badges/gpa.svg)](https://codeclimate.com/github/rapid7/nexpose-client)
 
-This is the official gem package for the Ruby Nexpose API.
+This is the official gem package for the Ruby Nexpose API client library.
 
-For assistance with using the gem, to share your scripts, or to discuss different approaches, please visit the Rapid7 forums for Nexpose: https://community.rapid7.com/community/nexpose/nexpose-apis
+For assistance with using the gem, to share your scripts, or to discuss different approaches, please visit the Rapid7 community: https://community.rapid7.com/
 
-Check out https://github.com/rapid7/nexpose-client/wiki for walk-throughs and release notes for recent versions.
+Check out the [wiki](https://github.com/rapid7/nexpose-client/wiki) for walk-throughs and other documentation. Submit bugs and feature requests on the [issues](https://github.com/rapid7/nexpose-client/issues) page.
 
-This gem is heavily used for internal, automated testing of the Nexpose product. It provides calls to the Nexpose XML APIs version 1.1 and 1.2 (except for some multi-tenant operations). It also includes a number of helper methods which are not currently exposed through alternate means.
+This gem is heavily used for internal, automated testing of the Nexpose product. It provides calls to the Nexpose XML APIs version 1.1 and 1.2, and JSON API 2.1. It also includes a number of helper methods which are not currently exposed through alternate means.
 
 ## Release Notes
 
