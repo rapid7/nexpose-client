@@ -12,7 +12,7 @@ module Nexpose
 
     def save(nsc)
       params = to_json
-      JSON.parse(AJAX.post(nsc, '/api/2.1/silo_blackout/', params, AJAX::CONTENT_TYPE::JSON))
+      AJAX.post(nsc, '/api/2.1/silo_blackout/', params, AJAX::CONTENT_TYPE::JSON)
     end
 
     def to_h
