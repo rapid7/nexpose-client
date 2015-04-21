@@ -15,9 +15,9 @@ module Nexpose
   end
 
   class AuthenticationFailed < APIError
-    def initialize(req)
+    def initialize(req, reason = nil)
       @req = req
-      @reason = "Login Failed"
+      @reason = reason ||= "Login Failed"
     end
   end
 

@@ -69,8 +69,8 @@ module Nexpose
           @session_id = r.sid
           true
         end
-      rescue APIError
-        raise AuthenticationFailed.new(r)
+      rescue APIError => error
+        raise AuthenticationFailed.new(r,error)
       end
     end
 
