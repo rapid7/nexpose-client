@@ -313,21 +313,18 @@ module Nexpose
     attr_accessor :blackout_start
     # The amount of time, in minutes, a blackout period should last.
     attr_accessor :blackout_duration
-    # The timezone in which the blackout will start
-    attr_accessor :blackout_timezone
 
-    def initialize(start, enabled=true, duration, timezone, type, interval)
+    def initialize(start, enabled=true, duration, type, interval)
       @blackout_start = start
       @enabled =enabled
       @blackout_duration = duration.to_i
-      @blackout_timezone = timezone
       @blackout_type = type
       @blackout_interval = interval.to_i
     end
 
     def self.from_hash(hash)
       repeat_blackout_hash = hash[:repeat_blackout]
-      blackout = new(hash[:start_date], hash[:blackout_duration], hash[:timezone], repeat_blackout_hash[:type], repeat_blackout_hash[:interval])
+      blackout = new(hash[:start_date], hash[:blackout_duration], repeat_blackout_hash[:type], repeat_blackout_hash[:interval])
       blackout
     end
 
@@ -336,7 +333,6 @@ module Nexpose
           start_date: @blackout_start,
           enabled: @enabled,
           blackout_duration: @blackout_duration,
-          timezone: @blackout_timezone
       }
       repeat_hash= {
           type: @blackout_type,
