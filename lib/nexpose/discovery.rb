@@ -35,6 +35,7 @@ module Nexpose
       HTTPS = 'HTTPS'
       LDAP  = 'LDAP'
       LDAPS = 'LDAPS'
+      SERVICE_PROXY = 'SERVICE_PROXY'
     end
 
     module Type
@@ -43,6 +44,7 @@ module Nexpose
       ACTIVESYNC            = 'ACTIVESYNC'
       ACTIVESYNC_POWERSHELL = 'ACTIVESYNC_POWERSHELL'
       ACTIVESYNC_OFFICE365  = 'ACTIVESYNC_OFFICE365'
+      DHCP_SERVICE = 'DHCP_SERVICE'
     end
 
     # A unique identifier for this connection.
