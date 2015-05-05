@@ -437,12 +437,12 @@ module Nexpose
 
       # Convert each string address to either a HostName or IPRange object
       included_scan_targets = { addresses: [], asset_groups: [] }
-      site.included_scan_targets[:addresses].each { |asset| included_scan_targets[:addresses] << HostOrIP.convert(asset) }
+      Array(site.included_scan_targets[:addresses]).each { |asset| included_scan_targets[:addresses] << HostOrIP.convert(asset) }
       included_scan_targets[:asset_groups] = site.included_scan_targets[:asset_groups]
       site.included_scan_targets = included_scan_targets
 
       excluded_scan_targets = { addresses: [], asset_groups: [] }
-      site.excluded_scan_targets[:addresses].each { |asset| excluded_scan_targets[:addresses] << HostOrIP.convert(asset) }
+      Array(site.excluded_scan_targets[:addresses]).each { |asset| excluded_scan_targets[:addresses] << HostOrIP.convert(asset) }
       excluded_scan_targets[:asset_groups] = site.excluded_scan_targets[:asset_groups]
       site.excluded_scan_targets = excluded_scan_targets
 
