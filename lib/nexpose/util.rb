@@ -123,4 +123,26 @@ module Nexpose
       arr.map(&:flatten).map { |p| { 'key' => p.first.to_s, 'value' => p.last.to_s } }
     end
   end
+
+  module SymbolizeHashKeys
+    module_function
+
+    # Convert any Hash keys into Symbols.
+    #
+    # @param [Hash] A hash which has keys that need to be converted to symbols.
+    # @return [Hash] Hash formatted where all keys are symbols.
+    #
+    def symbolize(hash)
+      return unless hash.is_a? Hash || Array
+      symbo_hash = {}
+      hash.each do |key,value|
+        symbo_hash[(key.to_sym rescue key) || key] = hash.delete(key)
+        next unless value.is_a? Hash || Array
+        symbo_hash[key] = SymbolizeHashKeys.symbolize(value)
+      end
+      return symbo_hash
+    end
+  end
+
+
 end
