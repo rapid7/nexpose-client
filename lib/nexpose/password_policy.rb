@@ -47,7 +47,7 @@ module Nexpose
       AJAX.post(nsc, '/api/2.1/password_policy/', params, AJAX::CONTENT_TYPE::JSON)
     end
 
-    def load(nsc)
+    def self.load(nsc)
       uri = '/api/2.1/password_policy/'
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
