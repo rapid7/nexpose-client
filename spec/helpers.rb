@@ -10,4 +10,19 @@ module Helpers
       Hash[attributes.to_enum.to_a]
     end
   end
+
+  module HashKeys
+    module_function
+
+    def get_all_keys(object)
+      if object.is_a? Hash
+        (object.keys + get_all_keys(object.values)).flatten.uniq
+      elsif object.is_a? Array
+        object.collect{|value| get_all_keys value}
+      else
+        []
+      end
+    end
+
+  end
 end

@@ -133,14 +133,7 @@ module Nexpose
     # @return [Hash] Hash formatted where all keys are symbols.
     #
     def symbolize(hash)
-      return unless hash.is_a? Hash || Array
-      symbo_hash = {}
-      hash.each do |key,value|
-        symbo_hash[(key.to_sym rescue key) || key] = hash.delete(key)
-        next unless value.is_a? Hash || Array
-        symbo_hash[key] = SymbolizeHashKeys.symbolize(value)
-      end
-      return symbo_hash
+      JSON.parse(hash.to_json, symbolize_names: true).to_hash
     end
   end
 
