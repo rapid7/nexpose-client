@@ -2,38 +2,37 @@ module Nexpose
   require 'json'
   # Configuration structure for password policies.
   class PasswordPolicy < APIObject
-
-    attr_accessor :policyName
-    attr_accessor :minLength
-    attr_accessor :maxLength
+    attr_accessor :policy_name
+    attr_accessor :min_length
+    attr_accessor :max_length
     attr_accessor :capitals
     attr_accessor :digits
-    attr_accessor :specialChars
+    attr_accessor :special_chars
 
-    def initialize(policyName:, minLength:, maxLength:, specialChars:, capitals:, digits:)
-      @policyName = policyName.to_s
-      @minLength = minLength.to_i
-      @maxLength = maxLength.to_i
-      @specialChars = specialChars.to_i
+    def initialize(policy_name:, min_length:, max_length:, special_chars:, capitals:, digits:)
+      @policy_name = policy_name.to_s
+      @min_length = min_length.to_i
+      @max_length = max_length.to_i
+      @special_chars = special_chars.to_i
       @capitals = capitals.to_i
       @digits = digits.to_i
     end
 
     def self.from_hash(hash)
-      new(hash[:policyName],
-          hash[:minLength],
-          hash[:maxLength],
-          hash[:specialChars],
-          hash[:capitals],
-          hash[:digits])
+      new(policy_name: hash[:policyName],
+          min_length: hash[:minLength],
+          max_length: hash[:maxLength],
+          special_chars: hash[:specialChars],
+          capitals: hash[:capitals],
+          digits: hash[:digits])
     end
 
     def to_h
       {
-          policyName: @policyName,
-          minLength: @minLength,
-          maxLength: @maxLength,
-          specialChars: @specialChars,
+          policyName: @policy_name,
+          minLength: @min_length,
+          maxLength: @max_length,
+          specialChars: @special_chars,
           capitals: @capitals,
           digits: @digits
       }
@@ -48,11 +47,11 @@ module Nexpose
       AJAX.post(nsc, '/api/2.1/password_policy/', params, AJAX::CONTENT_TYPE::JSON)
     end
 
-    def self.load(nsc)
+    def load(nsc)
       uri = '/api/2.1/password_policy/'
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
-      self.from_hash(hash)
+      from_hash(hash)
     end
   end
 end
