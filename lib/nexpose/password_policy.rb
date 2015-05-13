@@ -3,38 +3,37 @@ module Nexpose
   # Configuration structure for password policies.
   class PasswordPolicy < APIObject
 
-    attr_accessor :policy_name
-    attr_accessor :min_length
-    attr_accessor :max_length
+    attr_accessor :policyName
+    attr_accessor :minLength
+    attr_accessor :maxLength
     attr_accessor :capitals
     attr_accessor :digits
-    attr_accessor :special_chars
+    attr_accessor :specialChars
 
-
-    def initialize(policy_name, minlength, maxlength, specialchars, capitals, digits)
-      @policy_name = policy_name.to_s
-      @min_length = minlength.to_i
-      @max_length = maxlength.to_i
-      @special_chars = specialchars.to_i
+    def initialize(policyName:, minLength:, maxLength:, specialChars:, capitals:, digits:)
+      @policyName = policyName.to_s
+      @minLength = minLength.to_i
+      @maxLength = maxLength.to_i
+      @specialChars = specialChars.to_i
       @capitals = capitals.to_i
       @digits = digits.to_i
     end
 
     def self.from_hash(hash)
-      new(hash[:policy_name],
-          hash[:min_length],
-          hash[:max_length],
-          hash[:special_chars],
+      new(hash[:policyName],
+          hash[:minLength],
+          hash[:maxLength],
+          hash[:specialChars],
           hash[:capitals],
           hash[:digits])
     end
 
     def to_h
       {
-          policy_name: @policy_name,
-          min_length: @min_length,
-          max_length: @max_length,
-          special_chars: @special_chars,
+          policyName: @policyName,
+          minLength: @minLength,
+          maxLength: @maxLength,
+          specialChars: @specialChars,
           capitals: @capitals,
           digits: @digits
       }
