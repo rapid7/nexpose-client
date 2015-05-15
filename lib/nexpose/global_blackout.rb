@@ -1,6 +1,7 @@
 module Nexpose
 
   class GlobalBlackout < APIObject
+    require 'json'
     include JsonSerializer
 
     # [Array] Blackout starting dates, times and duration for blackout periods.
@@ -29,8 +30,6 @@ module Nexpose
     def self.json_initializer(data)
       new(blackout: data)
     end
-
-    require 'json'
 
     def self.load(nsc)
       uri = '/api/2.1/silo_blackout/'
