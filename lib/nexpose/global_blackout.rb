@@ -8,7 +8,7 @@ module Nexpose
     attr_accessor :blackout
 
     def initialize(blackout)
-      @global_blackout = Array(blackout)
+      @blackout = Array(blackout)
     end
 
     def save(nsc)
@@ -19,7 +19,7 @@ module Nexpose
     def to_h
       {
           blackouts:
-              (@global_blackout || []).map { |blackout| blackout.to_h }
+              (@blackout || []).map { |blackout| blackout.to_h }
       }
     end
 
