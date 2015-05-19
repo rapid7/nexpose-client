@@ -51,7 +51,7 @@ module Nexpose
       uri = '/api/2.1/password_policy/'
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
-      from_hash(hash)
+      self.from_hash(hash)
     end
   end
 end
