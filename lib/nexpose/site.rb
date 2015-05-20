@@ -466,7 +466,7 @@ module Nexpose
           asset_groups: @excluded_scan_targets[:asset_groups].compact
       }
 
-      {
+      hash = {
           id: @id,
           name: @name,
           description: @description,
@@ -477,7 +477,6 @@ module Nexpose
           scan_template_id: @scan_template_id,
           risk_factor: @risk_factor,
           schedules: (@schedules || []).map {|schedule| schedule.to_h},
-          blackouts: (@blackouts || []).map {|blackout| blackout.to_h},
           shared_credentials: (@shared_credentials || []).map {|cred| cred.to_h},
           site_credentials: (@site_credentials || []).map {|cred| cred.to_h},
           web_credentials: (@web_credentials || []).map {|webCred| webCred.to_h},
@@ -488,6 +487,10 @@ module Nexpose
           organization: @organization.to_h,
           users: users
       }
+      # Only pass in blackouts if they were actually specified
+      hash[:blackouts] = Array(@blackouts).map(&:to_h) if @blackouts && @blackouts.any?
+
+      hash
     end
 
     require 'json'
