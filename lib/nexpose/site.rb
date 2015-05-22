@@ -488,7 +488,7 @@ module Nexpose
           users: users
       }
       # Only pass in blackouts if they were actually specified
-      hash[:blackouts] = Array(@blackouts).map(&:to_h) if @blackouts && @blackouts.any?
+      hash[:blackouts] = @blackouts.map(&:to_h) if @blackouts && @blackouts.any?
 
       hash
     end
