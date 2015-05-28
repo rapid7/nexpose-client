@@ -8,16 +8,16 @@ module Nexpose
     attr_accessor :capitals
     attr_accessor :digits
     attr_accessor :special_chars
-    attr_accessor :expiryDays
+    attr_accessor :expiry_days
 
-    def initialize(policy_name:, min_length:, max_length:, special_chars:, capitals:, digits:, expiry:)
+    def initialize(policy_name:, min_length:, max_length:, special_chars:, capitals:, digits:, expiry_days:)
       @policy_name = policy_name.to_s
       @min_length = min_length.to_i
       @max_length = max_length.to_i
       @special_chars = special_chars.to_i
       @capitals = capitals.to_i
       @digits = digits.to_i
-      @expiryDays = expiry.to_i
+      @expiry_days = expiry_days.to_i
     end
 
     def self.from_hash(hash)
@@ -27,7 +27,7 @@ module Nexpose
           special_chars: hash[:specialChars],
           capitals: hash[:capitals],
           digits: hash[:digits],
-          expiryDays: hash[:expiryDays])
+          expiry_days: hash[:expiryDays])
     end
 
     def to_h
@@ -38,7 +38,7 @@ module Nexpose
           specialChars: @special_chars,
           capitals: @capitals,
           digits: @digits,
-          expiryDays: @expiryDays
+          expiryDays: @expiry_days
       }
     end
 
