@@ -487,7 +487,8 @@ module Nexpose
           organization: @organization.to_h,
           users: users
       }
-      # Only pass in blackouts if they were actually specified
+      # @TODO: Revisit this for 2.0.0 update
+      # Only pass in blackouts if they were actually specified (for backwards compatibility)
       hash[:blackouts] = @blackouts.map(&:to_h) if @blackouts && @blackouts.any?
 
       hash
