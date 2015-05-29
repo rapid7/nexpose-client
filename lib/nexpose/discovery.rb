@@ -103,22 +103,41 @@ module Nexpose
       @protocol = Protocol::HTTPS
     end
 
-    # Save this discovery connection to a Nexpose console.
+    # Save this discovery connection on a given Nexpose console.
     #
     # @param [Connection] nsc Connection to a console.
     #
-    def save(nsc)
-      if @id == -1
-        xml = nsc.make_xml('DiscoveryConnectionCreateRequest')
-      else
-        xml = nsc.make_xml('DiscoveryConnectionUpdateRequest')
-      end
+    def create(nsc)
+      xml = nsc.make_xml('DiscoveryConnectionCreateRequest')
       xml.add_element(as_xml)
+
       response = nsc.execute(xml, '1.2')
       if response.success
         ret = REXML::XPath.first(response.res, 'DiscoveryConnectionCreateResponse')
         @id = ret.attributes['id'].to_i unless ret.nil?
       end
+    end
+
+    # Update this (existing) discovery connection on a given Nexpose console.
+    #
+    # @param [Connection] nsc Connection to a console.
+    # @return [Boolean] whether the update request was successful
+    #
+    def update(nsc)
+      xml = nsc.make_xml('DiscoveryConnectionUpdateRequest')
+      xml.add_element(as_xml)
+
+      response = nsc.execute(xml, '1.2')
+      response.success
+    end
+
+    # Save this discovery connection to a Nexpose console.
+    #
+    # @param [Connection] nsc Connection to a console.
+    #
+    def save(nsc)
+      @id == -1 ? create(nsc) : update(nsc)
+
       @id
     end
 
@@ -170,6 +189,7 @@ module Nexpose
       xml.attributes['exchange-password'] = @exchange_password if @exchange_password
       xml.attributes['type']              = @type if @type
       xml.attributes['engine-id'] = @engine_id if @engine_id && @engine_id != -1
+      xml.attributes['id'] = @id if @id && @id != -1
       xml
     end
 
