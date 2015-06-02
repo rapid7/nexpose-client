@@ -514,33 +514,8 @@ module Nexpose
       uri = "/api/2.1/site_configurations/#{id}"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
-
-      site = self.json_initializer(hash).deserialize(hash)
-
-      # Convert each string address to either a HostName or IPRange object
-      included_addresses = hash[:included_scan_targets][:addresses]
-      site.included_scan_targets[:addresses] = []
-      included_addresses.each { |asset| site.include_asset(asset) }
-
-      excluded_addresses = hash[:excluded_scan_targets][:addresses]
-      site.excluded_scan_targets[:addresses] = []
-      excluded_addresses.each { |asset| site.exclude_asset(asset) }
-
-      site.organization = Organization.create(site.organization)
-      site.schedules = (hash[:schedules] || []).map {|schedule| Nexpose::Schedule.from_hash(schedule) }
-      site.blackouts = (hash[:blackouts] || []).map {|blackout| Nexpose::Blackout.from_hash(blackout) }
-      site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      site.discovery_config = Nexpose::DiscoveryConnection.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
-      site.search_criteria = Nexpose::DiscoveryConnection::Criteria.parseHash(hash[:search_criteria]) unless hash[:search_criteria].nil?
-      site.alerts = Alert.load_alerts(hash[:alerts])
-      site.tags = Tag.load_tags(hash[:tags])
-      site.web_credentials = hash[:web_credentials].map {|webCred| (
-      webCred[:service] == Nexpose::WebCredentials::WebAppAuthType::HTTP_HEADER ?
-          Nexpose::WebCredentials::Headers.new(webCred[:name], webCred[:baseURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred) :
-          Nexpose::WebCredentials::HTMLForms.new(webCred[:name], webCred[:baseURL], webCred[:loginURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred))}
-
-      site
+      site = self.from_hash(hash)
+      return site
     end
 
     def self.json_initializer(data)
