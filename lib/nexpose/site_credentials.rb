@@ -67,6 +67,7 @@ module Nexpose
       cred.port_restriction = port
       cred.service = service
       cred.scope = Credential::Scope::SITE_SPECIFIC
+      cred.permission_elevation_type = Credential::ElevationType::NONE
       cred
     end
 
