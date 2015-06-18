@@ -36,6 +36,7 @@ module Nexpose
     end
 
     module EventSource
+      INFOBLOX_TRINZIC = 'INFOBLOX_TRINZIC'
       MICROSOFT_DHCP = 'MICROSOFT_DHCP'
     end
 
