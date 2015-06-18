@@ -30,12 +30,23 @@ module Nexpose
   class DiscoveryConnection < APIObject
     include XMLUtils
 
+    module CollectionMethod
+      DIRECTORY_WATCHER = 'DIRECTORY_WATCHER'
+      SYSLOG = 'SYSLOG'
+    end
+
+    module EventSource
+      MICROSOFT_DHCP = 'MICROSOFT_DHCP'
+    end
+
     module Protocol
       HTTP  = 'HTTP'
       HTTPS = 'HTTPS'
       LDAP  = 'LDAP'
       LDAPS = 'LDAPS'
       SERVICE_PROXY = 'SERVICE_PROXY'
+      TCP = 'TCP'
+      UDP = 'UDP'
     end
 
     module Type
@@ -82,6 +93,12 @@ module Nexpose
 
     # The exchange password to connect for exchange powershell connections
     attr_accessor :exchange_password
+
+    # The collection method (e.g. for DHCP discovery connections)
+    attr_accessor :collection_method
+
+    # The event source (e.g. for DHCP discovery connections)
+    attr_accessor :event_source
 
     # Whether or not the connection is active.
     # Discovery is only possible when the connection is active.
@@ -188,6 +205,8 @@ module Nexpose
       xml.attributes['exchange-username'] = @exchange_username if @exchange_username
       xml.attributes['exchange-password'] = @exchange_password if @exchange_password
       xml.attributes['type']              = @type if @type
+      xml.attributes['collectionmethod']  = @collection_method if @collection_method
+      xml.attributes['eventsource']       = @event_source if @event_source
       xml.attributes['engine-id'] = @engine_id if @engine_id && @engine_id != -1
       xml.attributes['id'] = @id if @id && @id != -1
       xml
