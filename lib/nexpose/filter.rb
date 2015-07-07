@@ -375,7 +375,11 @@ module Nexpose
     attr_reader :vuln_count
     attr_reader :risk_score
 
+    # The first Site ID returned for this asset.
+    # Not recommended  if Asset Linking feature is enabled.
     attr_reader :site_id
+    # Array of Site IDs for the asset. Use when Asset Linking is enabled.
+    attr_reader :site_ids
     attr_reader :last_scan
 
     def initialize(json)
@@ -387,7 +391,11 @@ module Nexpose
       @malware_count = json['malwareCount'].to_i
       @vuln_count = json['vulnCount'].to_i
       @risk_score = json['riskScore'].to_f
-      @site_id = json['siteID']
+      @site_ids = []
+      json['sitePermissions'].each do |site_perm|
+        @site_ids << site_perm['siteID']
+      end
+      @site_id = @site_ids.first
       @last_scan = Time.at(json['lastScanDate'].to_i / 1000)
     end
   end
