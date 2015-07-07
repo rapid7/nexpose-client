@@ -10,3 +10,7 @@ env:
   global:
     - CODECLIMATE_REPO_TOKEN: *codeclimate_token
     - CI: true
+branches:
+  only:
+    - master
+    - /^staging.*$/
