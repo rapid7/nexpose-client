@@ -10,7 +10,7 @@ module Nexpose
     attr_accessor :special_chars
     attr_accessor :expiration_days
 
-    def initialize(policy_name:, min_length:, max_length:, special_chars:, capitals:, digits:, expiration_days:)
+    def initialize(policy_name:, min_length:, max_length:, special_chars:, capitals:, digits:, expiration_days: 0)
       @policy_name = policy_name.to_s
       @min_length = min_length.to_i
       @max_length = max_length.to_i
