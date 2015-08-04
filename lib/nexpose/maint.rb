@@ -7,7 +7,7 @@ module Nexpose
     # @return [Array[Backup]] List of backups.
     #
     def list_backups
-      data = DataTable._get_dyn_table(self, 'data/admin/backups')
+      data = DataTable._get_dyn_table(self, '/data/admin/backups')
       data.map { |b| Backup.parse(b) }
     end
 
@@ -118,7 +118,7 @@ module Nexpose
       parameters = { 'backupid' => @name,
                      'cmd' => 'deleteBackup',
                      'targetTask' => 'backupRestore' }
-      xml = AJAX.form_post(nsc, 'data/maintenance/command', parameters)
+      xml = AJAX.form_post(nsc, '/data/maintenance/command', parameters)
       !!(xml =~ /succeded="true"/)
     end
 
