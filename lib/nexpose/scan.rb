@@ -692,14 +692,15 @@ module Nexpose
     # returned by a #scan_status call.
     #
     module Status
-      RUNNING = 'running'
-      FINISHED = 'finished'
-      ABORTED = 'aborted'
-      STOPPED = 'stopped'
-      ERROR = 'error'
-      PAUSED = 'paused'
-      DISPATCHED = 'dispatched'
-      UNKNOWN = 'unknown'
+      RUNNING     = 'running'
+      FINISHED    = 'finished'
+      ABORTED     = 'aborted'
+      STOPPED     = 'stopped'
+      ERROR       = 'error'
+      PAUSED      = 'paused'
+      DISPATCHED  = 'dispatched'
+      UNKNOWN     = 'unknown'
+      INTEGRATING = 'integrating'
     end
   end
 
