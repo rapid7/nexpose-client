@@ -100,7 +100,7 @@ module Nexpose
       end
       @port = Credential::DEFAULT_PORTS[@service] if @port.nil?
       parameters = _to_param(target, engine_id, @port, siteid)
-      xml = AJAX.form_post(nsc, '/ajax/test_admin_credentials.txml', parameters)
+      xml = AJAX.form_post(nsc, '/data/credential/shared/test', parameters)
       result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
       result.attributes['success'].to_i == 1
     end
