@@ -7,7 +7,7 @@ module Nexpose
     # @return [Array[Backup]] List of backups.
     #
     def list_backups
-      data = DataTable._get_dyn_table(self, '/admin/global/ajax/backup_listing.txml')
+      data = DataTable._get_dyn_table(self, '/data/admin/backups')
       data.map { |b| Backup.parse(b) }
     end
 
@@ -26,7 +26,7 @@ module Nexpose
                      'cmd' => 'backup',
                      'platform_independent' => platform_independent,
                      'targetTask' => 'backupRestore' }
-      xml = AJAX.form_post(self, '/admin/global/maintenance/maintCmd.txml', parameters)
+      xml = AJAX.form_post(self, '/data/maintenance/command', parameters)
       if !!(xml =~ /succeded="true"/)
         _maintenance_restart
       end
@@ -51,7 +51,7 @@ module Nexpose
       parameters['cleanup'] = 1 if clean_up
       parameters['compress'] = 1 if compress
       parameters['reindex'] = 1 if reindex
-      xml = AJAX.form_post(self, '/admin/global/maintenance/maintCmd.txml', parameters)
+      xml = AJAX.form_post(self, '/data/maintenance/command', parameters)
       if !!(xml =~ /succeded="true"/)
         _maintenance_restart
       end
@@ -61,7 +61,7 @@ module Nexpose
       parameters = { 'cancelAllTasks' => false,
                      'cmd' => 'restartServer',
                      'targetTask' => 'maintModeHandler' }
-      xml = AJAX.form_post(self, '/admin/global/maintenance/maintCmd.txml', parameters)
+      xml = AJAX.form_post(self, '/data/maintenanceMode/command', parameters)
       !!(xml =~ /succeded="true"/)
     end
   end
@@ -103,7 +103,7 @@ module Nexpose
       parameters = { 'backupid' => @name,
                      'cmd' => 'restore',
                      'targetTask' => 'backupRestore' }
-      xml = AJAX.form_post(nsc, '/admin/global/maintenance/maintCmd.txml', parameters)
+      xml = AJAX.form_post(nsc, '/data/maintenance/command', parameters)
       if !!(xml =~ /succeded="true"/)
         nsc._maintenance_restart
       end
@@ -118,7 +118,7 @@ module Nexpose
       parameters = { 'backupid' => @name,
                      'cmd' => 'deleteBackup',
                      'targetTask' => 'backupRestore' }
-      xml = AJAX.form_post(nsc, '/admin/global/maintenance/maintCmd.txml', parameters)
+      xml = AJAX.form_post(nsc, '/data/maintenance/command', parameters)
       !!(xml =~ /succeded="true"/)
     end
 
