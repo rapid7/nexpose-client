@@ -318,7 +318,7 @@ module Nexpose
     #
     def checks_by_category
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Enabled')
-      checks.elements.to_a('VulnCategory').map { |c| c.attributes['name'] }
+      checks ? checks.elements.to_a('VulnCategory').map { |c| c.attributes['name'] } : []
     end
 
     # Enable checks by category for this template.
@@ -352,7 +352,7 @@ module Nexpose
     #
     def checks_by_type
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Enabled')
-      checks.elements.to_a('CheckType').map { |c| c.attributes['name'] }
+      checks ? checks.elements.to_a('CheckType').map { |c| c.attributes['name'] } : []
     end
 
     # Enable checks by type for this template.
@@ -404,7 +404,7 @@ module Nexpose
     #
     def vuln_checks
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Enabled')
-      checks.elements.to_a('Check').map { |c| c.attributes['id'] }
+      checks ? checks.elements.to_a('Check').map { |c| c.attributes['id'] } : []
     end
 
     # Enable individual check for this template.
