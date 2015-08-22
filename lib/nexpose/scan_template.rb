@@ -414,7 +414,8 @@ module Nexpose
     def enable_vuln_check(check_id)
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
       checks.elements.delete("Disabled/Check[@id='#{check_id}']")
-      checks.elements['Enabled'].add_element('Check', { 'id' => check_id })
+      enabled_checks = checks.elements['Enabled'] || checks.add_element('Enabled')
+      enabled_checks.add_element('Check', { 'id' => check_id })
     end
 
     # Disable individual check for this template.
