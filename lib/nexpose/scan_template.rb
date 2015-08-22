@@ -383,7 +383,8 @@ module Nexpose
     def _enable_check(check, elem)
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
       checks.elements.delete("Disabled/#{elem}[@name='#{check}']")
-      checks.elements['Enabled'].add_element(elem, { 'name' => check })
+      enabled_checks = checks.elements['Enabled'] || checks.add_element('Enabled')
+      enabled_checks.add_element(elem, { 'name' => check })
     end
 
     def _disable_check(check, elem)
