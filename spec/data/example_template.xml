@@ -38,9 +38,6 @@
  </DiscoveryPerformance>
  <Credentials/>
  <VulnerabilityChecks unsafe="0" correlate="1">
-  <Disabled>
-   <CheckType name="Policy"/>
-  </Disabled>
  </VulnerabilityChecks>
  <FileSearching fileQuota="-1">
  </FileSearching>
