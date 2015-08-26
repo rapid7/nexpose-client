@@ -250,12 +250,6 @@ module Nexpose
       end
     end
 
-    # @deprecated Use {#include_ip_range} instead.
-    def add_ip_range(from, to)
-      warn "[DEPRECATED] Use #{self.class}#include_ip_range instead of #{self.class}#add_ip_range."
-      include_ip_range(from, to)
-    end
-
     # Remove assets to this site by IP address range.
     #
     # @param [String] from Beginning IP address of a range.
@@ -274,12 +268,6 @@ module Nexpose
       end
     end
 
-    # @deprecated Use {#remove_included_ip_range} instead.
-    def remove_ip_range(from, to)
-      warn "[DEPRECATED] Use #{self.class}#remove_included_ip_range instead of #{self.class}#remove_ip_range."
-      remove_included_ip_range(from, to)
-    end
-
     # Adds an asset to this site included scan targets, resolving whether an IP or hostname is
     # provided.
     #
@@ -289,15 +277,6 @@ module Nexpose
       @included_scan_targets[:addresses] << HostOrIP.convert(asset)
     end
 
-    # @deprecated Use {#include_asset} instead.
-    def add_asset(asset)
-      warn "[DEPRECATED] Use #{self.class}#include_asset instead of #{self.class}#add_asset."
-      include_asset(asset)
-    end
-
-    alias_method :add_host, :add_asset
-    alias_method :add_ip, :add_asset
-
     # Remove an asset to this site included scan targets, resolving whether an IP or hostname is
     # provided.
     #
@@ -306,15 +285,6 @@ module Nexpose
     def remove_included_asset(asset)
       @included_scan_targets[:addresses].reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
     end
-
-    # @deprecated Use {#remove_included_asset} instead.
-    def remove_asset(asset)
-      warn "[DEPRECATED] Use #{self.class}#remove_included_asset instead of #{self.class}#remove_asset."
-      remove_included_asset(asset)
-    end
-
-    alias_method :remove_host, :remove_asset
-    alias_method :remove_ip, :remove_asset
 
     # Adds assets to this site excluded scan targets by IP address range.
     #
