@@ -321,6 +321,12 @@ module Nexpose
       checks ? checks.elements.to_a('VulnCategory').map { |c| c.attributes['name'] } : []
     end
 
+    # @deprecated Use {#enabled_checks_by_category} instead
+    def checks_by_category
+      warn "[DEPRECATED] Use #{self.class}#enabled_checks_by_category instead of #{self.class}##{__method__}"
+      enabled_checks_by_category
+    end
+
     # Get a list of the check categories enabled for this scan template.
     #
     # @return [Array[String]] List of enabled categories.
@@ -362,6 +368,12 @@ module Nexpose
     def disabled_checks_by_type
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Disabled')
       checks ? checks.elements.to_a('CheckType').map { |c| c.attributes['name'] } : []
+    end
+
+    # @deprecated Use {#enabled_checks_by_type} instead
+    def checks_by_type
+      warn "[DEPRECATED] Use #{self.class}#enabled_checks_by_type instead of #{self.class}##{__method__}"
+      enabled_checks_by_type
     end
 
     # Get a list of the check types enabled for this scan template.
@@ -416,6 +428,12 @@ module Nexpose
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
       checks.elements.delete("Disabled/#{elem}[@name='#{check}']")
       checks.elements.delete("Enabled/#{elem}[@name='#{check}']")
+    end
+
+    # @deprecated Use {#enabled_vuln_checks} instead
+    def vuln_checks
+      warn "[DEPRECATED] Use #{self.class}#enabled_vuln_checks instead of #{self.class}##{__method__}"
+      enabled_vuln_checks
     end
 
     # Get a list of the individual vuln checks enabled for this scan template.
