@@ -107,7 +107,7 @@ module Nexpose
       begin
         update(connection)
       rescue APIError => error
-        raise error unless (error.message =~ /The silo profile .* does not exist/)
+        raise error unless (error.message =~ /\S+ silo profile .* does not exist/)
         create(connection)
       end
     end
