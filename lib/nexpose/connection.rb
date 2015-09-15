@@ -43,17 +43,18 @@ module Nexpose
     attr_reader :response_xml
 
     # A constructor to load a Connection object from a URI
-    def self.from_uri(uri, user, pass, silo_id = nil)
+    def self.from_uri(uri, user, pass, silo_id = nil, token = nil)
       uri = URI.parse(uri)
-      new(uri.host, user, pass, uri.port, silo_id)
+      new(uri.host, user, pass, uri.port, silo_id, token)
     end
 
     # A constructor for Connection
-    def initialize(ip, user, pass, port = 3780, silo_id = nil)
+    def initialize(ip, user, pass, port = 3780, silo_id = nil, token = nil)
       @host = ip
       @port = port
       @username = user
       @password = pass
+      @token = token
       @silo_id = silo_id
       @session_id = nil
       @url = "https://#{@host}:#{@port}/api/API_VERSION/xml"
@@ -62,7 +63,7 @@ module Nexpose
     # Establish a new connection and Session ID
     def login
       begin
-        login_hash = {'sync-id' => 0, 'password' => @password, 'user-id' => @username}
+        login_hash = {'sync-id' => 0, 'password' => @password, 'user-id' => @username, 'token' => @token}
         login_hash['silo-id'] = @silo_id if @silo_id
         r = execute(make_xml('LoginRequest', login_hash))
         if r.success
