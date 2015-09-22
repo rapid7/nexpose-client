@@ -36,6 +36,8 @@ module Nexpose
     attr_reader :password
     # The URL for communication
     attr_reader :url
+    # The token used to login to the NSC
+    attr_reader :token
 
     # The last XML request sent by this object, useful for debugging.
     attr_reader :request_xml
