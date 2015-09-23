@@ -492,11 +492,14 @@ module Nexpose
       nsc.delete_scan_template(id)
     end
 
-    # Enable or disable asset configuration scanning for this template.
+    # Enable or disable asset configuration scanning for this template. If
+    # the level is not "full", "default" or "none", this is a no-op.
     #
     # @param [String] "full" to enable asset configuration logging, and
     #   "default" or "none" to disable it.
     def aces_level=(level)
+      return if level.nil?
+      return unless ['full', 'default', 'none'].include? level.downcase
       logging = REXML::XPath.first(@xml, 'ScanTemplate/Logging')
       if (logging.nil?)
         logging = REXML::Element.new('Logging')
