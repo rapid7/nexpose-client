@@ -204,6 +204,22 @@ module Nexpose
       Scan.parse(response.res) if response.success
     end
 
+    # Initiate an ad-hoc scan with template and engine.
+    #
+    # @param [Fixnum] site_id Site ID to scan.
+    # @param [Array[String]] assets Hostnames and/or IP addresses to scan.
+    # @param [String] scan_template The scan template ID.
+    # @param [Fixnum] scan_engine The scan engine ID.
+    # @return [Fixnum] Scan ID.
+    def scan_assets_with_template_engine(site_id, assets, scan_template, scan_engine)
+      uri = "/data/site/#{site_id}/scan"
+      params = { 'addressList' => assets.join(','),
+                 'template' => scan_template,
+                 'scanEngine' => scan_engine }
+      scan_id = AJAX.form_post(self, uri, params)
+      scan_id.to_i
+    end
+
     # Utility method for appending a HostName or IPRange object into an
     # XML object, in preparation for ad hoc scanning.
     #
