@@ -407,7 +407,7 @@ module Nexpose
       data = Rex::MIME::Message.new
       data.add_part(site_id.to_s, nil, nil, 'form-data; name="siteid"')
       data.add_part(session_id, nil, nil, 'form-data; name="nexposeCCSessionID"')
-      ::File.new(zip_file, 'rb') do |scan|
+      ::File.open(zip_file, 'rb') do |scan|
         data.add_part(scan.read, 'application/zip', 'binary',
                       "form-data; name=\"scan\"; filename=\"#{zip_file}\"")
       end
