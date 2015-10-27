@@ -213,7 +213,8 @@ module Nexpose
     # @return [Fixnum] Scan ID.
     def scan_assets_with_template_engine(site_id, assets, scan_template, scan_engine)
       uri = "/data/site/#{site_id}/scan"
-      params = { 'addressList' => assets.join(','),
+      assets.size > 1 ? addresses = assets.join(',') : addresses = assets.first
+      params = { 'addressList' => addresses,
                  'template' => scan_template,
                  'scanEngine' => scan_engine }
       scan_id = AJAX.form_post(self, uri, params)
