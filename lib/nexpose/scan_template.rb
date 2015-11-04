@@ -514,7 +514,7 @@ module Nexpose
         response = JSON.parse(AJAX.get(nsc, "/data/scan/templates/#{URI.encode(id)}"))
         xml = response['value']
       else
-        xml = AJAX.get(nsc, '/ajax/scantemplate_config.txml')
+        xml = AJAX.get(nsc, '/data/scan-template')
       end
       new(xml)
     end
