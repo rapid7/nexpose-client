@@ -78,7 +78,7 @@ module Nexpose
     # List the vulnerability findings for a given device ID.
     #
     # @param [Fixnum] dev_id Unique identifier of a device (asset).
-    # @return [Array[Vulnerability]] List of vulnerability findings.
+    # @return [Array[VulnFinding]] List of vulnerability findings.
     #
     def list_device_vulns(dev_id)
       parameters = { 'devid' => dev_id,
