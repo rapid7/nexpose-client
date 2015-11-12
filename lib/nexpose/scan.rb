@@ -204,14 +204,17 @@ module Nexpose
       Scan.parse(response.res) if response.success
     end
 
-    # Initiate an ad-hoc scan with template and engine.
+    # Initiate an ad-hoc scan on a subset of site assets with
+    # a specific scan template and scan engine, which may differ
+    # from the site's defined scan template and scan engine.
     #
     # @param [Fixnum] site_id Site ID to scan.
     # @param [Array[String]] assets Hostnames and/or IP addresses to scan.
     # @param [String] scan_template The scan template ID.
     # @param [Fixnum] scan_engine The scan engine ID.
     # @return [Fixnum] Scan ID.
-    def scan_assets_with_template_engine(site_id, assets, scan_template, scan_engine)
+    #
+    def scan_assets_with_template_and_engine(site_id, assets, scan_template, scan_engine)
       uri = "/data/site/#{site_id}/scan"
       assets.size > 1 ? addresses = assets.join(',') : addresses = assets.first
       params = { 'addressList' => addresses,
