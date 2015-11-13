@@ -590,7 +590,7 @@ module Nexpose
       debug_logging = REXML::XPath.first(logging, 'debugLogging')
       if debug_logging.nil?
         debug_logging = REXML::Element.new('debugLogging')
-        logging.add_element(enhancedLogging)
+        logging.add_element(debug_logging)
       end
       debug_logging.attributes['enabled'] = (enable ? 1 : 0)
     end
@@ -604,10 +604,10 @@ module Nexpose
         logging = REXML::Element.new('Logging')
         @xml.add_element(logging)
       end
-      enhancedLogging = REXML::XPath.first(logging, 'enhancedLogging')
+      enhanced_logging = REXML::XPath.first(logging, 'enhancedLogging')
       if enhanced_logging.nil?
         enhanced_logging = REXML::Element.new('enhancedLogging')
-        logging.add_element(enhancedLogging)
+        logging.add_element(enhanced_logging)
       end
       enhanced_logging.attributes['enabled'] = (enable ? 1 : 0)
     end
