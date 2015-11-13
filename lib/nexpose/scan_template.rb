@@ -577,5 +577,39 @@ module Nexpose
     def aces_enabled?
       return 'full' == aces_level
     end
+
+    # Enable or disable the debug logging.
+    # @param [Boolean] enable Enable or disable the debug logging.
+    def enable_debug_logging=(enable)
+      return if enable.nil?
+      logging = REXML::XPath.first(@xml, 'ScanTemplate/Logging')
+      if (logging.nil?)
+        logging = REXML::Element.new('Logging')
+        @xml.add_element(logging)
+      end
+      debugLogging = REXML::XPath.first(logging, 'debugLogging')
+      if (debugLogging.nil?)
+         debugLogging = REXML::Element.new('debugLogging')
+         logging.add_element(enhancedLogging)
+      end
+      debugLogging.attributes['enabled'] = (enable ? 1 : 0)
+    end
+
+    # Enable or disable the enhanced logging.
+    # @param [Boolean] enable Enable or disable the enhanced logging.
+    def enable_enhanced_logging=(enable)
+      return if enable.nil?
+      logging = REXML::XPath.first(@xml, 'ScanTemplate/Logging')
+      if (logging.nil?)
+        logging = REXML::Element.new('Logging')
+        @xml.add_element(logging)
+      end
+      enhancedLogging = REXML::XPath.first(logging, 'enhancedLogging')
+      if (enhancedLogging.nil?)
+         enhancedLogging = REXML::Element.new('enhancedLogging')
+         logging.add_element(enhancedLogging)
+      end
+      enhancedLogging.attributes['enabled'] = (enable ? 1 : 0)
+    end
   end
 end
