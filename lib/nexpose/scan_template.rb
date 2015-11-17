@@ -598,8 +598,8 @@ module Nexpose
     # Enable or disable the enhanced logging.
     # @param [Boolean] enable Enable or disable the enhanced logging.
     def enable_enhanced_logging=(enable)
-      enable_debug_logging(enable)
-      aces_level(enable ? 'full' : 'none')
+      self.enable_debug_logging = enable
+      self.aces_level = (enable ? 'full' : 'none')
     end
   end
 end
