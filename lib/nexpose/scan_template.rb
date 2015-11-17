@@ -598,18 +598,8 @@ module Nexpose
     # Enable or disable the enhanced logging.
     # @param [Boolean] enable Enable or disable the enhanced logging.
     def enable_enhanced_logging=(enable)
-      return if enable.nil?
-      logging = REXML::XPath.first(@xml, 'ScanTemplate/Logging')
-      if logging.nil?
-        logging = REXML::Element.new('Logging')
-        @xml.add_element(logging)
-      end
-      enhanced_logging = REXML::XPath.first(logging, 'enhancedLogging')
-      if enhanced_logging.nil?
-        enhanced_logging = REXML::Element.new('enhancedLogging')
-        logging.add_element(enhanced_logging)
-      end
-      enhanced_logging.attributes['enabled'] = (enable ? 1 : 0)
+      debug_logging = enable
+      aces_level = (enable ? 'full' : 'none')
     end
   end
 end
