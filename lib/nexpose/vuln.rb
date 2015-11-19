@@ -238,7 +238,7 @@ module Nexpose
     attr_reader :cvss_score
     attr_reader :cvss_vector
     attr_reader :risk
-    # Date this exploit was published.
+    # Date this vulnerability was published.
     attr_reader :published
     attr_reader :severity
     # Number of instances of this vulnerabilty finding on an asset.
