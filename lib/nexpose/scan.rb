@@ -385,11 +385,7 @@ module Nexpose
       end
     end
 
-    # Import scan data into a site. WARNING: Experimental!
-    #
-    # This code currently depends on a gem not in the gemspec. In order to use
-    # this method, you will need to add the following line to your script:
-    #   require 'rest-client'
+    # Import scan data into a site.
     #
     # This method is designed to work with export_scan to migrate scan data
     # from one console to another. This method will import the data as if run
