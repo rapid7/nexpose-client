@@ -404,7 +404,7 @@ module Nexpose
     # @return [String] An empty string on success.
     #
     def import_scan(site_id, zip_file)
-      data = Rex::MIME::Message.new
+      data = Rexlite::MIME::Message.new
       data.add_part(site_id.to_s, nil, nil, 'form-data; name="siteid"')
       data.add_part(session_id, nil, nil, 'form-data; name="nexposeCCSessionID"')
       ::File.open(zip_file, 'rb') do |scan|
