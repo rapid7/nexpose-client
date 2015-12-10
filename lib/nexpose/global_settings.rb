@@ -6,9 +6,8 @@ module Nexpose
     # all sites.
     attr_accessor :asset_exclusions
 
-    # Whether asset linking in enabled. A feature tied to ControlsInsight
-    # integration.
-    attr_accessor :asset_correlation
+    # Whether asset linking in enabled.
+    attr_accessor :asset_linking
 
     # Whether control scanning in enabled. A feature tied to ControlsInsight
     # integration.
@@ -22,7 +21,7 @@ module Nexpose
     def initialize(xml)
       @xml = xml
 
-      @asset_correlation = parse_asset_correlation_from_xml(xml)
+      @asset_linking = parse_asset_linking_from_xml(xml)
       @asset_exclusions = HostOrIP.parse(xml)
       @control_scanning = parse_control_scanning_from_xml(xml)
     end
@@ -46,7 +45,7 @@ module Nexpose
 
       replace_exclusions(xml, asset_exclusions)
       add_control_scanning_to_xml(xml, control_scanning)
-      add_asset_correlation_to_xml(xml, asset_correlation)
+      add_asset_linking_to_xml(xml, asset_linking)
 
       response = AJAX.post(nsc, '/data/admin/global-settings', xml)
       XMLUtils.success? response
@@ -123,7 +122,7 @@ module Nexpose
     end
 
     # Internal method for parsing XML for whether asset linking in enabled.
-    def parse_asset_correlation_from_xml(xml)
+    def parse_asset_linking_from_xml(xml)
       enabled = false
       if elem = REXML::XPath.first(xml, '//AssetCorrelation[@enabled]')
         enabled = elem.attribute('enabled').value.to_i == 1
@@ -132,7 +131,7 @@ module Nexpose
     end
 
     # Internal method for updating asset linking before saving.
-    def add_asset_correlation_to_xml(xml, enabled)
+    def add_asset_linking_to_xml(xml, enabled)
       elem = REXML::XPath.first(xml, '//AssetCorrelation')
       return nil unless elem
 
