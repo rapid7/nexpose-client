@@ -385,11 +385,7 @@ module Nexpose
       end
     end
 
-    # Import scan data into a site. WARNING: Experimental!
-    #
-    # This code currently depends on a gem not in the gemspec. In order to use
-    # this method, you will need to add the following line to your script:
-    #   require 'rest-client'
+    # Import scan data into a site.
     #
     # This method is designed to work with export_scan to migrate scan data
     # from one console to another. This method will import the data as if run
@@ -404,7 +400,7 @@ module Nexpose
     # @return [String] An empty string on success.
     #
     def import_scan(site_id, zip_file)
-      data = Rex::MIME::Message.new
+      data = Rexlite::MIME::Message.new
       data.add_part(site_id.to_s, nil, nil, 'form-data; name="siteid"')
       data.add_part(session_id, nil, nil, 'form-data; name="nexposeCCSessionID"')
       ::File.open(zip_file, 'rb') do |scan|

@@ -53,10 +53,10 @@ require 'rexml/document'
 require 'net/https'
 require 'net/http'
 require 'uri'
-require 'rex/mime'
 require 'ipaddr'
 require 'json'
 require 'cgi'
+require 'nexpose/rexlite/mime'
 require 'nexpose/api'
 require 'nexpose/json_serializer'
 require 'nexpose/error'
@@ -114,13 +114,5 @@ module Nexpose
   def self.print_xml(object)
     puts 'request: ' + object.request_xml.to_s
     puts 'response: ' + object.response_xml.to_s
-  end
-end
-
-# Monkey patch from ActiveSupport which rex 2.0.3 incorrectly replies upon.
-# This enables the multipart MIME handling in Connection#import_scan
-class String
-  def blank?
-    self !~ /\S/
   end
 end

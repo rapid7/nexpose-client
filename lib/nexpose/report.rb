@@ -249,7 +249,7 @@ module Nexpose
           content_type_response = content_type_response[0, last_semi_colon_index]
 
           data = 'Content-Type: ' + content_type_response + "\r\n\r\n" + response.raw_response_data
-          doc = Rex::MIME::Message.new(data)
+          doc = Rexlite::MIME::Message.new(data)
           doc.parts.each do |part|
             if /.*base64.*/ =~ part.header.to_s
               if @format =~ /(?:ht|x)ml/
