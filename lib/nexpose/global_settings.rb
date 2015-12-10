@@ -123,7 +123,7 @@ module Nexpose
 
     # Internal method for parsing XML for whether asset linking in enabled.
     def parse_asset_linking_from_xml(xml)
-      enabled = false
+      enabled = true
       if elem = REXML::XPath.first(xml, '//AssetCorrelation[@enabled]')
         enabled = elem.attribute('enabled').value.to_i == 1
       end
