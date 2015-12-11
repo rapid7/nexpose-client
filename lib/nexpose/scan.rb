@@ -377,6 +377,29 @@ module Nexpose
       end
     end
 
+    # Get paused scans. Provide a site ID to get paused scans for a site.
+    # With no site ID, all paused scans are returned.
+    #
+    # @param [Fixnum] site_id Site ID to retrieve paused scans for.
+    # @param [Fixnum] limit The maximum number of records to return from this call.
+    # @return [Array[ActiveScan]] List of paused scans.
+    #
+    def paused_scans(site_id = nil, limit = nil)
+      if site_id
+        uri = "/data/scan/site/#{site_id}?status=active"
+        rows = AJAX.row_pref_of(limit)
+        params = { 'sort' => 'endTime', 'dir' => 'DESC', 'startIndex' => 0 }
+        AJAX.preserving_preference(self, 'site-active-scans') do
+          data = DataTable._get_json_table(self, uri, params, rows, limit).select { |scan| scan['paused'] }
+          data.map(&ActiveScan.method(:parse_json))
+        end
+      else
+        uri = '/data/site/scans/dyntable.xml?printDocType=0&tableID=siteScansTable&activeOnly=true'
+        data = DataTable._get_dyn_table(self, uri).select { |scan| (scan['Status'].include? 'Paused') }
+        data.map(&ActiveScan.method(:parse_dyntable))
+      end
+    end
+
     # Export the data associated with a single scan, and optionally store it in
     # a zip-compressed file under the provided name.
     #
@@ -779,6 +802,38 @@ module Nexpose
         :stopped
       when 'A'
         :aborted
+      else
+        :unknown
+      end
+    end
+  end
+
+  class ActiveScan < CompletedScan
+    def self.parse_dyntable(json)
+      new do
+        @id = json['Scan ID']
+        @site_id = json['Site ID']
+        @status = CompletedScan._parse_status(json['Status Code'])
+        @start_time = Time.at(json['Started'].to_i / 1000)
+        @end_time = Time.at(json['Progress'].to_i / 1000)
+        @duration = json['Elapsed'].to_i
+        @vulns = json['Vulnerabilities Discovered'].to_i
+        @assets = json['Devices Discovered'].to_i
+        @risk_score = json['riskScore']
+        @type = json['Scan Type'] == 'Manual' ? :manual : :scheduled
+        @engine_name = json['Scan Engine']
+      end
+    end
+
+    # Internal method to parsing status codes.
+    def self._parse_status(code)
+      case code
+      when 'U'
+        :running
+      when 'P'
+        :paused
+      when 'I'
+        :integrating
       else
         :unknown
       end
