@@ -187,10 +187,19 @@ module Nexpose
     # is 2.1 or greater otherwise use the request body
     def get_error_message(request, response)
       version = get_request_api_version(request)
-      data_request = request.path.include? '/data/'
-      data_request ? response_is_text = (response.content_type.include? 'text/plain') : nil
-      return_response = (version >= 2.1 || (data_request && response_is_text))
+      data_request = use_response_error_message?(request, response)
+      return_response = (version >= 2.1 || data_request )
       (return_response && response.body) ? "response body: #{response.body}" : "request body: #{request.body}"
+    end
+
+    # Code cleanup to allow for cleaner get_error_message method
+    #
+    def use_response_error_message?(request, response)
+      if (request.path.include?('/data/') && !response.content_type.nil?)
+        response.content_type.include? 'text/plain'
+      else
+        return false
+      end
     end
 
     # Execute a block of code while presenving the preferences for any
