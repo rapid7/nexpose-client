@@ -370,12 +370,12 @@ module Nexpose
         rows = AJAX.row_pref_of(limit)
         params = { 'sort' => 'endTime', 'dir' => 'DESC', 'startIndex' => 0 }
         AJAX.preserving_preference(self, 'site-active-scans') do
-          data = DataTable._get_json_table(self, uri, params, rows, limit).select { |scan| scan['paused']}
+          data = DataTable._get_json_table(self, uri, params, rows, limit).select { |scan| scan['paused'] }
           data.map(&ActiveScan.method(:parse_json))
         end
       else
         uri = '/data/site/scans/dyntable.xml?printDocType=0&tableID=siteScansTable&activeOnly=true'
-        data = DataTable._get_dyn_table(self, uri).select { |scan| (scan['Status'].include? 'Paused')}
+        data = DataTable._get_dyn_table(self, uri).select { |scan| (scan['Status'].include? 'Paused') }
         data.map(&ActiveScan.method(:parse_dyntable))
       end
     end
