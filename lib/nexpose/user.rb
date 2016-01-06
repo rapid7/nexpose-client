@@ -174,7 +174,7 @@ module Nexpose
           all_groups = config.attributes['allGroups'] == 'true' ? true : false
           # Not trying to load sites and groups.
           # Looks like API currently doesn't return that info to load.
-          return User.new(name, fullname, password, role_name, id, enabled, email, all_sites, all_groups)
+          return User.new(name, fullname, password, role_name, id, enabled, email, all_sites, all_groups, token)
         end
       end
     end
