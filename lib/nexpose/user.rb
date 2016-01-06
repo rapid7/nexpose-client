@@ -90,15 +90,16 @@ module Nexpose
     # but caller can override (e.g., using LDAP authenticator).
     attr_accessor :authsrcid
     # Optional fields
-    attr_accessor :email, :password, :sites, :groups
+    attr_accessor :email, :password, :sites, :groups, :token
     # 1 to enable this user, 0 to disable
     attr_accessor :enabled
     # Boolean values
     attr_accessor :all_sites, :all_groups
 
-    def initialize(name, full_name, password, role_name = 'user', id = -1, enabled = 1, email = nil, all_sites = false, all_groups = false)
+    def initialize(name, full_name, password, role_name = 'user', id = -1, enabled = 1, email = nil, all_sites = false, all_groups = false, token = nil)
       @name = name
       @password = password
+      @token = token
       @role_name = role_name
       @authsrcid = ('global-admin'.eql? @role_name) ? '1' : '2'
       @id = id
@@ -119,6 +120,7 @@ module Nexpose
       xml << %Q{ fullname="#{replace_entities(@full_name)}"}
       xml << %Q{ role-name="#{replace_entities(@role_name)}"}
       xml << %Q{ password="#{replace_entities(@password)}"} if @password
+      xml << %Q{ token="#{replace_entities(@token)}"} if @token
       xml << %Q{ email="#{replace_entities(@email)}"} if @email
       xml << %Q{ enabled="#{@enabled}"}
       # These two fields are keying off role_name to work around a defect.
@@ -166,12 +168,13 @@ module Nexpose
 
           email = config.attributes['email']
           password = config.attributes['password']
+          token = config.attributes['token']
           enabled = config.attributes['enabled'].to_i
           all_sites = config.attributes['allSites'] == 'true' ? true : false
           all_groups = config.attributes['allGroups'] == 'true' ? true : false
           # Not trying to load sites and groups.
           # Looks like API currently doesn't return that info to load.
-          return User.new(name, fullname, password, role_name, id, enabled, email, all_sites, all_groups)
+          return User.new(name, fullname, password, role_name, id, enabled, email, all_sites, all_groups, token)
         end
       end
     end
