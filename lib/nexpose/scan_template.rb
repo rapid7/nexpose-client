@@ -583,5 +583,20 @@ module Nexpose
       self.enable_debug_logging = enable
       self.aces_level = (enable ? 'full' : 'none')
     end
+
+    # Enable or disable windows service editor
+    # @param [Boolean] enable Enable or disable windows service editor
+    def windows_service_editor=(enable)
+      cifs_scanner = REXML::XPath.first(@xml, 'ScanTemplate/Plugins/Plugin[@name="java/CifsScanner"]')
+      param = REXML::XPath.first(cifs_scanner, './param[@name="windowsServiceEditor"]')
+      if param
+        param.text = (enable ? 1 : 0)
+      else
+        param = REXML::Element.new('param')
+        param.add_attribute('name', 'windowsServiceEditor')
+        param.text = (enable ? 1 : 0)
+        cifs_scanner.add_element(param)
+      end
+    end
   end
 end
