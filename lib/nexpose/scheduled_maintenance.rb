@@ -39,7 +39,6 @@ module Nexpose
 
     def save(nsc)
       params = to_json
-      puts params
       AJAX.post(nsc, '/api/2.1/schedule_maintenance/', params,  AJAX::CONTENT_TYPE::JSON)
     end
 
@@ -69,7 +68,6 @@ module Nexpose
     def self.load(nsc)
       uri = '/api/2.1/schedule_maintenance/'
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
-      puts resp
       hash = JSON.parse(resp, symbolize_names: true).first
       Nexpose::ScheduledMaintenance.from_hash(hash || [])
     end
