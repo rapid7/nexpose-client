@@ -5,7 +5,7 @@ module Nexpose
     require 'json'
     include JsonSerializer
 
-    # Whether or not this schedule is enabled.
+    # Whether or not this schedule is enabled. Defaults to true if not set
     attr_accessor :enabled
     # Valid schedule types: daily, hourly, monthly-date, monthly-day, weekly.
     attr_accessor :schedule_type
@@ -13,16 +13,16 @@ module Nexpose
     attr_accessor :schedule_interval
     # The earliest date to generate the report on (in ISO 8601 format).
     attr_accessor :schedule_start
-    # The description of the backup
+    # The description of the backup. Defaults to nil if not set
     attr_accessor :description
-    # Whether the backup will be platform independent or not
+    # Whether the backup will be platform independent or not. Defaults to true if not set
     attr_accessor :platform_independent
-    # Whether the backup should pause all local scans or wait for local scans to complete.
+    # Whether the backup should pause all local scans or wait for local scans to complete. Defaults to true if not set
     attr_accessor :pause_local_scans
-    # Cancellation window in minutes for scheduled DB maintenance.
+    # Cancellation window in minutes for scheduled DB maintenance. Defaults to 0 if not set
     attr_accessor :cancellation_period
 
-    def initialize(start, enabled=true, type, interval, platform_independent, description, pause_local_scans, cancellation_period)
+    def initialize(start:, enabled: true, type:, interval:, platform_independent: true, description: nil, pause_local_scans: true, cancellation_period: 0)
       @schedule_start = start
       @enabled = enabled
       @schedule_type = type
@@ -44,7 +44,14 @@ module Nexpose
 
     def self.from_hash(hash)
       repeat_backup_hash = hash[:repeat_type]
-      backup = new(hash[:start_date], hash[:enabled], repeat_backup_hash[:type], repeat_backup_hash[:interval], hash[:platform_independent], hash[:description], hash[:pause_local_scans], hash[:cancellation_period])
+      backup = new(start: hash[:start_date],
+                   enabled: hash[:enabled],
+                   type: repeat_backup_hash[:type],
+                   interval: repeat_backup_hash[:interval],
+                   platform_independent: hash[:platform_independent],
+                   description: hash[:description],
+                   pause_local_scans: hash[:pause_local_scans],
+                   cancellation_period: hash[:cancellation_period])
       backup
     end
 
@@ -55,7 +62,7 @@ module Nexpose
           description: @description,
           platform_independent: @platform_independent,
           pause_local_scans: @pause_local_scans,
-          cancellation_period:@cancellation_period
+          cancellation_period: @cancellation_period
       }
       repeat_hash= {
           type: @schedule_type,

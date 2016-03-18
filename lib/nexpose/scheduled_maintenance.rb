@@ -5,7 +5,7 @@ module Nexpose
     require 'json'
     include JsonSerializer
 
-    # Whether or not this maintenance schedule is enabled.
+    # Whether or not this maintenance schedule is enabled. Defaults to true if not set
     attr_accessor :enabled
     # Valid schedule types: daily, hourly, monthly-date, monthly-day, weekly.
     attr_accessor :schedule_type
@@ -13,18 +13,18 @@ module Nexpose
     attr_accessor :schedule_interval
     # The earliest date to generate the report on (in ISO 8601 format).
     attr_accessor :schedule_start
-    # Whether the reindex task should run
+    # Whether the reindex task should run. Defaults to true if not set
     attr_accessor :reindex
-    # Whether the compression task should run
+    # Whether the compression task should run. Defaults to true if not set
     attr_accessor :compress
-    # Whether the cleanup task should run
+    # Whether the cleanup task should run. Defaults to true if not set
     attr_accessor :cleanup
-    # Whether the maintenance should pause all local scans or wait for local scans to complete.
+    # Whether the maintenance should pause all local scans or wait for local scans to complete. Defaults to true if not set
     attr_accessor :pause_local_scans
-    # Cancellation window in minutes for scheduled DB maintenance.
+    # Cancellation window in minutes for scheduled DB maintenance. Defaults to 0 if not set
     attr_accessor :cancellation_period
 
-    def initialize(start, enabled=true, type, interval, reindex, compress, cleanup, pause_local_scans, cancellation_period)
+    def initialize(start:, enabled: true, type:, interval:, reindex: true, compress: true, cleanup: true, pause_local_scans: true, cancellation_period: 0)
       @schedule_start = start
       @enabled = enabled
       @schedule_type = type
@@ -42,12 +42,20 @@ module Nexpose
 
     def save(nsc)
       params = to_json
-      AJAX.post(nsc, '/api/2.1/schedule_maintenance/', params,  AJAX::CONTENT_TYPE::JSON)
+      AJAX.post(nsc, '/api/2.1/schedule_maintenance/', params, AJAX::CONTENT_TYPE::JSON)
     end
 
     def self.from_hash(hash)
       repeat_backup_hash = hash[:repeat_type]
-      backup = new(hash[:start_date], hash[:enabled], repeat_backup_hash[:type], repeat_backup_hash[:interval], hash[:reindex], hash[:compression], hash[:cleanup], hash[:pause_local_scans], hash[:cancellation_period])
+      backup = new(start: hash[:start_date],
+                   enabled: hash[:enabled],
+                   type: repeat_backup_hash[:type],
+                   interval: repeat_backup_hash[:interval],
+                   reindex: hash[:reindex],
+                   compress: hash[:compression],
+                   cleanup: hash[:cleanup],
+                   pause_local_scans: hash[:pause_local_scans],
+                   cancellation_period: hash[:cancellation_period])
       backup
     end
 
@@ -59,7 +67,7 @@ module Nexpose
           reindex: @reindex,
           compression: @compress,
           pause_local_scans: @pause_local_scans,
-          cancellation_period:@cancellation_period
+          cancellation_period: @cancellation_period
       }
       repeat_hash= {
           type: @schedule_type,
