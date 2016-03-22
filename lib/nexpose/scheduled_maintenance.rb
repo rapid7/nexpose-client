@@ -21,10 +21,10 @@ module Nexpose
     attr_accessor :cleanup
     # Whether the maintenance should pause all local scans or wait for local scans to complete. Defaults to true if not set
     attr_accessor :pause_local_scans
-    # Cancellation window in minutes for scheduled DB maintenance. Defaults to 0 if not set
+    # Number of minutes to wait for running scans to pause/complete before aborting the maintenance task. Defaults to 0 if not set
     attr_accessor :cancellation_period
 
-    def initialize(start:, enabled: true, type:, interval:, reindex: true, compress: true, cleanup: true, pause_local_scans: true, cancellation_period: 0)
+    def initialize(start:, enabled: true, type:, interval:, reindex: false, compress: true, cleanup: true, pause_local_scans: true, cancellation_period: 0)
       @schedule_start = start
       @enabled = enabled
       @schedule_type = type
@@ -61,17 +61,17 @@ module Nexpose
 
     def to_h
       maintenance_hash = {
-          start_date: @schedule_start,
-          enabled: @enabled,
-          cleanup: @cleanup,
-          reindex: @reindex,
-          compression: @compress,
-          pause_local_scans: @pause_local_scans,
-          cancellation_period: @cancellation_period
+        start_date: @schedule_start,
+        enabled: @enabled,
+        cleanup: @cleanup,
+        reindex: @reindex,
+        compression: @compress,
+        pause_local_scans: @pause_local_scans,
+        cancellation_period: @cancellation_period
       }
-      repeat_hash= {
-          type: @schedule_type,
-          interval: @schedule_interval
+      repeat_hash = {
+        type: @schedule_type,
+        interval: @schedule_interval
       }
       maintenance_hash[:repeat_type] = repeat_hash
       maintenance_hash

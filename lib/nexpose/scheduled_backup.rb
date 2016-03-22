@@ -19,7 +19,7 @@ module Nexpose
     attr_accessor :platform_independent
     # Whether the backup should pause all local scans or wait for local scans to complete. Defaults to true if not set
     attr_accessor :pause_local_scans
-    # Cancellation window in minutes for scheduled DB maintenance. Defaults to 0 if not set
+    # Number of minutes to wait for running scans to pause/complete before aborting the backup task. Defaults to 0 if not set
     attr_accessor :cancellation_period
 
     def initialize(start:, enabled: true, type:, interval:, platform_independent: true, description: nil, pause_local_scans: true, cancellation_period: 0)
@@ -57,16 +57,16 @@ module Nexpose
 
     def to_h
       backup_hash = {
-          start_date: @schedule_start,
-          enabled: @enabled,
-          description: @description,
-          platform_independent: @platform_independent,
-          pause_local_scans: @pause_local_scans,
-          cancellation_period: @cancellation_period
+        start_date: @schedule_start,
+        enabled: @enabled,
+        description: @description,
+        platform_independent: @platform_independent,
+        pause_local_scans: @pause_local_scans,
+        cancellation_period: @cancellation_period
       }
-      repeat_hash= {
-          type: @schedule_type,
-          interval: @schedule_interval
+      repeat_hash = {
+        type: @schedule_type,
+        interval: @schedule_interval
       }
       backup_hash[:repeat_type] = repeat_hash
       backup_hash
