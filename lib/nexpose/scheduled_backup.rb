@@ -20,9 +20,9 @@ module Nexpose
     # Whether the backup should pause all local scans or wait for local scans to complete. Defaults to true if not set
     attr_accessor :pause_local_scans
     # Number of minutes to wait for running scans to pause/complete before aborting the backup task. Defaults to 0 if not set
-    attr_accessor :cancellation_period
+    attr_accessor :cancellation_window
 
-    def initialize(start:, enabled: true, type:, interval:, platform_independent: true, description: nil, pause_local_scans: true, cancellation_period: 0)
+    def initialize(start:, enabled: true, type:, interval:, platform_independent: true, description: nil, pause_local_scans: true, cancellation_window: 0)
       @schedule_start = start
       @enabled = enabled
       @schedule_type = type
@@ -30,7 +30,7 @@ module Nexpose
       @platform_independent = platform_independent
       @description = description
       @pause_local_scans = pause_local_scans
-      @cancellation_period = cancellation_period.to_i
+      @cancellation_window = cancellation_window.to_i
     end
 
     def to_json
@@ -51,7 +51,7 @@ module Nexpose
                    platform_independent: hash[:platform_independent],
                    description: hash[:description],
                    pause_local_scans: hash[:pause_local_scans],
-                   cancellation_period: hash[:cancellation_period])
+                   cancellation_window: hash[:cancellation_window])
       backup
     end
 
@@ -62,7 +62,7 @@ module Nexpose
         description: @description,
         platform_independent: @platform_independent,
         pause_local_scans: @pause_local_scans,
-        cancellation_period: @cancellation_period
+        cancellation_window: @cancellation_window
       }
       repeat_hash = {
         type: @schedule_type,
