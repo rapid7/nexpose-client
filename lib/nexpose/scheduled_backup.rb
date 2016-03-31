@@ -1,6 +1,5 @@
 module Nexpose
-# Constants useful across the Nexpose module.
-# Configuration structure for scheduled backups.
+  # Configuration structure for scheduled backups.
   class ScheduledBackup < APIObject
     require 'json'
     include JsonSerializer

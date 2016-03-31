@@ -1,6 +1,5 @@
 module Nexpose
-# Constants useful across the Nexpose module.
-# Configuration structure for scheduled maintenance.
+  # Configuration structure for scheduled maintenance.
   class ScheduledMaintenance < APIObject
     require 'json'
     include JsonSerializer
