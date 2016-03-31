@@ -42,6 +42,29 @@ module Nexpose
         false
       end
     end
+    
+    # Obtain the version information for each scan engine.
+    # Includes Product, Content, and Java versions.
+    #
+    def engine_versions
+      info = console_command('version engines')
+      versions = []
+      engines = info.split(/\n\n/)
+      engines.each do |eng|
+        engdata = {}
+        eng.split(/\n/).each do |kv|
+          key, value = kv.split(/:\s*/)
+          key = key.sub("Local Engine  ", "").sub("Remote Engine ", "")
+          if key != "VERSION INFORMATION"
+            engdata[key] = value
+          end
+        end
+      
+        versions << engdata
+      end
+      
+      return versions
+    end
 
     # Induce the application to retrieve required updates and restart
     # if necessary.
