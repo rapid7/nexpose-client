@@ -49,7 +49,7 @@ module Nexpose
     def engine_versions
       info = console_command('version engines')
       versions = []
-      engines = info.sub("VERSION INFORMATION\n", "").split(/\n\n/)
+      engines = info.sub('VERSION INFORMATION\n', '').split(/\n\n/)
       engines.each do |eng|
         engdata = {}
         eng.split(/\n/).each do |kv|
