@@ -297,6 +297,7 @@ module Nexpose
   end
 
   # An instance of a vulnerability discovered on an asset.
+  # Accessible from {Nexpose::Asset#vulnerability_instances}.
   #
   class VulnerabilityInstance < APIObject
     # ID of the asset where the vulnerability instance was detected.
