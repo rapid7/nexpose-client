@@ -32,8 +32,28 @@ describe Nexpose::HostOrIP do
       end
     end
 
-    context 'with an IP address range' do
+    context 'with an IP address range in CIDR format' do
       let(:asset) { asset = '192.168.1.0/24' }
+
+
+      it 'returns an IPRange' do
+        observed = subject.convert(asset)
+        expect(observed).to be_a(Nexpose::IPRange)
+      end
+    end
+
+    context 'with an IP address range without whitespace' do
+      let(:asset) { asset = '192.168.1.0-192.168.1.255' }
+
+
+      it 'returns an IPRange' do
+        observed = subject.convert(asset)
+        expect(observed).to be_a(Nexpose::IPRange)
+      end
+    end
+
+    context 'with an IP address range with whitespace' do
+      let(:asset) { asset = '192.168.1.0   -   192.168.1.255' }
 
 
       it 'returns an IPRange' do
