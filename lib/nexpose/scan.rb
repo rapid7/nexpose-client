@@ -461,7 +461,7 @@ module Nexpose
       response = http.request(post)
       case response
       when Net::HTTPOK
-        response.body
+        response.body.empty? ? response.body : response.body.to_i
       when Net::HTTPUnauthorized
         raise Nexpose::PermissionError.new(response)
       else
