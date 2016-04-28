@@ -245,11 +245,12 @@ module Nexpose
     end
 
     def get_rows(nsc, pref)
-      uri = '/ajax/user_pref_get.txml'
-      resp = get(nsc, uri, CONTENT_TYPE::XML, 'name' => "#{pref}.rows")
-      xml = REXML::Document.new(resp)
-      if val = REXML::XPath.first(xml, 'GetUserPref/userPref')
-        rows = val.text.to_i
+      uri = '/data/user/preferences/all'
+      pref_key = "#{pref}.rows"
+      resp = get(nsc, uri)
+      json = JSON.parse(resp)
+      if json.has_key?(pref_key)
+        rows = json[pref_key].to_i
         rows > 0 ? rows : 10
       else
         10
@@ -257,14 +258,12 @@ module Nexpose
     end
 
     def set_rows(nsc, pref, value)
-      uri = '/ajax/user_pref_set.txml'
+      uri = '/data/user/preference'
       params = { 'name'  => "#{pref}.rows",
                  'value' => value }
-      resp = get(nsc, uri, CONTENT_TYPE::XML, params)
-      xml = REXML::Document.new(resp)
-      if attr = REXML::XPath.first(xml, 'SetUserPref/@success')
-        attr.value == '1'
-      end
+
+      form_post(nsc, uri, params)
     end
+
   end
 end
