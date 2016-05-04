@@ -32,6 +32,23 @@ module Nexpose
       response.eql?("true")
     end
 
+    # Kicks off an update on a single engine.
+    # A return result of true should be taken only to mean that the update
+    # was sent, not that it correctly applied.
+    #
+    # @param [Fixnum] engine_id Unique ID of the engine.
+    # @return [Boolean] true if the update was sent.
+    #
+    def update_engine(engine_id)
+      uri = "/data/engine/#{engine_id}/update"
+      begin
+        AJAX.post(self, uri)
+        return true
+      rescue Nexpose
+        return false
+      end
+    end
+
     # Provide a list of current scan activities for a specific Scan Engine.
     #
     # @return [Array[ScanSummary]] Array of ScanSummary objects associated with
