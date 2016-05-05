@@ -102,8 +102,8 @@ module Nexpose
       # Valid Values (See Value::IPType): IPv4, IPv6
       IP_ALT_ADDRESS_TYPE = 'IP_ALT_ADDRESS_TYPE'
 
-      # Valid Operators: IN, NOT_IN
-      IP_RANGE = 'IP_RANGE'
+      # Valid Operators: IS, IS_NOT, IN_RANGE, NOT_IN_RANGE
+      IP_ADDRESS = 'IP_ADDRESS'
 
       # Valid Operators: IS, IS_NOT, IN_RANGE
       # Valid Values: Integers from 1 to 65535
@@ -185,6 +185,7 @@ module Nexpose
       IN = 'IN'
       NOT_IN = 'NOT_IN'
       IN_RANGE = 'IN_RANGE'
+      NOT_IN_RANGE = 'NOT_IN_RANGE'
       STARTS_WITH = 'STARTS_WITH'
       ENDS_WITH = 'ENDS_WITH'
       ON_OR_BEFORE = 'ON_OR_BEFORE'
