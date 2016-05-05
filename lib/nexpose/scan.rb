@@ -440,7 +440,7 @@ module Nexpose
     #
     # @param [Fixnum] site_id Site ID of the site to import the scan into.
     # @param [String] zip_file Path to a previously exported scan archive.
-    # @return [String] An empty string on success.
+    # @return [Fixnum] The scan ID on success.
     #
     def import_scan(site_id, zip_file)
       data = Rexlite::MIME::Message.new
@@ -461,7 +461,7 @@ module Nexpose
       response = http.request(post)
       case response
       when Net::HTTPOK
-        response.body
+        response.body.empty? ? response.body : response.body.to_i
       when Net::HTTPUnauthorized
         raise Nexpose::PermissionError.new(response)
       else
