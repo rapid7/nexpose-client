@@ -103,7 +103,7 @@ module Nexpose
       IP_ALT_ADDRESS_TYPE = 'IP_ALT_ADDRESS_TYPE'
 
       # Valid Operators: IS, IS_NOT, IN_RANGE, NOT_IN_RANGE
-      IP_ADDRESS = 'IP_ADDRESS'
+      IP_ADDRESS = 'IP_RANGE'
 
       # Valid Operators: IS, IS_NOT, IN_RANGE
       # Valid Values: Integers from 1 to 65535
