@@ -40,7 +40,7 @@ module Nexpose
     # or if the engine is offline or unresponsive.
     #
     # @param [Fixnum] engine_id Unique ID of the engine.
-    # @return [Boolean] true if the update was sent 
+    # @return [Boolean] true if the update was sent
     #   or if engine is already up to date.
     #
     def update_engine(engine_id)
