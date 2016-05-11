@@ -110,6 +110,10 @@ require 'nexpose/maint'
 require 'nexpose/version'
 require 'nexpose/wait'
 
+# Double the size of the default limit,
+# to work around large vuln content.
+REXML::Security.entity_expansion_text_limit = 20_000
+
 module Nexpose
 
   # Echos the last XML API request and response for the specified object.  (Useful for debugging)
