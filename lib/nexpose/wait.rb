@@ -19,11 +19,14 @@ module Nexpose
       poller.wait(report_status_proc(nexpose_connection: nexpose_connection, report_id: report_id))
       @ready = true
       rescue TimeoutError
+        @ready = false
         retry if timeout_retry?
         @error_message = "Timeout Waiting for Report to Generate - Report Config ID: #{report_id}"
       rescue NoMethodError => error
+        @ready = false
         @error_message = "Error Report Config ID: #{report_id} :: Report Probably Does Not Exist :: #{error}"
       rescue => error
+        @ready = false
         @error_message = "Error Report Config ID: #{report_id} :: #{error}"
     end
 
@@ -32,9 +35,11 @@ module Nexpose
       poller.wait(integration_status_proc(nexpose_connection: nexpose_connection, scan_id: scan_id, status: status))
       @ready = true
       rescue TimeoutError
+        @ready = false
         retry if timeout_retry?
         @error_message = "Timeout Waiting for Integration Status of '#{status}' - Scan ID: #{scan_id}"
       rescue Nexpose::APIError => error
+        @ready = false
         @error_message = "API Error Waiting for Integration Scan ID: #{scan_id} :: #{error.req.error}"
     end
 
@@ -43,6 +48,7 @@ module Nexpose
       poller.wait(proc)
       @ready = true
       rescue TimeoutError
+        @ready = false
         retry if timeout_retry?
         @error_message = "Timeout Waiting for Judgment to Judge. #{desc}"
     end
