@@ -152,7 +152,7 @@ module Nexpose
       # Return response body if request is successful. Brittle.
       response = http.request(request)
       case response
-        when Net::HTTPOK, Net::HTTPCreated, Net::HTTPNoContent
+      when Net::HTTPOK, Net::HTTPCreated, Net::HTTPNoContent
         response.body
       when Net::HTTPForbidden
         raise Nexpose::PermissionError.new(response)
