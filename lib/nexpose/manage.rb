@@ -47,7 +47,7 @@ module Nexpose
     # Includes dates and ids for Product and Content versions.
     #
     def engine_versions
-      JSON.parse(AJAX.post(self, "/data/engines"))['records']
+      JSON.parse(AJAX.post(self, '/data/engines'))['records']
     end
 
     # Induce the application to retrieve required updates and restart
