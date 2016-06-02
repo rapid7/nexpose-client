@@ -135,17 +135,12 @@ module Nexpose
     attr_accessor :type
     # The repeat interval based upon type.
     attr_accessor :interval
-    # The earliest date to generate the report on (in ISO 8601 format).
+    # Starting time of the scheduled scan (in ISO 8601 format).
     attr_accessor :start
-
     # The amount of time, in minutes, to allow execution before stopping.
     attr_accessor :max_duration
     # The date after which the schedule is disabled, in ISO 8601 format.
     attr_accessor :not_valid_after
-
-    # TODO: Remove this unused attribute
-    attr_accessor :incremental
-
     # Extended attributes added with the new scheduler implementation
     attr_accessor :is_extended
     attr_accessor :hour
@@ -154,11 +149,12 @@ module Nexpose
     attr_accessor :day
     attr_accessor :occurrence
     attr_accessor :start_month
+    # Timezone cannot be set, always console timezone. If console timezone is not supported defaults to utc.
     attr_accessor :timezone
     attr_accessor :next_run_time
-
     # scan-schedule attributes
     attr_accessor :repeater_type
+    # Scan template to use when starting a scan job.
     attr_accessor :scan_template_id
 
     # @param [Time] start
