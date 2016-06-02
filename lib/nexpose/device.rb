@@ -208,7 +208,7 @@ module Nexpose
     # object.
     def self.parse_json(json)
       new do
-        @id = json['id'].to_i
+        @id = json['assetID'].to_i
         @ip = json['ipAddress']
         @host_name = json['hostName']
         @os = json['operatingSystem']
