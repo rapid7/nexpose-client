@@ -9,7 +9,7 @@ module Nexpose
     # The repeat interval based upon type.
     attr_accessor :blackout_interval
     # Starting time of the blackout (in unix epoch with milliseconds. Example: 1464956590000)
-    # Timezone is always console timezone. If console timezone is not supported defaults to utc.
+    # The timezone is the timezone of the console. If the console timezone is not supported it defaults to utc.
     attr_accessor :blackout_start
     # The amount of time, in minutes, a blackout period should last.
     attr_accessor :blackout_duration

@@ -149,7 +149,7 @@ module Nexpose
     attr_accessor :day
     attr_accessor :occurrence
     attr_accessor :start_month
-    # Timezone cannot be set, always console timezone. If console timezone is not supported defaults to utc.
+    # Timezone cannot be set on schedule create, it is set to console timezone. If console timezone is not supported it defaults to utc.
     attr_accessor :timezone
     attr_accessor :next_run_time
     # scan-schedule attributes
