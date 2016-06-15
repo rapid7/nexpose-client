@@ -44,7 +44,7 @@ module Nexpose
     # [String] the IP address, host name or FQDN of the SMTP server.
     attr_accessor :smtp_relay_server
     # Recipients will be in form of email address.
-    # [Array<String>] of report recipients (i.e., not already on the report access list).
+    # [Array<String>] E-mail addresses of additional report recipients (i.e., not already on the report access list).
     attr_accessor :recipients
 
     def initialize(to_all_authorized, send_to_owner_as, send_to_acl_as, send_as)
