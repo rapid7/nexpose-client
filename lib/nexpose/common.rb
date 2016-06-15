@@ -25,20 +25,26 @@ module Nexpose
   # non-members.
   class Email
     # Send as file attachment or zipped file to individuals who are not members
-    # of the report access list. One of: file|zip
+    # of the report access list.
+    # [String] Attachment format, 'file' | 'zip'.
     attr_accessor :send_as
     # Send to all the authorized users of sites, groups, and assets.
+    # [Fixnum] 1 | 0
     attr_accessor :to_all_authorized
     # Send to users on the report access list.
+    # [String] Attachment format 'file' | 'zip'
     attr_accessor :send_to_acl_as
-    # Format to send to users on the report access list. One of: file|zip|url
+    # Format to send to users on the report access list.
+    # [String] Attachment format 'file' | 'zip' | 'url'
     attr_accessor :send_to_owner_as
-
     # Sender that e-mail will be attributed to.
+    # [String] an email address
     attr_accessor :sender
     # SMTP relay server.
+    # [String] the IP address, host name or FQDN of the SMTP server.
     attr_accessor :smtp_relay_server
-    # Array of report recipients (i.e., not already on the report access list).
+    # Recipients will be in form of email address.
+    # [Array<String>] E-mail addresses of additional report recipients (i.e., not already on the report access list).
     attr_accessor :recipients
 
     def initialize(to_all_authorized, send_to_owner_as, send_to_acl_as, send_as)
