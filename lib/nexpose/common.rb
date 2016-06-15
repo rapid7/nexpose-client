@@ -30,7 +30,7 @@ module Nexpose
     # Send to all the authorized users of sites, groups, and assets.
     # Ex. : Fixnum [1 | 0]
     attr_accessor :to_all_authorized
-    # Send to users on the report access list. Ex. : Fixnum [1 | 0]
+    # Send to users on the report access list. Ex. : [String] 'file' | 'zip'
     attr_accessor :send_to_acl_as
     # Format to send to users on the report access list.
     # One of: [String] 'file' | 'zip'
