@@ -31,13 +31,12 @@ module Nexpose
     # Send to all the authorized users of sites, groups, and assets.
     # [Fixnum] 1 | 0
     attr_accessor :to_all_authorized
-    # Send to users on the report access list. 
+    # Send to users on the report access list.
     # [String] Attachment format 'file' | 'zip'
     attr_accessor :send_to_acl_as
     # Format to send to users on the report access list.
     # [String] Attachment format 'file' | 'zip' | 'url'
     attr_accessor :send_to_owner_as
-
     # Sender that e-mail will be attributed to.
     # [String] an email address
     attr_accessor :sender
@@ -48,7 +47,7 @@ module Nexpose
     # Recipients will be in form of email address.
     # [Array<String>] of report recipients (i.e., not already on the report access list).
     attr_accessor :recipients
-
+    
     def initialize(to_all_authorized, send_to_owner_as, send_to_acl_as, send_as)
       @to_all_authorized = to_all_authorized
       @send_to_owner_as = send_to_owner_as
