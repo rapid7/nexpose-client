@@ -40,8 +40,7 @@ module Nexpose
     # Sender that e-mail will be attributed to.
     # [String] an email address
     attr_accessor :sender
-    # SMTP relay server. This is necessary to avoid security issue for
-    # internal network.
+    # SMTP relay server.
     # [String] the IP address, host name or FQDN of the SMTP server.
     attr_accessor :smtp_relay_server
     # Recipients will be in form of email address.
