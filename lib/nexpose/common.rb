@@ -250,7 +250,6 @@ module Nexpose
       xml.attributes['start'] = @start if @start
       xml.attributes['maxDuration'] = @max_duration if @max_duration
       xml.attributes['notValidAfter'] = @not_valid_after if @not_valid_after
-      xml.attributes['incremental'] = @incremental ? 1 : 0 if @incremental
       xml.attributes['repeaterType'] = @repeater_type if @repeater_type
       xml.attributes['is_extended'] = @is_extended if @is_extended
       xml.attributes['hour'] = @hour if @hour
@@ -277,7 +276,6 @@ module Nexpose
       # Optional parameters.
       schedule.max_duration = xml.attributes['maxDuration'].to_i if xml.attributes['maxDuration']
       schedule.not_valid_after = xml.attributes['notValidAfter'] if xml.attributes['notValidAfter']
-      schedule.incremental = (xml.attributes['incremental'] && xml.attributes['incremental'] == '1')
       schedule.repeater_type = xml.attributes['repeaterType'] if xml.attributes['repeaterType']
       schedule.is_extended = xml.attributes['is_extended'] if xml.attributes['is_extended']
       schedule.hour = xml.attributes['hour'] if xml.attributes['hour']
