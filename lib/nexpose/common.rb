@@ -149,13 +149,18 @@ module Nexpose
     attr_accessor :day
     attr_accessor :occurrence
     attr_accessor :start_month
-    # Timezone cannot be set on schedule create, it is set to console timezone. If console timezone is not supported it defaults to utc.
+    # Timezone in which start time run. If not set will default to console timezone.
+    # If console timezone is not supported it defaults to utc.
     attr_accessor :timezone
     attr_accessor :next_run_time
     # scan-schedule attributes
     attr_accessor :repeater_type
     # Scan template to use when starting a scan job.
     attr_accessor :scan_template_id
+    # Starting time of the scheduled scan (in ISO 8601 format). Relative to the console timezone
+    attr_accessor :console_start
+    # The timezone of the console.
+    attr_accessor :console_timezone
 
     # @param [Time] start
     def initialize(type, interval, start, enabled = true, scan_template_id = nil)
@@ -182,6 +187,8 @@ module Nexpose
       schedule.not_valid_after = Nexpose::ISO8601.to_time(hash[:not_valid_after_date]) if hash[:not_valid_after_date]
       schedule.timezone = hash[:time_zone] if hash[:time_zone]
       schedule.next_run_time = hash[:next_run_time] if hash[:next_run_time]
+      schedule.console_start = Nexpose::ISO8601.to_time(hash[:console_start_date]) if hash[:console_start_date]
+      schedule.console_timezone = hash[:console_time_zone] if hash[:console_time_zone]
 
       unless repeat_scan_hash.nil?
         schedule.type = repeat_scan_hash[:type]
