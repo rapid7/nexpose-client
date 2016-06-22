@@ -8,7 +8,8 @@ module Nexpose
     attr_accessor :blackout_type
     # The repeat interval based upon type.
     attr_accessor :blackout_interval
-    # The earliest date to generate the report on (in ISO 8601 format).
+    # Starting time of the blackout (in unix epoch with milliseconds. Example: 1464956590000)
+    # The timezone is the timezone of the console. If the console timezone is not supported it defaults to utc.
     attr_accessor :blackout_start
     # The amount of time, in minutes, a blackout period should last.
     attr_accessor :blackout_duration

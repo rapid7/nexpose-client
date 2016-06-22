@@ -10,7 +10,7 @@ module Nexpose
     attr_accessor :schedule_type
     # The repeat interval based upon type.
     attr_accessor :schedule_interval
-    # The earliest date to generate the report on (in ISO 8601 format).
+    # Starting time of the backup task (in unix epoch with milliseconds. Example: 1464956590000)
     attr_accessor :schedule_start
     # The description of the backup. Defaults to nil if not set
     attr_accessor :description
