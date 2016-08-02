@@ -274,18 +274,19 @@ module Nexpose
     attr_reader :id
 
     def initialize(source = nil, id = nil)
-      @id, @source = id, source
+      @id = id
+      @source = source
     end
 
     def to_h
       { source: source,
-        id: id}
+        id: id }
     end
 
     def <=>(other)
       c = source <=> other.source
       return c unless c == 0
-      c = id <=> other.id
+      id <=> other.id
     end
 
     def ==(other)
