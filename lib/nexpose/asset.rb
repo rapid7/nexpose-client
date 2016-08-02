@@ -268,7 +268,7 @@ module Nexpose
   # Unique system identifiers on an asset.
   #
   class UniqueIdentifier < APIObject
-    # User account name.
+    # The source name for the uniuqe identifier.
     attr_reader :source
     # Unique identifier of the user as determined by the asset (not Nexpose).
     attr_reader :id
