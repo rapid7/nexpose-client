@@ -79,6 +79,8 @@ module Nexpose
       attr_accessor :groups
       # Files and directories on the asset.
       attr_accessor :files
+      # Unique system identifiers on the asset.
+      attr_accessor :unique_identifiers
       # A list of key-value attributes associated with the asset.
       attr_accessor :attributes
       # Asset-level vulnerabilities.
@@ -92,6 +94,7 @@ module Nexpose
         @users = []
         @groups = []
         @files = []
+        @unique_identifiers = []
         @vulnerabilities = []
       end
 
@@ -113,6 +116,7 @@ module Nexpose
           users: users.map(&:to_h),
           groups: groups.map(&:to_h),
           files: files.map(&:to_h),
+          unique_identifiers: unique_identifiers.map(&:to_h),
           vulnerabilities: vulnerabilities.map(&:to_h),
           attributes: Attributes.to_hash(attributes) }
       end
