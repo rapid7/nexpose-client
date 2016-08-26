@@ -3,9 +3,10 @@ sudo: false
 cache: bundler
 rvm:
   - 2.1.5
-  - 2.1.8
-  - 2.2.4
-  - 2.3.0
+  - 2.1
+  - 2.2
+  - 2.3
+  - jruby
 script: bundle exec rspec --color --format=documentation
 addons:
   code_climate:
