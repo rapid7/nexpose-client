@@ -6,7 +6,9 @@ rvm:
   - 2.1.9
   - 2.2.5
   - 2.3.1
-  - jruby
+  - ruby-head
+  - jruby-9.0.5.0
+  - jruby-head
 script: bundle exec rspec --color --format=documentation
 addons:
   code_climate:
