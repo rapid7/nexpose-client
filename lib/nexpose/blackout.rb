@@ -15,17 +15,25 @@ module Nexpose
     attr_accessor :blackout_duration
 
     def initialize(start, enabled=true, duration, type, interval)
-      @blackout_start = start
-      @enabled =enabled
+      @blackout_start    = start
+      @enabled           = enabled
       @blackout_duration = duration.to_i
-      @blackout_type = type
+      @blackout_type     = type
       @blackout_interval = interval.to_i
     end
 
     def self.from_hash(hash)
       repeat_blackout_hash = hash[:repeat_blackout]
-      blackout = new(hash[:start_date], hash[:blackout_duration], repeat_blackout_hash[:type], repeat_blackout_hash[:interval])
-      blackout
+
+      if repeat_blackout_hash.nil?
+        type     = 'daily'
+        interval = 0
+      else
+        type     = repeat_blackout_hash[:type]
+        interval = repeat_blackout_hash[:interval]
+      end
+
+      new(hash[:start_date], hash[:blackout_duration], type, interval)
     end
 
     def to_h
