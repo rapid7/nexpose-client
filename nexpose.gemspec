@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('codeclimate-test-reporter', '~> 0.4.6')
   s.add_development_dependency('simplecov', '~> 0.9.1')
   s.add_development_dependency('rspec', '~> 3.2')
-  s.add_development_dependency('rubocop', '~> 0.29.0')
+  s.add_development_dependency('rubocop')
   s.add_development_dependency('webmock', '~> 1.20.4')
   s.add_development_dependency('vcr', '~> 2.9.3')
 end
