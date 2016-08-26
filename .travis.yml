@@ -8,7 +8,31 @@ rvm:
   - 2.3.1
   - ruby-head
   - jruby-9.0.5.0
-  - jruby-head
+jdk:
+  - oraclejdk8
+  - openjdk8
+matrix:
+  exclude:
+    - rvm: 2.1.5
+      jdk: openjdk8
+    - rvm: 2.1.5
+      jdk: oraclejdk8
+    - rvm: 2.1.9
+      jdk: openjdk8
+    - rvm: 2.1.9
+      jdk: oraclejdk8
+    - rvm: 2.2.5
+      jdk: openjdk8
+    - rvm: 2.2.5
+      jdk: oraclejdk8
+    - rvm: 2.3.1
+      jdk: openjdk8
+    - rvm: 2.3.1
+      jdk: oraclejdk8
+    - rvm: ruby-head
+      jdk: openjdk8
+    - rvm: ruby-head
+      jdk: oraclejdk8
 script: bundle exec rspec --color --format=documentation
 addons:
   code_climate:
