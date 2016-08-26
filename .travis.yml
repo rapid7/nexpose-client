@@ -3,9 +3,9 @@ sudo: false
 cache: bundler
 rvm:
   - 2.1.5
-  - 2.1
-  - 2.2
-  - 2.3
+  - 2.1.9
+  - 2.2.5
+  - 2.3.1
   - jruby
 script: bundle exec rspec --color --format=documentation
 addons:
