@@ -53,8 +53,7 @@ module Nexpose
     #
     module Field
       # Search for an Asset by name.
-      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, CONTAINS,
-      #                  NOT_CONTAINS
+      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, CONTAINS, NOT_CONTAINS
       ASSET = 'ASSET'
 
       # Search for an Asset by CVE ID
@@ -90,8 +89,7 @@ module Nexpose
       CVSS_SCORE = 'CVSS_SCORE'
 
       # Valid Operators: IN, NOT_IN
-      # Valid Values (See Value::HostType): UNKNOWN, VIRTUAL, HYPERVISOR,
-      #                                     BARE_METAL
+      # Valid Values (See Value::HostType): UNKNOWN, VIRTUAL, HYPERVISOR, BARE_METAL
       HOST_TYPE = 'HOST_TYPE'
 
       # Valid Operators: IN, NOT_IN
@@ -121,8 +119,7 @@ module Nexpose
       RISK_SCORE = 'RISK_SCORE'
 
       # Search based on the last scan date of an asset.
-      # Valid Operators: ON_OR_BEFORE, ON_OR_AFTER, BETWEEN, EARLIER_THAN,
-      #                  WITHIN_THE_LAST
+      # Valid Operators: ON_OR_BEFORE, ON_OR_AFTER, BETWEEN, EARLIER_THAN, WITHIN_THE_LAST
       # Valid Values: Use Value::ScanDate::FORMAT for date arguments.
       #               Use FixNum for day arguments.
       SCAN_DATE = 'SCAN_DATE'
@@ -139,8 +136,7 @@ module Nexpose
       # Valid Operators: CONTAINS, NOT_CONTAINS
       SOFTWARE = 'SOFTWARE'
 
-      # Valid Operators: IS, IS_NOT, GREATER_THAN, LESS_THAN, IS_APPLIED,
-      #                  IS_NOT_APPLIED
+      # Valid Operators: IS, IS_NOT, GREATER_THAN, LESS_THAN, IS_APPLIED, IS_NOT_APPLIED
       # Valid Values: VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW
       USER_ADDED_CRITICALITY_LEVEL = 'TAG_CRITICALITY'
 
@@ -165,13 +161,11 @@ module Nexpose
       VULNERABILITY = 'VULNERABILITY'
 
       # Valid Operators: INCLUDE, DO_NOT_INCLUDE
-      # Valid Values (See Value::VulnerabilityExposure): MALWARE, METASPLOIT,
-      #                                                  DATABASE
+      # Valid Values (See Value::VulnerabilityExposure): MALWARE, METASPLOIT, DATABASE
       VULNERABILITY_EXPOSURES = 'VULNERABILITY_EXPOSURES'
 
       # Search by VULNERABILITY CATEGORY
-      # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS, STARTS_WITH,
-      #                  ENDS_WITH
+      # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS, STARTS_WITH, ENDS_WITH
       VULN_CATEGORY = 'VULN_CATEGORY'
     end
 
