@@ -103,14 +103,14 @@ module Nexpose
     def download(url, file_name = nil)
       return nil if url.nil? or url.empty?
       uri = URI.parse(url)
-      
+
       headers = {'Cookie' => "nexposeCCSessionID=#{@session_id}"}
-      
-      Net::HTTP.start(@host, @port, 
-                      use_ssl: true, 
+
+      Net::HTTP.start(@host, @port,
+                      use_ssl: true,
                       verify_mode: OpenSSL::SSL::VERIFY_NONE) do |http|
         request = Net::HTTP::Get.new(uri.to_s, headers)
-        
+
         http.request(request) do |response|
           if filename
             File.open(filename, 'wb') do |f|
