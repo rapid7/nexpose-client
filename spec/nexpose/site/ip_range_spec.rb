@@ -29,7 +29,52 @@ describe Nexpose::IPRange do
       end
     end
   end
-
+  describe '#include?' do
+    context 'testing inclusion from a single ip' do
+      subject { Nexpose::IPRange.new('192.168.1.1') }
+      context 'with an IPAddr argument' do
+        it 'returns false if the other ip is not equal' do
+          other = IPAddr.new('192.168.1.2')
+          expect(subject.include?(other)).to be_falsey
+        end
+        it 'returns true if the other ip is equal' do
+          other = IPAddr.new('192.168.1.1')
+          expect(subject.include?(other)).to be_truthy
+        end
+      end
+      context 'with an IPRange argument' do
+        it 'returns false if the other.size > 1' do
+          other = Nexpose::IPRange.new('192.168.1.1','192.168.1.2')
+          expect(subject.include?(other)).to be_falsey
+        end
+        it 'returns false if the other.size==1 and other.from!=self.from' do
+          other = Nexpose::IPRange.new('192.168.1.2')
+          expect(subject.include?(other)).to be_falsey
+        end
+        it 'returns true if the other.from == self.from' do
+          other = Nexpose::IPRange.new('192.168.1.1')
+          expect(subject.include?(other)).to be_falsey
+        end
+      end
+    end
+    context 'testing inclusion from a spanning range' do
+      subject { Nexpose::IPRange.new('192.168.1.1','192.168.1.3') }
+      context 'with an IPAddr argument' do
+        it 'returns true if self.from <= other <= self.to'
+        it 'returns false otherwise'
+        it 'raises an ArgumentError if the string cannot instantiate an IPAddr'
+      end
+      context 'with an IPRange argument' do
+        it 'returns false if the other.size > 1'
+        it 'returns true if the other self.from == self.from'
+      end
+    end
+    context 'called with a castable other' do
+      subject { Nexpose::IPRange.new('192.168.1.1','192.168.1.3') }
+      it 'casts other to IPAddr'
+      it 'raises an ArgumentError for unusable arguments'
+    end
+  end
   describe '#as_xml' do
     include Helpers::XML
 
