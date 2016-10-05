@@ -130,21 +130,15 @@ module Nexpose
 
     def include_iprange?(other)
       if (other.to==nil) && (self.to==nil)
-        warn "self single ip #{self.to_s} <=> other single ip #{other.to_s}"
         eql?(other)
       elsif (other.to==nil) && (self.to!=nil)
-        warn "self spanning range #{self.to_s} <=> other single ip #{other.to_s}"
-        #binding.pry
         ip_from    = IPAddr.new(self.from)
         ip_to      = IPAddr.new(self.to)
         other_from = IPAddr.new(other.from)
         (ip_from <= other_from) && (other_from <= ip_to)
       elsif (other.to!=nil) && (self.to==nil)
-        warn "self single ip #{self.to_s} <=> other spanning range #{other.to_s}"
         false
       else
-        warn "self spanning range #{self.to_s} <=> other spanning range #{other.to_s}"
-        #binding.pry
         ip_from    = IPAddr.new(self.from)
         ip_to      = IPAddr.new(self.to)
         other_from = IPAddr.new(other.from)
