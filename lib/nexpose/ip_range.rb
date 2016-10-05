@@ -78,6 +78,27 @@ module Nexpose
       @from == other.from && @to == other.to
     end
 
+    #
+    # @overload include?(other)
+    #   @param other [IPAddr] /32 IP address
+    #
+    # @overload include?(IPAddr)
+    #   @param other [IPAddr] CIDR range
+    #
+    # @overload include?(other)
+    #   @param other [IPRange] single IP address
+    #
+    # @overload include?(other)
+    #   @param other [IPRange] IPRange spanning multiple IPs
+    #
+    # @overload include?(other)
+    #   @param other [String] /32 IP address
+    #
+    # @overload include?(other)
+    #   @param other [String] CIDR range
+    #
+    # @return [FalseClass]|[TrueClass] if other is bounded inclusively by #from and #to
+    #
     def include?(other)
       case other
       when IPAddr
@@ -96,7 +117,7 @@ module Nexpose
         end
         include_ipaddr?(other_addr)
       else
-        raise ArgumentError, "invalid type"
+        raise ArgumentError, "invalid type: #{other.class.to_s} not one of IPAddr, String, Nexpose::IPRange"
       end
     end
 
@@ -119,7 +140,7 @@ module Nexpose
       return from.to_s if to.nil?
       "#{from.to_s} - #{to.to_s}"
     end
-
+    private 
     def include_ipaddr?(other)
       other_range = other.to_range
       other_from  = other_range.first
