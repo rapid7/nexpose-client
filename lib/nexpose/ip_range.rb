@@ -131,13 +131,13 @@ module Nexpose
     def include_iprange?(other)
       if (other.to==nil) && (self.to==nil)
         eql?(other)
+      elsif (other.to!=nil) && (self.to==nil)
+        false
       elsif (other.to==nil) && (self.to!=nil)
         ip_from    = IPAddr.new(self.from)
         ip_to      = IPAddr.new(self.to)
         other_from = IPAddr.new(other.from)
         (ip_from <= other_from) && (other_from <= ip_to)
-      elsif (other.to!=nil) && (self.to==nil)
-        false
       else
         ip_from    = IPAddr.new(self.from)
         ip_to      = IPAddr.new(self.to)
