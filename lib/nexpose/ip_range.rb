@@ -85,10 +85,18 @@ module Nexpose
       when Nexpose::IPRange
         include_iprange?(other)
       when String
-        other_addr = IPAddr.new(other)
+        begin
+          other_addr = IPAddr.new(other)
+        rescue IPAddr::InvalidAddressError => invalid_address
+         warn "could not coerce \"#{other}\" to IPAddr at #{invalid_address.backtrace[0]}: #{invalid_address.cause.to_s}"
+          return false
+        rescue IPAddr::AddressFamilyError => address_family
+          warn "could not coerce \"#{other}\" to IPAddr at #{address_family.backtrace[0]}: #{address_family.cause.to_s}"
+          return false
+        end
         include_ipaddr?(other_addr)
       else
-        raise ArgumentError, "don't know what to do with #{other.class.to_s}"
+        raise ArgumentError, "invalid type"
       end
     end
 
@@ -121,13 +129,26 @@ module Nexpose
     end
 
     def include_iprange?(other)
-      if other.to==nil
+      if (other.to==nil) && (self.to==nil)
+        warn "self single ip #{self.to_s} <=> other single ip #{other.to_s}"
         eql?(other)
+      elsif (other.to==nil) && (self.to!=nil)
+        warn "self spanning range #{self.to_s} <=> other single ip #{other.to_s}"
+        #binding.pry
+        ip_from    = IPAddr.new(self.from)
+        ip_to      = IPAddr.new(self.to)
+        other_from = IPAddr.new(other.from)
+        (ip_from <= other_from) && (other_from <= ip_to)
+      elsif (other.to!=nil) && (self.to==nil)
+        warn "self single ip #{self.to_s} <=> other spanning range #{other.to_s}"
+        false
       else
-        ip_from    = IPAddr.new(self.from,Socket::AF_INET)
-        ip_to      = IPAddr.new(self.to,Socket::AF_INET)
-        other_from = IPAddr.new(other.from,Socket::AF_INET)
-        other_to   = IPAddr.new(other.to,Socket::AF_INET)
+        warn "self spanning range #{self.to_s} <=> other spanning range #{other.to_s}"
+        #binding.pry
+        ip_from    = IPAddr.new(self.from)
+        ip_to      = IPAddr.new(self.to)
+        other_from = IPAddr.new(other.from)
+        other_to   = IPAddr.new(other.to)
         (ip_from <= other_from) && (other_to <= ip_to)
       end
     end
