@@ -140,7 +140,7 @@ module Nexpose
       return from.to_s if to.nil?
       "#{from.to_s} - #{to.to_s}"
     end
-
+    private 
     def include_ipaddr?(other)
       other_range = other.to_range
       other_from  = other_range.first
