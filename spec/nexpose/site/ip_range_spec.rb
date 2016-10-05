@@ -30,51 +30,130 @@ describe Nexpose::IPRange do
     end
   end
   describe '#include?' do
-    context 'testing inclusion from a single ip' do
-      subject { Nexpose::IPRange.new('192.168.1.1') }
-      context 'with an IPAddr argument' do
+    context 'with an uncastable argument' do
+      it 'returns false for stringlike arguments that cannot be coerced'
+    end
+  end
+  describe '#include_ipaddr?' do
+    context 'calling from a range of one ip' do
+      context 'with a /32 argument' do
+        let(:single) { Nexpose::IPRange.new('192.168.1.1') }
         it 'returns false if the other ip is not equal' do
           other = IPAddr.new('192.168.1.2')
-          expect(subject.include?(other)).to be_falsey
+          expect(single.include_ipaddr?(other)).to be_falsey
         end
         it 'returns true if the other ip is equal' do
           other = IPAddr.new('192.168.1.1')
-          expect(subject.include?(other)).to be_truthy
+          expect(single.include_ipaddr?(other)).to be_truthy
         end
       end
-      context 'with an IPRange argument' do
-        it 'returns false if the other.size > 1' do
-          other = Nexpose::IPRange.new('192.168.1.1','192.168.1.2')
-          expect(subject.include?(other)).to be_falsey
+      context 'with a CIDR network argument ' do
+        let(:single_aligned) { Nexpose::IPRange.new('192.168.1.0') }
+        it 'returns false if self.from == other base and masklen != 32' do
+          cidr_28 = IPAddr.new('192.168.1.0/28')
+          expect(single_aligned.include_ipaddr?(cidr_28)).to be_falsey
         end
-        it 'returns false if the other.size==1 and other.from!=self.from' do
-          other = Nexpose::IPRange.new('192.168.1.2')
-          expect(subject.include?(other)).to be_falsey
+        it 'returns false if self.from != other base and masklen != 32' do
+          cidr_28_succ = IPAddr.new('192.168.1.1/28')
+          expect(single_aligned.include_ipaddr?(cidr_28_succ)).to be_falsey
         end
-        it 'returns true if the other.from == self.from' do
-          other = Nexpose::IPRange.new('192.168.1.1')
-          expect(subject.include?(other)).to be_falsey
+
+        it 'returns true if self.from == other base and masklen == 32' do
+          cidr_32 = IPAddr.new('192.168.1.0/32')
+          expect(single_aligned.include_ipaddr?(cidr_32)).to be_truthy
+        end
+        it 'returns false if self.from != other base and masklen == 32' do
+          cidr_32_succ = IPAddr.new('192.168.1.1/32')
+          expect(single_aligned.include_ipaddr?(cidr_32_succ)).to be_falsey
         end
       end
     end
-    context 'testing inclusion from a spanning range' do
-      subject { Nexpose::IPRange.new('192.168.1.1','192.168.1.3') }
-      context 'with an IPAddr argument' do
-        it 'returns true if self.from <= other <= self.to'
-        it 'returns false otherwise'
-        it 'raises an ArgumentError if the string cannot instantiate an IPAddr'
+    context 'calling from a spanning range' do
+
+      context 'with a /32 argument' do
+        let(:span_10_100) { Nexpose::IPRange.new('192.168.1.10','192.168.1.100') }
+        it 'returns false if self.to < other' do
+          outside_right = IPAddr.new('192.168.1.101/32')
+          expect(span_10_100.include_ipaddr?(outside_right)).to be_falsey
+        end
+        it 'returns false if self.from > other' do
+          outside_left = IPAddr.new('192.168.1.1/32')
+          expect(span_10_100.include_ipaddr?(outside_left)).to be_falsey
+        end
       end
-      context 'with an IPRange argument' do
-        it 'returns false if the other.size > 1'
-        it 'returns true if the other self.from == self.from'
+      context 'calling from an aligned range' do
+        it 'returns true if self == other' do
+          range = Nexpose::IPRange.new('192.168.1.64','192.168.1.127')
+          same_cidr = IPAddr.new('192.168.1.64/26')
+          expect(range.include_ipaddr?(same_cidr)).to be_truthy
+        end
+
+        it 'returns false for uncovered left and uncovered right' do
+          range = Nexpose::IPRange.new('192.168.1.64','192.168.1.127')
+          uncovered_cidr = IPAddr.new('192.168.1.0/24')
+          expect(range.include_ipaddr?(uncovered_cidr)).to be_falsey
+        end
+        it 'returns false for uncovered left and equal right' do
+          range = Nexpose::IPRange.new('192.168.1.64','192.168.1.127')
+          uncovered_left_equal_right = IPAddr.new('192.168.1.64/25')
+          expect(range.include_ipaddr?(uncovered_left_equal_right)).to be_falsey
+        end
+        it 'returns false for equal left and uncovered right' do
+          range = Nexpose::IPRange.new('192.168.1.0','192.168.1.127')
+          equal_left_uncovered_right = IPAddr.new('192.168.1.0/24')
+          expect(range.include_ipaddr?(equal_left_uncovered_right)).to be_falsey
+        end
+        it 'returns false for included left and uncovered right' do
+          range = Nexpose::IPRange.new('192.168.1.64','192.168.1.95')
+          included_left_uncovered_right = IPAddr.new('192.168.1.65/26')
+          expect(range.include_ipaddr?(included_left_uncovered_right)).to be_falsey
+        end
+        it 'returns true for equal left and equal right'
+        it 'returns true for included left and equal right'
+        it 'returns true for equal left and included right'
+        it 'returns true for included left and included right'
       end
-    end
-    context 'called with a castable other' do
-      subject { Nexpose::IPRange.new('192.168.1.1','192.168.1.3') }
-      it 'casts other to IPAddr'
-      it 'raises an ArgumentError for unusable arguments'
     end
   end
+  describe '#include_iprange?' do
+    context 'calling from a single ip' do
+      let(:single) { Nexpose::IPRange.new('192.168.1.1') }
+      it 'returns true if self.from == other.from and other.to.nil?'
+      it 'returns false for other.from < self.from and other.to.nil?'
+      it 'returns false for other.from > self.from and other.to.nil?'
+      it 'returns false for self.from == other.from and other.to not nil'
+      it 'returns false for self.from < other.from and other.to not nil'
+      it 'returns false for self.from > other.from and other.to not nil'
+    end
+    context 'called from a spanning range' do
+      let(:spanning) { Nexpose::IPRange.new('192.168.1.1','192.168.1.100') }
+      it 'returns false for other.from < self.from' do
+        uncovered_left = Nexpose::IPRange.new('192.168.1.0','192.168.1.2')
+        expect(spanning.include_iprange?(uncovered_left)).to be_falsey
+      end
+      it 'returns false for self.to < other.to' do
+        uncovered_right = Nexpose::IPRange.new('192.168.1.2','192.168.1.105')
+        expect(spanning.include_iprange?(uncovered_right)).to be_falsey
+      end
+      it 'returns true for self.from < other.from && other.to < self.to'  do
+        fully_included = Nexpose::IPRange.new('192.168.1.2','192.168.1.99')
+        expect(spanning.include_iprange?(fully_included)).to be_truthy
+      end
+      it 'returns true for self.from < other.from && other.to == self.to'  do
+        same_right = Nexpose::IPRange.new('192.168.1.2','192.168.1.100')
+        expect(spanning.include_iprange?(same_right)).to be_truthy
+      end
+      it 'returns true for self.from == other.from && other.to < self.to'  do
+        same_left = Nexpose::IPRange.new('192.168.1.1','192.168.1.3')
+        expect(spanning.include_iprange?(same_left)).to be_truthy
+      end
+      it 'returns true for self==other' do
+        same = Nexpose::IPRange.new('192.168.1.1','192.168.1.100')
+        expect(spanning.include_iprange?(same)).to be_truthy
+      end
+    end
+  end
+
   describe '#as_xml' do
     include Helpers::XML
 

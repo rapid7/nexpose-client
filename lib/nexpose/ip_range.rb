@@ -78,18 +78,17 @@ module Nexpose
       @from == other.from && @to == other.to
     end
 
-    def include?(single_ip)
-      return false unless single_ip.respond_to? :from
-      from = IPAddr.new(@from)
-      to = @to.nil? ? from : IPAddr.new(@to)
-      other = IPAddr.new(single_ip)
-
-      if other < from
-        false
-      elsif to < other
-        false
+    def include?(other)
+      case other
+      when IPAddr
+        include_ipaddr?(other)
+      when Nexpose::IPRange
+        include_iprange?(other)
+      when String
+        other_addr = IPAddr.new(other)
+        include_ipaddr?(other_addr)
       else
-        true
+        raise ArgumentError, "don't know what to do with #{other.class.to_s}"
       end
     end
 
@@ -111,6 +110,26 @@ module Nexpose
     def to_s
       return from.to_s if to.nil?
       "#{from.to_s} - #{to.to_s}"
+    end
+
+    def include_ipaddr?(other)
+      other_range = other.to_range
+      other_from  = other_range.first
+      other_to    = other_range.last
+      other_iprange = Nexpose::IPRange.new(other_from.to_s, other_to.to_s)
+      include_iprange?(other_iprange)
+    end
+
+    def include_iprange?(other)
+      if other.to==nil
+        eql?(other)
+      else
+        ip_from    = IPAddr.new(self.from,Socket::AF_INET)
+        ip_to      = IPAddr.new(self.to,Socket::AF_INET)
+        other_from = IPAddr.new(other.from,Socket::AF_INET)
+        other_to   = IPAddr.new(other.to,Socket::AF_INET)
+        (ip_from <= other_from) && (other_to <= ip_to)
+      end
     end
   end
 end
