@@ -117,7 +117,7 @@ module Nexpose
         end
         include_ipaddr?(other_addr)
       else
-        raise ArgumentError, "invalid type: #{other.class.to_s} not one of IPAddr, String, Nexpose::IPRange"
+        raise ArgumentError, "incompatible type: #{other.class.to_s} not one of IPAddr, String, Nexpose::IPRange"
       end
     end
 
