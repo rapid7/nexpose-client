@@ -73,9 +73,25 @@ describe Nexpose::IPRange do
       end
     end
 
-    shared_examples_for 'incompatible type' do
-      it 'raises an IncompatibleType exception for uncastable strings'
-      it 'raises an IncompatibleType exception for unusable types' 
+    shared_examples_for 'uncastable string' do |unusable_string|
+      it 'only works on strings' do
+        expect(unusable_string).to be_a(String)
+      end
+
+      it 'returns false' do
+        expect(iprange.include?(unusable_string)).to be_falsey
+      end
+
+      it 'traps exceptions from IPAddr.initialize' do
+        expect{ iprange.include?(unusable_string) }.not_to raise_error
+      end
+
+    end
+
+    shared_examples_for 'incompatible type' do |other|
+      it 'raises an ArgumentError' do
+        expect{ iprange.include?(other) }.to raise_error( ArgumentError, /incompatible type/)
+      end
     end
 
     context 'when IPRange contains a single address' do
@@ -88,7 +104,6 @@ describe Nexpose::IPRange do
       covered_cidr   = '192.168.1.81/32'
 
       it_behaves_like 'covered compatible type', equivalent
-
 
       it_behaves_like 'uncovered compatible type', below_subject
       it_behaves_like 'uncovered compatible type', above_subject
@@ -113,6 +128,13 @@ describe Nexpose::IPRange do
         expect(iprange.include?(equiv_host_32)).to be_truthy
       end
 
+      context 'making invalid comparisons' do
+        it_behaves_like 'uncastable string', 'kitten'
+        it_behaves_like 'uncastable string', '0'
+        it_behaves_like 'incompatible type', 0
+        it_behaves_like 'incompatible type', :kitten
+        it_behaves_like 'incompatible type', nil
+      end
     end
 
     context 'when IPRange spans multiple addresses' do
@@ -167,6 +189,14 @@ describe Nexpose::IPRange do
         it_behaves_like 'uncovered address', Nexpose::IPRange.new(below_subject, above_subject)
         it_behaves_like 'uncovered address', Nexpose::IPRange.new(lower_bound, above_subject)
         it_behaves_like 'uncovered address', Nexpose::IPRange.new(inside_subject, above_subject)
+      end
+
+      context 'making invalid comparisons' do
+        it_behaves_like 'uncastable string', 'kitten'
+        it_behaves_like 'uncastable string', '0'
+        it_behaves_like 'incompatible type', 0
+        it_behaves_like 'incompatible type', :kitten
+        it_behaves_like 'incompatible type', nil
       end
     end
   end
