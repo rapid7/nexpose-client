@@ -30,7 +30,6 @@ describe Nexpose::IPRange do
     end
   end
   describe '#include?' do
-
     shared_examples_for 'covered compatible type' do |host_addr|
       it 'returns true for IPAddr arguments' do
         other = IPAddr.new(host_addr)
@@ -83,28 +82,28 @@ describe Nexpose::IPRange do
       end
 
       it 'traps exceptions from IPAddr.initialize' do
-        expect{ iprange.include?(unusable_string) }.not_to raise_error
+        expect { iprange.include?(unusable_string) }.not_to raise_error
       end
 
       it 'emits a warning to stderr' do
-        expect{ iprange.include?(unusable_string) }.to output(/could not coerce/).to_stderr
+        expect { iprange.include?(unusable_string) }.to output(/could not coerce/).to_stderr
       end
     end
 
     shared_examples_for 'incompatible type' do |other|
       it 'raises an ArgumentError' do
-        expect{ iprange.include?(other) }.to raise_error( ArgumentError, /incompatible type/)
+        expect { iprange.include?(other) }.to raise_error(ArgumentError, /incompatible type/)
       end
     end
 
     context 'when IPRange contains a single address' do
-      let( :iprange )        { Nexpose::IPRange.new('192.168.1.81') }
+      let(:iprange) { Nexpose::IPRange.new('192.168.1.81') }
 
-      below_subject  = '192.168.1.80'
-      above_subject  = '192.168.1.82'
+      below_subject = '192.168.1.80'
+      above_subject = '192.168.1.82'
       uncovered_cidr = '192.168.1.64/28'
-      equivalent     = '192.168.1.81'
-      covered_cidr   = '192.168.1.81/32'
+      equivalent = '192.168.1.81'
+      covered_cidr = '192.168.1.81/32'
 
       it_behaves_like 'covered compatible type', equivalent
 
@@ -112,16 +111,16 @@ describe Nexpose::IPRange do
       it_behaves_like 'uncovered compatible type', above_subject
       it_behaves_like 'uncovered compatible type', uncovered_cidr
 
-      it_behaves_like 'covered address',   Nexpose::IPRange.new(equivalent, equivalent)
-      it_behaves_like 'covered address',   Nexpose::IPRange.new(equivalent)
-      it_behaves_like 'covered address',   Nexpose::IPRange.new(equivalent, nil)
-      it_behaves_like 'covered address',   covered_cidr
-      it_behaves_like 'covered address',   IPAddr.new(covered_cidr)
+      it_behaves_like 'covered address', Nexpose::IPRange.new(equivalent, equivalent)
+      it_behaves_like 'covered address', Nexpose::IPRange.new(equivalent)
+      it_behaves_like 'covered address', Nexpose::IPRange.new(equivalent, nil)
+      it_behaves_like 'covered address', covered_cidr
+      it_behaves_like 'covered address', IPAddr.new(covered_cidr)
 
       it_behaves_like 'uncovered address', Nexpose::IPRange.new(below_subject, equivalent)
-      it_behaves_like 'uncovered address', Nexpose::IPRange.new(equivalent,    above_subject)
+      it_behaves_like 'uncovered address', Nexpose::IPRange.new(equivalent, above_subject)
       it_behaves_like 'uncovered address', Nexpose::IPRange.new(below_subject, above_subject)
-      
+
       context 'making invalid comparisons' do
         it_behaves_like 'uncastable string', 'kitten'
         it_behaves_like 'uncastable string', '0'
@@ -132,7 +131,7 @@ describe Nexpose::IPRange do
     end
 
     context 'when IPRange spans multiple addresses' do
-      let( :iprange ) { Nexpose::IPRange.new('192.168.1.64','192.168.1.95') }
+      let(:iprange) { Nexpose::IPRange.new('192.168.1.64', '192.168.1.95') }
 
       covered_cidr = '192.168.1.72/30'
       equivalent_cidr = '192.168.1.64/27'

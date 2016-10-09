@@ -27,17 +27,16 @@ module Nexpose
     #     x.x.x.0 and x.x.x.255).
     #
     # @return [IPRange] an IP address range of one or more addresses.
-    def initialize(from, to = nil)
-      @from = from
-      @to = to unless from == to
-
-      return unless @to.nil?
-
-      range = IPAddr.new(@from.to_s).to_range
-      unless range.one?
-        @from = range.first.to_s
-        @to = range.last.to_s
-      end
+    def initialize(lower, upper = nil)
+      range = IPAddr.new(lower).to_range
+      span = range.last.to_i - range.first.to_i
+      @to = case upper
+            when nil, lower
+              span > 0 ? range.last.to_s : nil
+            else
+              IPAddr.new(upper).to_s
+            end
+      @from = range.first.to_s
     end
 
     # Size of the IP range. The total number of IP addresses represented
@@ -46,26 +45,32 @@ module Nexpose
     # @return [Fixnum] size of the range.
     #
     def size
-      return 1 if @to.nil?
-      from = IPAddr.new(@from)
-      to = IPAddr.new(@to)
-      (from..to).to_a.size
+      1 + case @to
+          when nil
+            0
+          else
+            upper_ip.to_i - lower_ip.to_i
+          end
+    end
+
+    def single?
+      (size == 1)
     end
 
     include Comparable
 
     def <=>(other)
-      return 1 unless other.respond_to? :from
-      from = IPAddr.new(@from)
-      to = @to.nil? ? from : IPAddr.new(@to)
-      cf_from = IPAddr.new(other.from)
-      cf_to = IPAddr.new(other.to.nil? ? other.from : other.to)
-      if cf_to < from
-        1
-      elsif to < cf_from
-        -1
-      else # Overlapping
-        0
+      case other
+      when Nexpose::IPRange
+        if other.upper_ip < lower_ip
+          1
+        elsif upper_ip < other.lower_ip
+          -1
+        else # Overlapping
+          0
+        end
+      else
+        (addr = coerce_address(other)) ? self.<=>(Nexpose::IPRange.new(addr)) : 1
       end
     end
 
@@ -106,18 +111,10 @@ module Nexpose
       when Nexpose::IPRange
         include_iprange?(other)
       when String
-        begin
-          other_addr = IPAddr.new(other)
-        rescue IPAddr::InvalidAddressError => invalid_address
-         warn "could not coerce \"#{other}\" to IPAddr at #{invalid_address.backtrace[0]}: #{invalid_address.cause.to_s}"
-          return false
-        rescue IPAddr::AddressFamilyError => address_family
-          warn "could not coerce \"#{other}\" to IPAddr at #{address_family.backtrace[0]}: #{address_family.cause.to_s}"
-          return false
-        end
-        include_ipaddr?(other_addr)
+        other_addr = coerce_address(other)
+        other_addr ? include_ipaddr?(other_addr) : false
       else
-        raise ArgumentError, "incompatible type: #{other.class.to_s} not one of IPAddr, String, Nexpose::IPRange"
+        raise ArgumentError, "incompatible type: #{other.class} cannot be coerced to IPAddr or Nexpose::IPRange"
       end
     end
 
@@ -127,7 +124,7 @@ module Nexpose
 
     def as_xml
       xml = REXML::Element.new('range')
-      xml.add_attributes({ 'from' => @from, 'to' => @to })
+      xml.add_attributes('from' => @from, 'to' => @to)
       xml
     end
     alias_method :to_xml_elem, :as_xml
@@ -138,33 +135,42 @@ module Nexpose
 
     def to_s
       return from.to_s if to.nil?
-      "#{from.to_s} - #{to.to_s}"
+      "#{from} - #{to}"
     end
+
+    def lower_ip
+      IPAddr.new(@from)
+    end
+
+    def upper_ip
+      @to.nil? ? IPAddr.new(@from) : IPAddr.new(@to)
+    end
+
     private
+
+    def coerce_address(str)
+      addr = begin
+        IPAddr.new(str)
+      rescue IPAddr::AddressFamilyError, IPAddr::InvalidAddressError => invalid
+        warn format('could not coerce "%s" to IPAddr: %s', str, invalid.to_s)
+        false
+      end
+      addr
+    end
+
     def include_ipaddr?(other)
-      other_range = other.to_range
-      other_from  = other_range.first
-      other_to    = other_range.last
-      other_iprange = Nexpose::IPRange.new(other_from.to_s, other_to.to_s)
-      include_iprange?(other_iprange)
+      ip_range = other.to_range
+      lower = ip_range.first.to_s
+      upper = ip_range.last.to_s
+      nxp_iprange = Nexpose::IPRange.new(lower, upper)
+      include_iprange?(nxp_iprange)
     end
 
     def include_iprange?(other)
-      if (other.to==nil) && (self.to==nil)
-        eql?(other)
-      elsif (other.to!=nil) && (self.to==nil)
-        false
-      elsif (other.to==nil) && (self.to!=nil)
-        ip_from    = IPAddr.new(self.from)
-        ip_to      = IPAddr.new(self.to)
-        other_from = IPAddr.new(other.from)
-        (ip_from <= other_from) && (other_from <= ip_to)
+      if single?
+        other.single? ? eql?(other) : false
       else
-        ip_from    = IPAddr.new(self.from)
-        ip_to      = IPAddr.new(self.to)
-        other_from = IPAddr.new(other.from)
-        other_to   = IPAddr.new(other.to)
-        (ip_from <= other_from) && (other_to <= ip_to)
+        (lower_ip <= other.lower_ip) && (other.upper_ip <= upper_ip)
       end
     end
   end
