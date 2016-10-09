@@ -86,6 +86,9 @@ describe Nexpose::IPRange do
         expect{ iprange.include?(unusable_string) }.not_to raise_error
       end
 
+      it 'emits a warning to stderr' do
+        expect{ iprange.include?(unusable_string) }.to output(/could not coerce/).to_stderr
+      end
     end
 
     shared_examples_for 'incompatible type' do |other|
@@ -110,24 +113,15 @@ describe Nexpose::IPRange do
       it_behaves_like 'uncovered compatible type', uncovered_cidr
 
       it_behaves_like 'covered address',   Nexpose::IPRange.new(equivalent, equivalent)
-
+      it_behaves_like 'covered address',   Nexpose::IPRange.new(equivalent)
+      it_behaves_like 'covered address',   Nexpose::IPRange.new(equivalent, nil)
       it_behaves_like 'covered address',   covered_cidr
       it_behaves_like 'covered address',   IPAddr.new(covered_cidr)
 
       it_behaves_like 'uncovered address', Nexpose::IPRange.new(below_subject, equivalent)
       it_behaves_like 'uncovered address', Nexpose::IPRange.new(equivalent,    above_subject)
       it_behaves_like 'uncovered address', Nexpose::IPRange.new(below_subject, above_subject)
-
-      it 'returns true for IPRange objects initialized with equivalent /32 IPAddr host addresses', skip: true do
-        equiv_host_32 = Nexpose::IPRange.new(covered_cidr)
-        expect(iprange.include?(equiv_host_32)).to be_truthy # TODO: something with initialization
-      end
-
-      it 'returns true for IPRange objects initialized with equivalent /32 IPAddr host addresses', skip: true do
-        equiv_host_32 = Nexpose::IPRange.new(covered_cidr,nil)
-        expect(iprange.include?(equiv_host_32)).to be_truthy
-      end
-
+      
       context 'making invalid comparisons' do
         it_behaves_like 'uncastable string', 'kitten'
         it_behaves_like 'uncastable string', '0'
