@@ -92,7 +92,7 @@ describe Nexpose::IPRange do
 
     shared_examples_for 'incompatible type' do |other|
       it 'raises an ArgumentError' do
-        expect { iprange.include?(other) }.to raise_error(ArgumentError, /incompatible type/)
+        expect { iprange.include?(other) }.to raise_error(Nexpose::IPRange::IncompatibleType, /not IPAddr, Nexpose::IPRange, or String/)
       end
     end
 

@@ -83,6 +83,8 @@ module Nexpose
       @from == other.from && @to == other.to
     end
 
+    IncompatibleType = Class.new(ArgumentError)
+
     #
     # @overload include?(other)
     #   @param other [IPAddr] /32 IP address
@@ -114,7 +116,7 @@ module Nexpose
         other_addr = coerce_address(other)
         other_addr ? include_ipaddr?(other_addr) : false
       else
-        raise ArgumentError, "incompatible type: #{other.class} cannot be coerced to IPAddr or Nexpose::IPRange"
+        raise IncompatibleType, "#{other.class} not IPAddr, Nexpose::IPRange, or String"
       end
     end
 
@@ -137,6 +139,8 @@ module Nexpose
       return from.to_s if to.nil?
       "#{from} - #{to}"
     end
+
+    protected
 
     def lower_ip
       IPAddr.new(@from)
