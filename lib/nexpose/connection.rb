@@ -94,7 +94,8 @@ module Nexpose
     end
 
     # Download a specific URL, typically a report.
-    # Include an optional file_name parameter to write the output to a file.
+    # Include an optional file_name parameter to stream the output to a file.
+    # Pass a block to get the response as it is returned from the server
     #
     # Note: XML and HTML reports have charts not downloaded by this method.
     #       Would need to do something more sophisticated to grab
@@ -102,16 +103,29 @@ module Nexpose
     def download(url, file_name = nil)
       return nil if url.nil? or url.empty?
       uri = URI.parse(url)
-      http = Net::HTTP.new(@host, @port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE # XXX: security issue
-      headers = {'Cookie' => "nexposeCCSessionID=#{@session_id}"}
-      resp = http.get(uri.to_s, headers)
 
-      if file_name
-        ::File.open(file_name, 'wb') { |file| file.write(resp.body) }
-      else
-        resp.body
+      headers = {'Cookie' => "nexposeCCSessionID=#{@session_id}"}
+
+      Net::HTTP.start(@host, @port,
+                      use_ssl: true,
+                      verify_mode: OpenSSL::SSL::VERIFY_NONE) do |http|
+        request = Net::HTTP::Get.new(uri.to_s, headers)
+
+        http.request(request) do |response|
+          if filename
+            File.open(filename, 'wb') do |f|
+              response.read_body do |chunk|
+                f.write chunk
+              end
+            end
+          elsif block_given?
+            response.read_body do |chunk|
+              yield chunk
+            end
+          else
+            return response.body
+          end
+        end
       end
     end
   end
