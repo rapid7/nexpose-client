@@ -17,7 +17,7 @@ Release notes are available on the [Releases](https://github.com/rapid7/nexpose-
 
 ## Contributions
 
-We welcome contributions to this package. Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+We welcome contributions to this package. Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
 Our coding standards include:
 
