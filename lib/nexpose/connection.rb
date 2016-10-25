@@ -112,8 +112,8 @@ module Nexpose
         request = Net::HTTP::Get.new(uri.to_s, headers)
 
         http.request(request) do |response|
-          if filename
-            File.open(filename, 'wb') do |f|
+          if file_name
+            File.open(file_name, 'wb') do |f|
               response.read_body do |chunk|
                 f.write chunk
               end
