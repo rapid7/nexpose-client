@@ -113,7 +113,7 @@ module Nexpose
 
         http.request(request) do |response|
           if file_name
-            File.open(file_name, 'wb') do |f|
+            ::File.open(file_name, 'wb') do |f|
               response.read_body do |chunk|
                 f.write chunk
               end
