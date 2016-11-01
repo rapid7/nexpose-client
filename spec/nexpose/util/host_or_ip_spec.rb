@@ -5,7 +5,7 @@ describe Nexpose::HostOrIP do
 
   describe '.convert' do
     context 'with a fully qualified domain name' do
-      let(:asset) { asset = 'nexpose.local' }
+      let(:asset) { 'nexpose.local' }
 
       it 'returns a HostName' do
         observed = subject.convert(asset)
@@ -14,7 +14,7 @@ describe Nexpose::HostOrIP do
     end
 
     context 'with a hostname' do
-      let(:asset) { asset = 'target-host' }
+      let(:asset) { 'target-host' }
 
       it 'returns a HostName' do
         observed = subject.convert(asset)
@@ -23,8 +23,7 @@ describe Nexpose::HostOrIP do
     end
 
     context 'with an IP address' do
-      let(:asset) { asset = '192.168.1.1' }
-
+      let(:asset) { '192.168.1.1' }
 
       it 'returns an IPRange' do
         observed = subject.convert(asset)
@@ -32,9 +31,26 @@ describe Nexpose::HostOrIP do
       end
     end
 
-    context 'with an IP address range' do
-      let(:asset) { asset = '192.168.1.0/24' }
+    context 'with an IP address range in CIDR format' do
+      let(:asset) { '192.168.1.0/24' }
 
+      it 'returns an IPRange' do
+        observed = subject.convert(asset)
+        expect(observed).to be_a(Nexpose::IPRange)
+      end
+    end
+
+    context 'with an IP address range without whitespace' do
+      let(:asset) { '192.168.1.0-192.168.1.255' }
+
+      it 'returns an IPRange' do
+        observed = subject.convert(asset)
+        expect(observed).to be_a(Nexpose::IPRange)
+      end
+    end
+
+    context 'with an IP address range with whitespace' do
+      let(:asset) { '192.168.1.0   -   192.168.1.255' }
 
       it 'returns an IPRange' do
         observed = subject.convert(asset)

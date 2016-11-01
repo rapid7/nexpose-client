@@ -53,8 +53,7 @@ module Nexpose
     #
     module Field
       # Search for an Asset by name.
-      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, CONTAINS,
-      #                  NOT_CONTAINS
+      # Valid Operators: IS, IS_NOT, STARTS_WITH, ENDS_WITH, CONTAINS, NOT_CONTAINS
       ASSET = 'ASSET'
 
       # Search for an Asset by CVE ID
@@ -90,8 +89,7 @@ module Nexpose
       CVSS_SCORE = 'CVSS_SCORE'
 
       # Valid Operators: IN, NOT_IN
-      # Valid Values (See Value::HostType): UNKNOWN, VIRTUAL, HYPERVISOR,
-      #                                     BARE_METAL
+      # Valid Values (See Value::HostType): UNKNOWN, VIRTUAL, HYPERVISOR, BARE_METAL
       HOST_TYPE = 'HOST_TYPE'
 
       # Valid Operators: IN, NOT_IN
@@ -102,8 +100,9 @@ module Nexpose
       # Valid Values (See Value::IPType): IPv4, IPv6
       IP_ALT_ADDRESS_TYPE = 'IP_ALT_ADDRESS_TYPE'
 
-      # Valid Operators: IN, NOT_IN
-      IP_RANGE = 'IP_RANGE'
+      # Valid Operators: IS, IS_NOT, IN_RANGE, NOT_IN_RANGE, IN, NOT_IN
+      IP_ADDRESS = 'IP_RANGE'
+      IP_RANGE = IP_ADDRESS
 
       # Valid Operators: IS, IS_NOT, IN_RANGE
       # Valid Values: Integers from 1 to 65535
@@ -120,8 +119,7 @@ module Nexpose
       RISK_SCORE = 'RISK_SCORE'
 
       # Search based on the last scan date of an asset.
-      # Valid Operators: ON_OR_BEFORE, ON_OR_AFTER, BETWEEN, EARLIER_THAN,
-      #                  WITHIN_THE_LAST
+      # Valid Operators: ON_OR_BEFORE, ON_OR_AFTER, BETWEEN, EARLIER_THAN, WITHIN_THE_LAST
       # Valid Values: Use Value::ScanDate::FORMAT for date arguments.
       #               Use FixNum for day arguments.
       SCAN_DATE = 'SCAN_DATE'
@@ -138,8 +136,7 @@ module Nexpose
       # Valid Operators: CONTAINS, NOT_CONTAINS
       SOFTWARE = 'SOFTWARE'
 
-      # Valid Operators: IS, IS_NOT, GREATER_THAN, LESS_THAN, IS_APPLIED,
-      #                  IS_NOT_APPLIED
+      # Valid Operators: IS, IS_NOT, GREATER_THAN, LESS_THAN, IS_APPLIED, IS_NOT_APPLIED
       # Valid Values: VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW
       USER_ADDED_CRITICALITY_LEVEL = 'TAG_CRITICALITY'
 
@@ -164,13 +161,11 @@ module Nexpose
       VULNERABILITY = 'VULNERABILITY'
 
       # Valid Operators: INCLUDE, DO_NOT_INCLUDE
-      # Valid Values (See Value::VulnerabilityExposure): MALWARE, METASPLOIT,
-      #                                                  DATABASE
+      # Valid Values (See Value::VulnerabilityExposure): MALWARE, METASPLOIT, DATABASE
       VULNERABILITY_EXPOSURES = 'VULNERABILITY_EXPOSURES'
 
       # Search by VULNERABILITY CATEGORY
-      # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS, STARTS_WITH,
-      #                  ENDS_WITH
+      # Valid Operators: IS, IS_NOT, CONTAINS, NOT_CONTAINS, STARTS_WITH, ENDS_WITH
       VULN_CATEGORY = 'VULN_CATEGORY'
     end
 
@@ -185,6 +180,7 @@ module Nexpose
       IN = 'IN'
       NOT_IN = 'NOT_IN'
       IN_RANGE = 'IN_RANGE'
+      NOT_IN_RANGE = 'NOT_IN_RANGE'
       STARTS_WITH = 'STARTS_WITH'
       ENDS_WITH = 'ENDS_WITH'
       ON_OR_BEFORE = 'ON_OR_BEFORE'
@@ -375,7 +371,11 @@ module Nexpose
     attr_reader :vuln_count
     attr_reader :risk_score
 
+    # The first Site ID returned for this asset.
+    # Not recommended if Asset Linking feature is enabled.
     attr_reader :site_id
+    # Array of Site IDs for the asset. Use when Asset Linking is enabled.
+    attr_reader :site_ids
     attr_reader :last_scan
 
     def initialize(json)
@@ -387,7 +387,8 @@ module Nexpose
       @malware_count = json['malwareCount'].to_i
       @vuln_count = json['vulnCount'].to_i
       @risk_score = json['riskScore'].to_f
-      @site_id = json['siteID']
+      @site_ids = json['sitePermissions'].map { |site| site['siteID'] }
+      @site_id = @site_ids.first
       @last_scan = Time.at(json['lastScanDate'].to_i / 1000)
     end
   end

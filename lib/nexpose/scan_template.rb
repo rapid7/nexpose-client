@@ -312,13 +312,22 @@ module Nexpose
       checks.attributes['potential'] = enable ? '1' : '0'
     end
 
+    # Get a list of the check categories disabled for this scan template.
+    #
+    # @return [Array[String]] List of enabled categories.
+    #
+    def disabled_checks_by_category
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Disabled')
+      checks ? checks.elements.to_a('VulnCategory').map { |c| c.attributes['name'] } : []
+    end
+
     # Get a list of the check categories enabled for this scan template.
     #
     # @return [Array[String]] List of enabled categories.
     #
-    def checks_by_category
+    def enabled_checks_by_category
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Enabled')
-      checks.elements.to_a('VulnCategory').map { |c| c.attributes['name'] }
+      checks ? checks.elements.to_a('VulnCategory').map { |c| c.attributes['name'] } : []
     end
 
     # Enable checks by category for this template.
@@ -346,13 +355,22 @@ module Nexpose
       _remove_check(category, 'VulnCategory')
     end
 
+    # Get a list of the check types disabled for this scan template.
+    #
+    # @return [Array[String]] List of enabled check types.
+    #
+    def disabled_checks_by_type
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Disabled')
+      checks ? checks.elements.to_a('CheckType').map { |c| c.attributes['name'] } : []
+    end
+
     # Get a list of the check types enabled for this scan template.
     #
     # @return [Array[String]] List of enabled check types.
     #
-    def checks_by_type
+    def enabled_checks_by_type
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Enabled')
-      checks.elements.to_a('CheckType').map { |c| c.attributes['name'] }
+      checks ? checks.elements.to_a('CheckType').map { |c| c.attributes['name'] } : []
     end
 
     # Enable checks by type for this template.
@@ -383,13 +401,15 @@ module Nexpose
     def _enable_check(check, elem)
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
       checks.elements.delete("Disabled/#{elem}[@name='#{check}']")
-      checks.elements['Enabled'].add_element(elem, { 'name' => check })
+      enabled_checks = checks.elements['Enabled'] || checks.add_element('Enabled')
+      enabled_checks.add_element(elem, { 'name' => check })
     end
 
     def _disable_check(check, elem)
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
       checks.elements.delete("Enabled/#{elem}[@name='#{check}']")
-      checks.elements['Disabled'].add_element(elem, { 'name' => check })
+      disabled_checks = checks.elements['Disabled'] || checks.add_element('Disabled')
+      disabled_checks.add_element(elem, { 'name' => check })
     end
 
     def _remove_check(check, elem)
@@ -402,9 +422,18 @@ module Nexpose
     #
     # @return [Array[String]] List of enabled vulnerability checks.
     #
-    def vuln_checks
+    def enabled_vuln_checks
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Enabled')
-      checks.elements.to_a('Check').map { |c| c.attributes['id'] }
+      checks ? checks.elements.to_a('Check').map { |c| c.attributes['id'] } : []
+    end
+
+    # Get a list of the individual vuln checks disabled for this scan template.
+    #
+    # @return [Array[String]] List of enabled vulnerability checks.
+    #
+    def disabled_vuln_checks
+      checks = REXML::XPath.first(@xml, '//VulnerabilityChecks/Disabled')
+      checks ? checks.elements.to_a('Check').map { |c| c.attributes['id'] } : []
     end
 
     # Enable individual check for this template.
@@ -414,7 +443,8 @@ module Nexpose
     def enable_vuln_check(check_id)
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
       checks.elements.delete("Disabled/Check[@id='#{check_id}']")
-      checks.elements['Enabled'].add_element('Check', { 'id' => check_id })
+      enabled_checks = checks.elements['Enabled'] || checks.add_element('Enabled')
+      enabled_checks.add_element('Check', { 'id' => check_id })
     end
 
     # Disable individual check for this template.
@@ -424,7 +454,8 @@ module Nexpose
     def disable_vuln_check(check_id)
       checks = REXML::XPath.first(@xml, '//VulnerabilityChecks')
       checks.elements.delete("Enabled/Check[@id='#{check_id}']")
-      checks.elements['Disabled'].add_element('Check', { 'id' => check_id })
+      disabled_checks = checks.elements['Disabled'] || checks.add_element('Disabled')
+      disabled_checks.add_element('Check', { 'id' => check_id })
     end
 
     # Remove individual check for this template. Removes both enabled and
@@ -465,7 +496,7 @@ module Nexpose
         response = JSON.parse(AJAX.get(nsc, "/data/scan/templates/#{URI.encode(id)}"))
         xml = response['value']
       else
-        xml = AJAX.get(nsc, '/ajax/scantemplate_config.txml')
+        xml = AJAX.get(nsc, '/data/scan-template')
       end
       new(xml)
     end
@@ -490,6 +521,83 @@ module Nexpose
     #
     def delete(nsc)
       nsc.delete_scan_template(id)
+    end
+
+    # Enable or disable asset configuration scanning for this template. If
+    # the level is not "full", "default" or "none", this is a no-op.
+    #
+    # @param [String] "full" to enable asset configuration logging, and
+    #   "default" or "none" to disable it.
+    def aces_level=(level)
+      return if level.nil?
+      return unless ['full', 'default', 'none'].include? level.downcase
+      logging = REXML::XPath.first(@xml, 'ScanTemplate/Logging')
+      if (logging.nil?)
+        logging = REXML::Element.new('Logging')
+        @xml.add_element(logging)
+      end
+      aces = REXML::XPath.first(logging, 'aces')
+      if (aces.nil?)
+         aces = REXML::Element.new('aces')
+         logging.add_element(aces)
+      end
+      aces.attributes['level'] = level
+    end
+
+    # @return [String] the asset configuration logging value for this
+    #   template.
+    def aces_level
+      logging = REXML::XPath.first(@xml, 'ScanTemplate/Logging')
+      return 'default' if logging.nil?
+      aces = REXML::XPath.first(logging, 'aces')
+      return 'default' if aces.nil?
+      return aces.attributes['level']
+    end
+
+    # @return [Boolean] whether asset configuration scanning is enabled for
+    #   this template.
+    def aces_enabled?
+      return 'full' == aces_level
+    end
+
+    # Enable or disable the debug logging.
+    # @param [Boolean] enable Enable or disable the debug logging.
+    def enable_debug_logging=(enable)
+      return if enable.nil?
+      logging = REXML::XPath.first(@xml, 'ScanTemplate/Logging')
+      if logging.nil?
+        logging = REXML::Element.new('Logging')
+        @xml.add_element(logging)
+      end
+      debug_logging = REXML::XPath.first(logging, 'debugLogging')
+      if debug_logging.nil?
+        debug_logging = REXML::Element.new('debugLogging')
+        logging.add_element(debug_logging)
+      end
+      debug_logging.attributes['enabled'] = (enable ? 1 : 0)
+    end
+
+    # Enable or disable the enhanced logging.
+    # @param [Boolean] enable Enable or disable the enhanced logging.
+    def enable_enhanced_logging=(enable)
+      self.enable_debug_logging = enable
+      self.aces_level = (enable ? 'full' : 'none')
+    end
+
+    # Enable or disable windows service editor.
+    # @param [Boolean] enable Enable or disable windows service editor.
+    def windows_service_editor=(enable)
+      cifs_scanner = REXML::XPath.first(@xml, 'ScanTemplate/Plugins/Plugin[@name="java/CifsScanner"]')
+      param = REXML::XPath.first(cifs_scanner, './param[@name="windowsServiceEditor"]')
+      if param
+        param.text = (enable ? '1' : '0')
+      else
+        param = REXML::Element.new('param')
+        param.attributes['name'] = 'windowsServiceEditor'
+        param.text = (enable ? '1' : '0')
+        cifs_scanner.add_element(param)
+      end
+      param.text
     end
   end
 end

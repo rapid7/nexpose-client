@@ -204,6 +204,26 @@ module Nexpose
       Scan.parse(response.res) if response.success
     end
 
+    # Initiate an ad-hoc scan on a subset of site assets with
+    # a specific scan template and scan engine, which may differ
+    # from the site's defined scan template and scan engine.
+    #
+    # @param [Fixnum] site_id Site ID to scan.
+    # @param [Array[String]] assets Hostnames and/or IP addresses to scan.
+    # @param [String] scan_template The scan template ID.
+    # @param [Fixnum] scan_engine The scan engine ID.
+    # @return [Fixnum] Scan ID.
+    #
+    def scan_assets_with_template_and_engine(site_id, assets, scan_template, scan_engine)
+      uri = "/data/site/#{site_id}/scan"
+      assets.size > 1 ? addresses = assets.join(',') : addresses = assets.first
+      params = { 'addressList' => addresses,
+                 'template' => scan_template,
+                 'scanEngine' => scan_engine }
+      scan_id = AJAX.form_post(self, uri, params)
+      scan_id.to_i
+    end
+
     # Utility method for appending a HostName or IPRange object into an
     # XML object, in preparation for ad hoc scanning.
     #
@@ -357,6 +377,29 @@ module Nexpose
       end
     end
 
+    # Get paused scans. Provide a site ID to get paused scans for a site.
+    # With no site ID, all paused scans are returned.
+    #
+    # @param [Fixnum] site_id Site ID to retrieve paused scans for.
+    # @param [Fixnum] limit The maximum number of records to return from this call.
+    # @return [Array[ActiveScan]] List of paused scans.
+    #
+    def paused_scans(site_id = nil, limit = nil)
+      if site_id
+        uri = "/data/scan/site/#{site_id}?status=active"
+        rows = AJAX.row_pref_of(limit)
+        params = { 'sort' => 'endTime', 'dir' => 'DESC', 'startIndex' => 0 }
+        AJAX.preserving_preference(self, 'site-active-scans') do
+          data = DataTable._get_json_table(self, uri, params, rows, limit).select { |scan| scan['paused'] }
+          data.map(&ActiveScan.method(:parse_json))
+        end
+      else
+        uri = '/data/site/scans/dyntable.xml?printDocType=0&tableID=siteScansTable&activeOnly=true'
+        data = DataTable._get_dyn_table(self, uri).select { |scan| (scan['Status'].include? 'Paused') }
+        data.map(&ActiveScan.method(:parse_dyntable))
+      end
+    end
+
     # Export the data associated with a single scan, and optionally store it in
     # a zip-compressed file under the provided name.
     #
@@ -385,11 +428,7 @@ module Nexpose
       end
     end
 
-    # Import scan data into a site. WARNING: Experimental!
-    #
-    # This code currently depends on a gem not in the gemspec. In order to use
-    # this method, you will need to add the following line to your script:
-    #   require 'rest-client'
+    # Import scan data into a site.
     #
     # This method is designed to work with export_scan to migrate scan data
     # from one console to another. This method will import the data as if run
@@ -401,15 +440,16 @@ module Nexpose
     #
     # @param [Fixnum] site_id Site ID of the site to import the scan into.
     # @param [String] zip_file Path to a previously exported scan archive.
-    # @return [String] An empty string on success.
+    # @return [Fixnum] The scan ID on success.
     #
     def import_scan(site_id, zip_file)
-      data = Rex::MIME::Message.new
+      data = Rexlite::MIME::Message.new
       data.add_part(site_id.to_s, nil, nil, 'form-data; name="siteid"')
       data.add_part(session_id, nil, nil, 'form-data; name="nexposeCCSessionID"')
-      scan = ::File.new(zip_file, 'rb')
-      data.add_part(scan.read, 'application/zip', 'binary',
-                    "form-data; name=\"scan\"; filename=\"#{zip_file}\"")
+      ::File.open(zip_file, 'rb') do |scan|
+        data.add_part(scan.read, 'application/zip', 'binary',
+                      "form-data; name=\"scan\"; filename=\"#{zip_file}\"")
+      end
 
       post = Net::HTTP::Post.new('/data/scan/import')
       post.body = data.to_s
@@ -421,7 +461,7 @@ module Nexpose
       response = http.request(post)
       case response
       when Net::HTTPOK
-        response.body
+        response.body.empty? ? response.body : response.body.to_i
       when Net::HTTPUnauthorized
         raise Nexpose::PermissionError.new(response)
       else
@@ -692,14 +732,15 @@ module Nexpose
     # returned by a #scan_status call.
     #
     module Status
-      RUNNING = 'running'
-      FINISHED = 'finished'
-      ABORTED = 'aborted'
-      STOPPED = 'stopped'
-      ERROR = 'error'
-      PAUSED = 'paused'
-      DISPATCHED = 'dispatched'
-      UNKNOWN = 'unknown'
+      RUNNING     = 'running'
+      FINISHED    = 'finished'
+      ABORTED     = 'aborted'
+      STOPPED     = 'stopped'
+      ERROR       = 'error'
+      PAUSED      = 'paused'
+      DISPATCHED  = 'dispatched'
+      UNKNOWN     = 'unknown'
+      INTEGRATING = 'integrating'
     end
   end
 
@@ -761,6 +802,38 @@ module Nexpose
         :stopped
       when 'A'
         :aborted
+      else
+        :unknown
+      end
+    end
+  end
+
+  class ActiveScan < CompletedScan
+    def self.parse_dyntable(json)
+      new do
+        @id = json['Scan ID']
+        @site_id = json['Site ID']
+        @status = CompletedScan._parse_status(json['Status Code'])
+        @start_time = Time.at(json['Started'].to_i / 1000)
+        @end_time = Time.at(json['Progress'].to_i / 1000)
+        @duration = json['Elapsed'].to_i
+        @vulns = json['Vulnerabilities Discovered'].to_i
+        @assets = json['Devices Discovered'].to_i
+        @risk_score = json['riskScore']
+        @type = json['Scan Type'] == 'Manual' ? :manual : :scheduled
+        @engine_name = json['Scan Engine']
+      end
+    end
+
+    # Internal method to parsing status codes.
+    def self._parse_status(code)
+      case code
+      when 'U'
+        :running
+      when 'P'
+        :paused
+      when 'I'
+        :integrating
       else
         :unknown
       end

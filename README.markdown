@@ -9,13 +9,15 @@ Check out the [wiki](https://github.com/rapid7/nexpose-client/wiki) for walk-thr
 
 This gem is heavily used for internal, automated testing of the Nexpose product. It provides calls to the Nexpose XML APIs version 1.1 and 1.2, and JSON API 2.1. It also includes a number of helper methods which are not currently exposed through alternate means.
 
+Since version 1.0 nexpose-client uses [Semantic Versioning](http://semver.org/). This allows for confident use of the [pessimistic operator](https://robots.thoughtbot.com/rubys-pessimistic-operator) in scripts or larger ruby projects.
+
 ## Release Notes
 
 Release notes are available on the [Releases](https://github.com/rapid7/nexpose-client/releases) page.
 
 ## Contributions
 
-We welcome contributions to this package. Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+We welcome contributions to this package. Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
 Our coding standards include:
 

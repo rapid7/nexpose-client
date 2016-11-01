@@ -108,6 +108,8 @@ module Nexpose
     # [Array] Schedule starting dates and times for scans, and set their frequency.
     attr_accessor :schedules
 
+    # [Array] Blackout starting dates, times and duration for blackout periods.
+    attr_accessor :blackouts
 
     # The risk factor associated with this site. Default: 1.0
     attr_accessor :risk_factor
@@ -162,6 +164,7 @@ module Nexpose
       @risk_factor = 1.0
       @config_version = 3
       @schedules = []
+      @blackouts = []
       @included_scan_targets = { addresses: [], asset_groups: [] }
       @excluded_scan_targets = { addresses: [], asset_groups: [] }
       @site_credentials = []
@@ -247,12 +250,6 @@ module Nexpose
       end
     end
 
-    # @deprecated Use {#include_ip_range} instead.
-    def add_ip_range(from, to)
-      warn "[DEPRECATED] Use #{self.class}#include_ip_range instead of #{self.class}#add_ip_range."
-      include_ip_range(from, to)
-    end
-
     # Remove assets to this site by IP address range.
     #
     # @param [String] from Beginning IP address of a range.
@@ -271,12 +268,6 @@ module Nexpose
       end
     end
 
-    # @deprecated Use {#remove_included_ip_range} instead.
-    def remove_ip_range(from, to)
-      warn "[DEPRECATED] Use #{self.class}#remove_included_ip_range instead of #{self.class}#remove_ip_range."
-      remove_included_ip_range(from, to)
-    end
-
     # Adds an asset to this site included scan targets, resolving whether an IP or hostname is
     # provided.
     #
@@ -286,15 +277,6 @@ module Nexpose
       @included_scan_targets[:addresses] << HostOrIP.convert(asset)
     end
 
-    # @deprecated Use {#include_asset} instead.
-    def add_asset(asset)
-      warn "[DEPRECATED] Use #{self.class}#include_asset instead of #{self.class}#add_asset."
-      include_asset(asset)
-    end
-
-    alias_method :add_host, :add_asset
-    alias_method :add_ip, :add_asset
-
     # Remove an asset to this site included scan targets, resolving whether an IP or hostname is
     # provided.
     #
@@ -303,15 +285,6 @@ module Nexpose
     def remove_included_asset(asset)
       @included_scan_targets[:addresses].reject! { |existing_asset| existing_asset == HostOrIP.convert(asset) }
     end
-
-    # @deprecated Use {#remove_included_asset} instead.
-    def remove_asset(asset)
-      warn "[DEPRECATED] Use #{self.class}#remove_included_asset instead of #{self.class}#remove_asset."
-      remove_included_asset(asset)
-    end
-
-    alias_method :remove_host, :remove_asset
-    alias_method :remove_ip, :remove_asset
 
     # Adds assets to this site excluded scan targets by IP address range.
     #
@@ -463,7 +436,7 @@ module Nexpose
           asset_groups: @excluded_scan_targets[:asset_groups].compact
       }
 
-      {
+      hash = {
           id: @id,
           name: @name,
           description: @description,
@@ -484,6 +457,11 @@ module Nexpose
           organization: @organization.to_h,
           users: users
       }
+      # @TODO: Revisit this for 2.0.0 update
+      # Only pass in blackouts if they were actually specified (for backwards compatibility)
+      hash[:blackouts] = @blackouts.map(&:to_h) if @blackouts && @blackouts.any?
+
+      hash
     end
 
     require 'json'
@@ -510,6 +488,7 @@ module Nexpose
 
       site.organization = Organization.create(site.organization)
       site.schedules = (hash[:schedules] || []).map {|schedule| Nexpose::Schedule.from_hash(schedule) }
+      site.blackouts = (hash[:blackouts] || []).map {|blackout| Nexpose::Blackout.from_hash(blackout) }
       site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
       site.discovery_config = Nexpose::DiscoveryConnection.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?

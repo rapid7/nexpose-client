@@ -78,7 +78,7 @@ module Nexpose
     # List the vulnerability findings for a given device ID.
     #
     # @param [Fixnum] dev_id Unique identifier of a device (asset).
-    # @return [Array[Vulnerability]] List of vulnerability findings.
+    # @return [Array[VulnFinding]] List of vulnerability findings.
     #
     def list_device_vulns(dev_id)
       parameters = { 'devid' => dev_id,
@@ -130,6 +130,21 @@ module Nexpose
     end
 
     alias_method :delete_asset, :delete_device
+
+    # Retrieve the scan history for an asset.
+    # Note: This is not optimized for querying many assets.
+    #
+    # @param [Fixnum] asset_id Unique identifer of an asset.
+    # @return [Array[AssetScan]] A list of scans for the asset.
+    #
+    def asset_scan_history(asset_id)
+      uri = "/data/assets/#{asset_id}/scans"
+      AJAX.preserving_preference(self, 'asset-scan-history') do
+        data = DataTable._get_json_table(self, uri, {}, 500, nil, true)
+        data.each { |a| a['assetID'] = asset_id.to_s }
+        data.map(&AssetScan.method(:parse_json))
+      end
+    end
   end
 
   # Object that represents a single device in a Nexpose security console.
@@ -193,7 +208,7 @@ module Nexpose
     # object.
     def self.parse_json(json)
       new do
-        @id = json['id'].to_i
+        @id = json['assetID'].to_i
         @ip = json['ipAddress']
         @host_name = json['hostName']
         @os = json['operatingSystem']
@@ -207,5 +222,51 @@ module Nexpose
   # Summary object of an incomplete asset for a scan.
   #
   class IncompleteAsset < CompletedAsset
+  end
+
+
+  # Summary object of a scan for a particular asset.
+  #
+  class AssetScan
+    # Unique identifier of an asset.
+    attr_reader :asset_id
+    # IP address of the asset.
+    attr_reader :ip
+    # Host name of the asset, if discovered.
+    attr_reader :host_name
+    # Site name where the scan originated.
+    attr_reader :site_name
+    # Unique identifier for the site where the scan originated.
+    attr_reader :site_id
+    # Unique identifier for the scan.
+    attr_reader :scan_id
+    # Time when the asset finished scanning.
+    attr_reader :end_time
+    # Number of vulnerabilities discovered on the asset.
+    attr_reader :vulns
+    # Operating system fingerprint of the asset.
+    attr_reader :os
+    # Name of the scan engine used for the scan.
+    attr_reader :engine_name
+
+    # Internal constructor to be called by #parse_json.
+    def initialize(&block)
+      instance_eval(&block) if block_given?
+    end
+
+    def self.parse_json(json)
+      new do
+        @asset_id = json['assetID'].to_i
+        @scan_id = json['scanID'].to_i
+        @site_id = json['siteID'].to_i
+        @ip = json['ipAddress']
+        @host_name = json['hostname']
+        @os = json['operatingSystem']
+        @vulns = json['vulnCount']
+        @end_time = Time.at(json['completed'].to_i / 1000)
+        @site_name = json['siteName']
+        @engine_name = json['scanEngineName']
+      end
+    end
   end
 end

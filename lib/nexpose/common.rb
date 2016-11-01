@@ -25,20 +25,26 @@ module Nexpose
   # non-members.
   class Email
     # Send as file attachment or zipped file to individuals who are not members
-    # of the report access list. One of: file|zip
+    # of the report access list.
+    # [String] Attachment format, 'file' | 'zip'.
     attr_accessor :send_as
     # Send to all the authorized users of sites, groups, and assets.
+    # [Fixnum] 1 | 0
     attr_accessor :to_all_authorized
     # Send to users on the report access list.
+    # [String] Attachment format 'file' | 'zip'
     attr_accessor :send_to_acl_as
-    # Format to send to users on the report access list. One of: file|zip|url
+    # Format to send to users on the report access list.
+    # [String] Attachment format 'file' | 'zip' | 'url'
     attr_accessor :send_to_owner_as
-
     # Sender that e-mail will be attributed to.
+    # [String] an email address
     attr_accessor :sender
     # SMTP relay server.
+    # [String] the IP address, host name or FQDN of the SMTP server.
     attr_accessor :smtp_relay_server
-    # Array of report recipients (i.e., not already on the report access list).
+    # Recipients will be in form of email address.
+    # [Array<String>] E-mail addresses of additional report recipients (i.e., not already on the report access list).
     attr_accessor :recipients
 
     def initialize(to_all_authorized, send_to_owner_as, send_to_acl_as, send_as)
@@ -135,17 +141,12 @@ module Nexpose
     attr_accessor :type
     # The repeat interval based upon type.
     attr_accessor :interval
-    # The earliest date to generate the report on (in ISO 8601 format).
+    # Starting time of the scheduled scan (in ISO 8601 format).
     attr_accessor :start
-
     # The amount of time, in minutes, to allow execution before stopping.
     attr_accessor :max_duration
     # The date after which the schedule is disabled, in ISO 8601 format.
     attr_accessor :not_valid_after
-
-    # TODO: Remove this unused attribute
-    attr_accessor :incremental
-
     # Extended attributes added with the new scheduler implementation
     attr_accessor :is_extended
     attr_accessor :hour
@@ -154,12 +155,18 @@ module Nexpose
     attr_accessor :day
     attr_accessor :occurrence
     attr_accessor :start_month
+    # Timezone in which start time run. If not set will default to console timezone.
+    # If console timezone is not supported it defaults to utc.
     attr_accessor :timezone
     attr_accessor :next_run_time
-
     # scan-schedule attributes
     attr_accessor :repeater_type
+    # Scan template to use when starting a scan job.
     attr_accessor :scan_template_id
+    # Starting time of the scheduled scan (in ISO 8601 format). Relative to the console timezone
+    attr_accessor :console_start
+    # The timezone of the console.
+    attr_accessor :console_timezone
 
     # @param [Time] start
     def initialize(type, interval, start, enabled = true, scan_template_id = nil)
@@ -186,6 +193,8 @@ module Nexpose
       schedule.not_valid_after = Nexpose::ISO8601.to_time(hash[:not_valid_after_date]) if hash[:not_valid_after_date]
       schedule.timezone = hash[:time_zone] if hash[:time_zone]
       schedule.next_run_time = hash[:next_run_time] if hash[:next_run_time]
+      schedule.console_start = Nexpose::ISO8601.to_time(hash[:console_start_date]) if hash[:console_start_date]
+      schedule.console_timezone = hash[:console_time_zone] if hash[:console_time_zone]
 
       unless repeat_scan_hash.nil?
         schedule.type = repeat_scan_hash[:type]
@@ -247,7 +256,6 @@ module Nexpose
       xml.attributes['start'] = @start if @start
       xml.attributes['maxDuration'] = @max_duration if @max_duration
       xml.attributes['notValidAfter'] = @not_valid_after if @not_valid_after
-      xml.attributes['incremental'] = @incremental ? 1 : 0 if @incremental
       xml.attributes['repeaterType'] = @repeater_type if @repeater_type
       xml.attributes['is_extended'] = @is_extended if @is_extended
       xml.attributes['hour'] = @hour if @hour
@@ -274,7 +282,6 @@ module Nexpose
       # Optional parameters.
       schedule.max_duration = xml.attributes['maxDuration'].to_i if xml.attributes['maxDuration']
       schedule.not_valid_after = xml.attributes['notValidAfter'] if xml.attributes['notValidAfter']
-      schedule.incremental = (xml.attributes['incremental'] && xml.attributes['incremental'] == '1')
       schedule.repeater_type = xml.attributes['repeaterType'] if xml.attributes['repeaterType']
       schedule.is_extended = xml.attributes['is_extended'] if xml.attributes['is_extended']
       schedule.hour = xml.attributes['hour'] if xml.attributes['hour']

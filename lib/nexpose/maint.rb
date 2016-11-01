@@ -7,7 +7,7 @@ module Nexpose
     # @return [Array[Backup]] List of backups.
     #
     def list_backups
-      data = DataTable._get_dyn_table(self, '/admin/global/ajax/backup_listing.txml')
+      data = DataTable._get_dyn_table(self, '/data/admin/backups?tableID=BackupSynopsis')
       data.map { |b| Backup.parse(b) }
     end
 

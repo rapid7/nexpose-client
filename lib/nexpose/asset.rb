@@ -38,6 +38,8 @@ module Nexpose
     attr_reader :group_accounts
     # Files and directories that have been enumerated on the asset. [Lazy]
     attr_reader :files
+    # Unique system identifiers on the asset.
+    attr_accessor :unique_identifiers
 
     def initialize
       @addresses = []
@@ -47,7 +49,7 @@ module Nexpose
     # Load an asset from the provided console.
     #
     # @param [Connection] nsc Active connection to a Nexpose console.
-    # @param [String] id Unique identifier of an asset.
+    # @param [Fixnum] id Unique identifier of an asset.
     # @return [Asset] The requested asset, if found.
     #
     def self.load(nsc, id)
@@ -260,6 +262,39 @@ module Nexpose
 
     def eql?(other)
       name.eql?(other.name) && size.eql?(other.size) && directory.eql?(other.directory) && attributes.eql?(other.attributes)
+    end
+  end
+
+  # Unique system identifiers on an asset.
+  #
+  class UniqueIdentifier < APIObject
+    # The source name for the uniuqe identifier.
+    attr_reader :source
+    # Unique identifier of the user as determined by the asset (not Nexpose).
+    attr_reader :id
+
+    def initialize(source = nil, id = nil)
+      @id = id
+      @source = source
+    end
+
+    def to_h
+      { source: source,
+        id: id }
+    end
+
+    def <=>(other)
+      c = source <=> other.source
+      return c unless c == 0
+      id <=> other.id
+    end
+
+    def ==(other)
+      eql?(other)
+    end
+
+    def eql?(other)
+      source.eql?(other.source) && id.eql?(other.id)
     end
   end
 

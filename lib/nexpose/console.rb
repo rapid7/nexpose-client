@@ -46,7 +46,7 @@ module Nexpose
     # @param [Connection] connection Nexpose connection.
     #
     def self.load(connection)
-      xml = REXML::Document.new(Nexpose::AJAX.get(connection, '/ajax/nsc_config.txml'))
+      xml = REXML::Document.new(Nexpose::AJAX.get(connection, '/data/admin/config/nsc'))
       new(xml)
     end
 
@@ -63,7 +63,7 @@ module Nexpose
       web_server = REXML::XPath.first(nsc, 'WebServer')
       web_server.attributes['sessionTimeout'] = @session_timeout.to_i
 
-      response = REXML::Document.new(Nexpose::AJAX.post(connection, '/ajax/save_nsc_config.txml', @xml))
+      response = REXML::Document.new(Nexpose::AJAX.post(connection, '/data/admin/config/nsc', @xml))
       saved = REXML::XPath.first(response, 'SaveConfig')
       saved.attributes['success'] == '1'
     end

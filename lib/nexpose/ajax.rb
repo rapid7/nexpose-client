@@ -152,7 +152,7 @@ module Nexpose
       # Return response body if request is successful. Brittle.
       response = http.request(request)
       case response
-      when Net::HTTPOK, Net::HTTPCreated
+      when Net::HTTPOK, Net::HTTPCreated, Net::HTTPNoContent
         response.body
       when Net::HTTPForbidden
         raise Nexpose::PermissionError.new(response)
@@ -187,8 +187,19 @@ module Nexpose
     # is 2.1 or greater otherwise use the request body
     def get_error_message(request, response)
       version = get_request_api_version(request)
+      data_request = use_response_error_message?(request, response)
+      return_response = (version >= 2.1 || data_request )
+      (return_response && response.body) ? "response body: #{response.body}" : "request body: #{request.body}"
+    end
 
-      (version >= 2.1 && response.body) ? "response body: #{response.body}" : "request body: #{request.body}"
+    # Code cleanup to allow for cleaner get_error_message method
+    #
+    def use_response_error_message?(request, response)
+      if (request.path.include?('/data/') && !response.content_type.nil?)
+        response.content_type.include? 'text/plain'
+      else
+        return false
+      end
     end
 
     # Execute a block of code while presenving the preferences for any
@@ -234,11 +245,12 @@ module Nexpose
     end
 
     def get_rows(nsc, pref)
-      uri = '/ajax/user_pref_get.txml'
-      resp = get(nsc, uri, CONTENT_TYPE::XML, 'name' => "#{pref}.rows")
-      xml = REXML::Document.new(resp)
-      if val = REXML::XPath.first(xml, 'GetUserPref/userPref')
-        rows = val.text.to_i
+      uri = '/data/user/preferences/all'
+      pref_key = "#{pref}.rows"
+      resp = get(nsc, uri)
+      json = JSON.parse(resp)
+      if json.has_key?(pref_key)
+        rows = json[pref_key].to_i
         rows > 0 ? rows : 10
       else
         10
@@ -246,14 +258,12 @@ module Nexpose
     end
 
     def set_rows(nsc, pref, value)
-      uri = '/ajax/user_pref_set.txml'
+      uri = '/data/user/preference'
       params = { 'name'  => "#{pref}.rows",
                  'value' => value }
-      resp = get(nsc, uri, CONTENT_TYPE::XML, params)
-      xml = REXML::Document.new(resp)
-      if attr = REXML::XPath.first(xml, 'SetUserPref/@success')
-        attr.value == '1'
-      end
+
+      form_post(nsc, uri, params)
     end
+
   end
 end

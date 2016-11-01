@@ -30,11 +30,24 @@ module Nexpose
   class DiscoveryConnection < APIObject
     include XMLUtils
 
+    module CollectionMethod
+      DIRECTORY_WATCHER = 'DIRECTORY_WATCHER'
+      SYSLOG = 'SYSLOG'
+    end
+
+    module EventSource
+      INFOBLOX_TRINZIC = 'INFOBLOX_TRINZIC'
+      MICROSOFT_DHCP = 'MICROSOFT_DHCP'
+    end
+
     module Protocol
       HTTP  = 'HTTP'
       HTTPS = 'HTTPS'
       LDAP  = 'LDAP'
       LDAPS = 'LDAPS'
+      SERVICE_PROXY = 'SERVICE_PROXY'
+      TCP = 'TCP'
+      UDP = 'UDP'
     end
 
     module Type
@@ -43,6 +56,7 @@ module Nexpose
       ACTIVESYNC            = 'ACTIVESYNC'
       ACTIVESYNC_POWERSHELL = 'ACTIVESYNC_POWERSHELL'
       ACTIVESYNC_OFFICE365  = 'ACTIVESYNC_OFFICE365'
+      DHCP_SERVICE = 'DHCP_SERVICE'
     end
 
     # A unique identifier for this connection.
@@ -81,6 +95,12 @@ module Nexpose
     # The exchange password to connect for exchange powershell connections
     attr_accessor :exchange_password
 
+    # The collection method (e.g. for DHCP discovery connections)
+    attr_accessor :collection_method
+
+    # The event source (e.g. for DHCP discovery connections)
+    attr_accessor :event_source
+
     # Whether or not the connection is active.
     # Discovery is only possible when the connection is active.
     attr_accessor :status
@@ -101,22 +121,41 @@ module Nexpose
       @protocol = Protocol::HTTPS
     end
 
-    # Save this discovery connection to a Nexpose console.
+    # Save this discovery connection on a given Nexpose console.
     #
     # @param [Connection] nsc Connection to a console.
     #
-    def save(nsc)
-      if @id == -1
-        xml = nsc.make_xml('DiscoveryConnectionCreateRequest')
-      else
-        xml = nsc.make_xml('DiscoveryConnectionUpdateRequest')
-      end
+    def create(nsc)
+      xml = nsc.make_xml('DiscoveryConnectionCreateRequest')
       xml.add_element(as_xml)
+
       response = nsc.execute(xml, '1.2')
       if response.success
         ret = REXML::XPath.first(response.res, 'DiscoveryConnectionCreateResponse')
         @id = ret.attributes['id'].to_i unless ret.nil?
       end
+    end
+
+    # Update this (existing) discovery connection on a given Nexpose console.
+    #
+    # @param [Connection] nsc Connection to a console.
+    # @return [Boolean] whether the update request was successful
+    #
+    def update(nsc)
+      xml = nsc.make_xml('DiscoveryConnectionUpdateRequest')
+      xml.add_element(as_xml)
+
+      response = nsc.execute(xml, '1.2')
+      response.success
+    end
+
+    # Save this discovery connection to a Nexpose console.
+    #
+    # @param [Connection] nsc Connection to a console.
+    #
+    def save(nsc)
+      @id == -1 ? create(nsc) : update(nsc)
+
       @id
     end
 
@@ -167,7 +206,10 @@ module Nexpose
       xml.attributes['exchange-username'] = @exchange_username if @exchange_username
       xml.attributes['exchange-password'] = @exchange_password if @exchange_password
       xml.attributes['type']              = @type if @type
+      xml.attributes['collectionmethod']  = @collection_method if @collection_method
+      xml.attributes['eventsource']       = @event_source if @event_source
       xml.attributes['engine-id'] = @engine_id if @engine_id && @engine_id != -1
+      xml.attributes['id'] = @id if @id && @id != -1
       xml
     end
 

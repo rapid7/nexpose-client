@@ -100,7 +100,7 @@ module Nexpose
       end
       @port = Credential::DEFAULT_PORTS[@service] if @port.nil?
       parameters = _to_param(target, engine_id, @port, siteid)
-      xml = AJAX.form_post(nsc, '/ajax/test_admin_credentials.txml', parameters)
+      xml = AJAX.form_post(nsc, '/data/credential/shared/test', parameters)
       result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
       result.attributes['success'].to_i == 1
     end
@@ -112,14 +112,14 @@ module Nexpose
         sc_creds_svc: @service,
         sc_creds_database: @database,
         sc_creds_domain: @domain,
-        sc_creds_uname: @username,
+        sc_creds_uname: @user_name,
         sc_creds_password: @password,
-        sc_creds_pemkey: @pem_key,
+        sc_creds_pemkey: @pem_format_private_key,
         sc_creds_port: port,
-        sc_creds_privilegeelevationusername: @privilege_username,
-        sc_creds_privilegeelevationpassword: @privilege_password,
-        sc_creds_privilegeelevationtype: @privilege_type,
-        sc_creds_snmpv3authtype: @auth_type,
+        sc_creds_privilegeelevationusername: @permission_elevation_user,
+        sc_creds_privilegeelevationpassword: @permission_elevation_password,
+        sc_creds_privilegeelevationtype: @permission_elevation_type,
+        sc_creds_snmpv3authtype: @authentication_type,
         sc_creds_snmpv3privtype: @privacy_type,
         sc_creds_snmpv3privpassword: @privacy_password,
         siteid: siteid }

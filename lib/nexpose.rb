@@ -53,10 +53,10 @@ require 'rexml/document'
 require 'net/https'
 require 'net/http'
 require 'uri'
-require 'rex/mime'
 require 'ipaddr'
 require 'json'
 require 'cgi'
+require 'nexpose/rexlite/mime'
 require 'nexpose/api'
 require 'nexpose/json_serializer'
 require 'nexpose/error'
@@ -65,6 +65,7 @@ require 'nexpose/alert'
 require 'nexpose/ajax'
 require 'nexpose/api_request'
 require 'nexpose/asset'
+require 'nexpose/blackout'
 require 'nexpose/common'
 require 'nexpose/console'
 require 'nexpose/credential'
@@ -78,17 +79,21 @@ require 'nexpose/external'
 require 'nexpose/filter'
 require 'nexpose/discovery'
 require 'nexpose/discovery/filter'
+require 'nexpose/global_blackout'
 require 'nexpose/global_settings'
 require 'nexpose/group'
 require 'nexpose/dag'
 require 'nexpose/manage'
 require 'nexpose/multi_tenant_user'
+require 'nexpose/password_policy'
 require 'nexpose/pool'
 require 'nexpose/report'
 require 'nexpose/report_template'
 require 'nexpose/role'
 require 'nexpose/scan'
 require 'nexpose/scan_template'
+require 'nexpose/scheduled_backup'
+require 'nexpose/scheduled_maintenance'
 require 'nexpose/shared_secret'
 require 'nexpose/silo'
 require 'nexpose/silo_profile'
@@ -105,19 +110,15 @@ require 'nexpose/maint'
 require 'nexpose/version'
 require 'nexpose/wait'
 
+# Double the size of the default limit,
+# to work around large vuln content.
+REXML::Security.entity_expansion_text_limit = 20_000
+
 module Nexpose
 
   # Echos the last XML API request and response for the specified object.  (Useful for debugging)
   def self.print_xml(object)
     puts 'request: ' + object.request_xml.to_s
     puts 'response: ' + object.response_xml.to_s
-  end
-end
-
-# Monkey patch from ActiveSupport which rex 2.0.3 incorrectly replies upon.
-# This enables the multipart MIME handling in Connection#import_scan
-class String
-  def blank?
-    self !~ /\S/
   end
 end

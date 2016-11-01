@@ -50,7 +50,7 @@ module Nexpose
     # @return [IPRange|HostName] Valid class, if it can be converted.
     #
     def convert(asset)
-      ips = asset.split(' - ')
+      ips = asset.split('-').map(&:strip)
       IPAddr.new(ips[0])
       IPAddr.new(ips[1]) if ips[1]
       IPRange.new(ips[0], ips[1])
