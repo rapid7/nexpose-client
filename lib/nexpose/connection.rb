@@ -44,20 +44,29 @@ module Nexpose
     # The last XML response received by this object, useful for debugging.
     attr_reader :response_xml
 
+    # Enforcement of certificate validation to a CA
+    attr_reader :allow_untrusted
+
+    # The trust store to validate connections against if any
+    attr_reader :trust_store
+
     # A constructor to load a Connection object from a URI
     def self.from_uri(uri, user, pass, silo_id = nil, token = nil)
       uri = URI.parse(uri)
-      new(uri.host, user, pass, uri.port, silo_id, token)
+      new(uri.host, user, pass, uri.port, silo_id, token, nil)
     end
 
     # A constructor for Connection
-    def initialize(ip, user, pass, port = 3780, silo_id = nil, token = nil)
+    def initialize(ip, user, pass, port = 3780, silo_id = nil, token = nil, trust_cert = nil)
       @host = ip
       @port = port
       @username = user
       @password = pass
       @token = token
       @silo_id = silo_id
+      unless trust_cert.nil?
+        @trust_store = create_trust_store(trust_cert)
+      end
       @session_id = nil
       @url = "https://#{@host}:#{@port}/api/API_VERSION/xml"
     end
@@ -88,7 +97,7 @@ module Nexpose
     def execute(xml, version = '1.1', options = {})
       @request_xml = xml.to_s
       @api_version = version
-      response = APIRequest.execute(@url, @request_xml, @api_version, options)
+      response = APIRequest.execute(@url, @request_xml, @trust_store, @api_version, options)
       @response_xml = response.raw_response_data
       response
     end
@@ -104,7 +113,11 @@ module Nexpose
       uri = URI.parse(url)
       http = Net::HTTP.new(@host, @port)
       http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE # XXX: security issue
+      if @trust_store.nil?
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE # XXX: security issue
+      else
+        http.cert_store = @trust_store
+      end
       headers = {'Cookie' => "nexposeCCSessionID=#{@session_id}"}
       resp = http.get(uri.to_s, headers)
 
@@ -114,5 +127,14 @@ module Nexpose
         resp.body
       end
     end
+
+    def create_trust_store(trust_cert)
+      store = OpenSSL::X509::Store.new
+      store.trust
+      store.add_cert(OpenSSL::X509::Certificate.new(trust_cert))
+      store
+    end
+
+    private :create_trust_store
   end
 end
