@@ -58,7 +58,7 @@ module Nexpose
 
     def to_xml
       xml = '<Email'
-      xml << %( toAllAuthorized='#{@toAllAuthorized ? 1 : 0}')
+      xml << %( toAllAuthorized='#{@to_all_authorized ? 1 : 0}')
       xml << %( sendToOwnerAs='#{@send_to_owner_as}') if @send_to_owner_as
       xml << %( sendToAclAs='#{@send_to_acl_as}') if @send_to_acl_as
       xml << %( sendAs='#{@send_as}') if @send_as
