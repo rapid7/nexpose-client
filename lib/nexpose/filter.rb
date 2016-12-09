@@ -120,8 +120,9 @@ module Nexpose
 
       # Search based on the last scan date of an asset.
       # Valid Operators: ON_OR_BEFORE, ON_OR_AFTER, BETWEEN, EARLIER_THAN, WITHIN_THE_LAST
-      # Valid Values: Use Value::ScanDate::FORMAT for date arguments.
-      #               Use FixNum for day arguments.
+      # Valid Values: Use FixNum of days for EARLIER_THAN and WITHIN_THE_LAST.
+      #               See Value::ScanDate::FORMAT for how to generate String
+      #               values for all other arguments.
       SCAN_DATE = 'SCAN_DATE'
 
       # Valid Operators: CONTAINS, NOT_CONTAINS
@@ -252,6 +253,8 @@ module Nexpose
       # Constants for filtering on scan date.
       module ScanDate
         # Pass this format to #strftime() to get expected format for requests.
+        # For example:
+        # Time.now().strftime(Nexpose::Search::Value::ScanDate::FORMAT)
         FORMAT = '%m/%d/%Y'
       end
 
