@@ -145,6 +145,18 @@ module Nexpose
         data.map(&AssetScan.method(:parse_json))
       end
     end
+
+    # Remove (or delete) one or more assets from a site.
+    # With asset linking enabled, this will remove the association
+    # of an asset from the given site. If this is the only site
+    # of which an asset is a member, the asset will be deleted.
+    # If asset linking is disabled, the assets will be deleted.
+    #
+    # @param [Array[Fixnum]] asset_ids The asset IDs to be removed from the site.
+    # @param [Fixnum] site_id The site ID to remove the assets from.
+    def remove_assets_from_site(asset_ids, site_id)
+      AJAX.post(self, "/data/assets/bulk-delete?siteid=#{site_id}", asset_ids, Nexpose::AJAX::CONTENT_TYPE::JSON)
+    end
   end
 
   # Object that represents a single device in a Nexpose security console.
