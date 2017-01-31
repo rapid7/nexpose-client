@@ -22,3 +22,5 @@ branches:
   only:
     - master
     - /^staging.*$/
+before_install:
+  - gem update --system
