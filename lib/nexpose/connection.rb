@@ -44,9 +44,6 @@ module Nexpose
     # The last XML response received by this object, useful for debugging.
     attr_reader :response_xml
 
-    # Enforcement of certificate validation to a CA
-    attr_reader :allow_untrusted
-
     # The trust store to validate connections against if any
     attr_reader :trust_store
 
