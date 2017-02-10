@@ -19,7 +19,7 @@ module Nexpose
 
     attr_reader :trust_store
 
-    def initialize(req, url, trust_store, api_version = '1.1')
+    def initialize(req, url, api_version = '1.1', trust_store = nil)
       @url = url
       @req = req
       @api_version = api_version
@@ -140,8 +140,8 @@ module Nexpose
       @res.root.attributes(*args)
     end
 
-    def self.execute(url, req, trust_store, api_version = '1.1', options = {})
-      obj = self.new(req.to_s, url, trust_store, api_version)
+    def self.execute(url, req, api_version = '1.1', options = {}, trust_store = nil)
+      obj = self.new(req.to_s, url, api_version, trust_store)
       obj.execute(options)
       raise APIError.new(obj, "Action failed: #{obj.error}") unless obj.success
       obj
