@@ -48,9 +48,9 @@ module Nexpose
     attr_reader :trust_store
 
     # A constructor to load a Connection object from a URI
-    def self.from_uri(uri, user, pass, silo_id = nil, token = nil)
+    def self.from_uri(uri, user, pass, silo_id = nil, token = nil, trust_cert = nil)
       uri = URI.parse(uri)
-      new(uri.host, user, pass, uri.port, silo_id, token, nil)
+      new(uri.host, user, pass, uri.port, silo_id, token, trust_cert)
     end
 
     # A constructor for Connection
