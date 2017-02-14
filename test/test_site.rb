@@ -66,7 +66,7 @@ describe Site do
 
   # Monkey patch API behavior to give static responses.
   class Nexpose::APIRequest
-    def self.execute(url, req, api_version='1.1')
+    def self.execute(url, _req, _api_version = '1.1', _trust_store)
       url
     end
   end

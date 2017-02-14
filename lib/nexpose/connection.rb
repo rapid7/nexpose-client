@@ -8,6 +8,19 @@ module Nexpose
   #   # Create a new Nexpose::Connection from a URI or "URI" String
   #   nsc = Connection.from_uri('https://10.1.40.10:3780', 'nxadmin', 'password')
   #
+  #   # Create a new Nexpose::Connection with a specific port
+  #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password', 443)
+  #
+  #   # Create a new Nexpose::Connection with a silo identifier
+  #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password', 3780, 'default')
+  #
+  #   # Create a new Nexpose::Connection with a two-factor authentication (2FA) token
+  #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password', 3780, nil, '123456')
+  #
+  #   # Create a new Nexpose::Connection with an excplicitly trusted web certificate
+  #   trusted_cert = ::File.read('cert.pem')
+  #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password', 3780, nil, nil, trusted_cert)
+  #
   #   # Login to NSC and Establish a Session ID
   #   nsc.login
   #
@@ -44,20 +57,34 @@ module Nexpose
     # The last XML response received by this object, useful for debugging.
     attr_reader :response_xml
 
+    # The trust store to validate connections against if any
+    attr_reader :trust_store
+
     # A constructor to load a Connection object from a URI
-    def self.from_uri(uri, user, pass, silo_id = nil, token = nil)
+    def self.from_uri(uri, user, pass, silo_id = nil, token = nil, trust_cert = nil)
       uri = URI.parse(uri)
-      new(uri.host, user, pass, uri.port, silo_id, token)
+      new(uri.host, user, pass, uri.port, silo_id, token, trust_cert)
     end
 
     # A constructor for Connection
-    def initialize(ip, user, pass, port = 3780, silo_id = nil, token = nil)
+    #
+    # @param [String] ip The IP address or hostname/FQDN of the Nexpose console.
+    # @param [String] user The username for Nexpose sessions.
+    # @param [String] pass The password for Nexpose sessions.
+    # @param [Fixnum] port The port number of the Nexpose console.
+    # @param [String] silo_id The silo identifier for Nexpose sessions.
+    # @param [String] token The two-factor authentication (2FA) token for Nexpose sessions.
+    # @param [String] trust_cert The PEM-formatted web certificate of the Nexpose console. Used for SSL validation.
+    def initialize(ip, user, pass, port = 3780, silo_id = nil, token = nil, trust_cert = nil)
       @host = ip
       @port = port
       @username = user
       @password = pass
       @token = token
       @silo_id = silo_id
+      unless trust_cert.nil?
+        @trust_store = create_trust_store(trust_cert)
+      end
       @session_id = nil
       @url = "https://#{@host}:#{@port}/api/API_VERSION/xml"
     end
@@ -88,7 +115,7 @@ module Nexpose
     def execute(xml, version = '1.1', options = {})
       @request_xml = xml.to_s
       @api_version = version
-      response = APIRequest.execute(@url, @request_xml, @api_version, options)
+      response = APIRequest.execute(@url, @request_xml, @api_version, options, @trust_store)
       @response_xml = response.raw_response_data
       response
     end
@@ -104,7 +131,11 @@ module Nexpose
       uri = URI.parse(url)
       http = Net::HTTP.new(@host, @port)
       http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE # XXX: security issue
+      if @trust_store.nil?
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE # XXX: security issue
+      else
+        http.cert_store = @trust_store
+      end
       headers = {'Cookie' => "nexposeCCSessionID=#{@session_id}"}
       resp = http.get(uri.to_s, headers)
 
@@ -114,5 +145,14 @@ module Nexpose
         resp.body
       end
     end
+
+    def create_trust_store(trust_cert)
+      store = OpenSSL::X509::Store.new
+      store.trust
+      store.add_cert(OpenSSL::X509::Certificate.new(trust_cert))
+      store
+    end
+
+    private :create_trust_store
   end
 end

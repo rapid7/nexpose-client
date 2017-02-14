@@ -17,11 +17,14 @@ module Nexpose
     attr_reader :raw_response
     attr_reader :raw_response_data
 
-    def initialize(req, url, api_version = '1.1')
+    attr_reader :trust_store
+
+    def initialize(req, url, api_version = '1.1', trust_store = nil)
       @url = url
       @req = req
       @api_version = api_version
       @url = @url.sub('API_VERSION', @api_version)
+      @trust_store = trust_store
       prepare_http_client
     end
 
@@ -34,7 +37,11 @@ module Nexpose
       #      a confirmation when the nexpose host is not localhost. In a perfect world, we would present
       #      the server signature before accepting it, but this requires either a direct callback inside
       #      of this module back to whatever UI, or opens a race condition between accept and attempt.
-      @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      if @trust_store.nil?
+        @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      else
+        @http.cert_store = @trust_store
+      end
       @headers = {'Content-Type' => 'text/xml'}
       @success = false
     end
@@ -93,7 +100,7 @@ module Nexpose
         # drops our HTTP connection before processing. We try 5 times to establish a
         # connection in these situations. The actual exception occurs in the Ruby
         # http library, which is why we use such generic error classes.
-      rescue OpenSSL::SSL::SSLError
+      rescue OpenSSL::SSL::SSLError => e
         if @conn_tries < 5
           @conn_tries += 1
           retry
@@ -133,8 +140,8 @@ module Nexpose
       @res.root.attributes(*args)
     end
 
-    def self.execute(url, req, api_version='1.1', options = {})
-      obj = self.new(req.to_s, url, api_version)
+    def self.execute(url, req, api_version = '1.1', options = {}, trust_store = nil)
+      obj = self.new(req.to_s, url, api_version, trust_store)
       obj.execute(options)
       raise APIError.new(obj, "Action failed: #{obj.error}") unless obj.success
       obj

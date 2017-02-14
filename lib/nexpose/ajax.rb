@@ -135,7 +135,11 @@ module Nexpose
       http = Net::HTTP.new(nsc.host, nsc.port)
       http.read_timeout = timeout if timeout
       http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      if nsc.trust_store.nil?
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      else
+        http.cert_store = nsc.trust_store
+      end
       http
     end
 
