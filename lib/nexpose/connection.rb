@@ -8,6 +8,19 @@ module Nexpose
   #   # Create a new Nexpose::Connection from a URI or "URI" String
   #   nsc = Connection.from_uri('https://10.1.40.10:3780', 'nxadmin', 'password')
   #
+  #   # Create a new Nexpose::Connection with a specific port
+  #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password', 443)
+  #
+  #   # Create a new Nexpose::Connection with a silo identifier
+  #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password', 3780, 'default')
+  #
+  #   # Create a new Nexpose::Connection with a two-factor authentication (2FA) token
+  #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password', 3780, nil, '123456')
+  #
+  #   # Create a new Nexpose::Connection with an excplicitly trusted web certificate
+  #   trusted_cert = ::File.read('cert.pem')
+  #   nsc = Connection.new('10.1.40.10', 'nxadmin', 'password', 3780, nil, nil, trusted_cert)
+  #
   #   # Login to NSC and Establish a Session ID
   #   nsc.login
   #
@@ -54,6 +67,14 @@ module Nexpose
     end
 
     # A constructor for Connection
+    #
+    # @param [String] ip The IP address or hostname/FQDN of the Nexpose console.
+    # @param [String] user The username for Nexpose sessions.
+    # @param [String] pass The password for Nexpose sessions.
+    # @param [Fixnum] port The port number of the Nexpose console.
+    # @param [String] silo_id The silo identifier for Nexpose sessions.
+    # @param [String] token The two-factor authentication (2FA) token for Nexpose sessions.
+    # @param [String] trust_cert The PEM-formatted web certificate of the Nexpose console. Used for SSL validation.
     def initialize(ip, user, pass, port = 3780, silo_id = nil, token = nil, trust_cert = nil)
       @host = ip
       @port = port
