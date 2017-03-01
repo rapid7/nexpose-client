@@ -166,6 +166,46 @@ module Nexpose
       xml
     end
 
+    # Test this credential against a target where the credentials should apply.
+    # Only works for a newly created credential. Loading an existing credential
+    # will likely fail.
+    #
+    # @param [Connection] nsc An active connection to the security console.
+    # @param [String] target Target host to check credentials against.
+    # @param [Fixnum] engine_id ID of the engine to use for testing credentials.
+    #   Will default to the local engine if none is provided.
+    #
+    def test(nsc, target, engine_id = nil, siteid = -1)
+      unless engine_id
+        engine_id = nsc.engines.find { |e| e.name == 'Local scan engine' }.id
+      end
+      @port = Credential::DEFAULT_PORTS[@service] if @port.nil?
+      parameters = _to_param(target, engine_id, @port, siteid)
+      xml = AJAX.form_post(nsc, '/data/credential/shared/test', parameters)
+      result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
+      result.attributes['success'].to_i == 1
+    end
+
+
+    def _to_param(target, engine_id, port, siteid)
+      { engineid: engine_id,
+        sc_creds_dev: target,
+        sc_creds_svc: @service,
+        sc_creds_database: @database,
+        sc_creds_domain: @domain,
+        sc_creds_uname: @username,
+        sc_creds_password: @password,
+        sc_creds_pemkey: @pem_key,
+        sc_creds_port: port,
+        sc_creds_privilegeelevationusername: @privilege_username,
+        sc_creds_privilegeelevationpassword: @privilege_password,
+        sc_creds_privilegeelevationtype: @privilege_type,
+        sc_creds_snmpv3authtype: @auth_type,
+        sc_creds_snmpv3privtype: @privacy_type,
+        sc_creds_snmpv3privpassword: @privacy_password,
+        siteid: siteid }
+    end
+
     def to_xml
       as_xml.to_s
     end
