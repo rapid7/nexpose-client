@@ -33,7 +33,7 @@ module Nexpose
         interval = repeat_blackout_hash[:interval]
       end
 
-      new(hash[:start_date], hash[:blackout_duration], type, interval)
+      new(hash[:start_date], hash[:enabled], hash[:blackout_duration],  type, interval)
     end
 
     def to_h
