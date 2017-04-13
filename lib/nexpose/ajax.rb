@@ -192,8 +192,10 @@ module Nexpose
     def get_error_message(request, response)
       version = get_request_api_version(request)
       data_request = use_response_error_message?(request, response)
-      return_response = (version >= 2.1 || data_request )
-      (return_response && response.body) ? "response body: #{response.body}" : "request body: #{request.body}"
+      return_response = (version >= 2.1 || data_request)
+      return "request body: #{request.body}" unless return_response && response.body
+      return "response body: #{response.body}" unless response.content_type.include? 'application/json'
+      "response message: #{JSON.parse(response.body)['message']}"
     end
 
     # Code cleanup to allow for cleaner get_error_message method
@@ -201,6 +203,8 @@ module Nexpose
     def use_response_error_message?(request, response)
       if (request.path.include?('/data/') && !response.content_type.nil?)
         response.content_type.include? 'text/plain'
+      elsif request.path.include?('/api/experimental/') && !response.content_type.nil?
+        response.content_type.include? 'application/json'
       else
         return false
       end
