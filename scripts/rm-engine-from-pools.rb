@@ -6,7 +6,7 @@ require 'optparse'
 
 include Nexpose
 
-DEFAULT_ENGINE_POOL = "Default Engine Pool"
+DEFAULT_ENGINE_POOL = 'Default Engine Pool'
 
 @port = 3780
 @file = nil
@@ -32,7 +32,7 @@ if __FILE__ == $0
              'The Nexpose listening port') { |o| @port = o }
       opt.on('-o',
              '--output FILE',
-             'Outputs the pools to FILE instead of stdout') { |o| @file = File.open(o, "w") }
+             'Outputs the pools to FILE instead of stdout') { |o| @file = File.open(o, 'w') }
       opt.on('-l',
              '--login LOGIN_NAME',
              'The login name to use') { |o| @username = o }
@@ -47,32 +47,32 @@ if __FILE__ == $0
     port = Integer(@port)
     username = @username
 
-    raise OptionParser::MissingArgument, "You must specify the nexpose host." unless hostname
-    raise OptionParser::MissingArgument, "You must specify the engine that will be removed from pools" unless engine_name
+    raise OptionParser::MissingArgument, 'You must specify the nexpose host.' unless hostname
+    raise OptionParser::MissingArgument, 'You must specify the engine that will be removed from pools' unless engine_name
 
-    puts "Enter your Nexpose credentials."
-    print "Username: " unless username
+    puts 'Enter your Nexpose credentials.'
+    print 'Username: ' unless username
     username = username || gets()
-    print "Password: "
+    print 'Password: '
     password = STDIN.noecho(&:gets)
-    puts ""
+    puts ''
     username = username.chomp 
     password = password.chomp
-    
+
     nsc = Connection.new(hostname, username, password, port)
     nsc.login
 
-    engine = nsc.engines.each.find { |e| e.name == engine_name }
+    engine = nsc.engines.each.detect { |e| e.name == engine_name }
     raise 'Engine not found' unless engine 
 
     pools_to_save = []
-    print "Removing engines from pools..."
+    print 'Removing engines from pools...'
     nsc.engine_pools.each do |pool_summary|
       next if pool_summary.name == DEFAULT_ENGINE_POOL
       pool = EnginePool.load(nsc, pool_summary.name)
 
       if pool.engines.size > 1
-        pool.engines.delete_if do |e| 
+        pool.engines.delete_if do |e|
           found = e.name == engine.name
           output pool.name if found
           found
@@ -81,15 +81,18 @@ if __FILE__ == $0
       else
         output "Skipping pool #{pool.name} since it has only one engine"
       end
-      print "..."
+      print '...'
     end
-    puts "Done!"
-    
-    print "Saving pools"
-    pools_to_save.each { |pool| pool.save(nsc); print "." }
-    puts "Done!"
-  rescue ArgumentError => ex
-    puts "Port must be an integer"
+    puts 'Done!'
+
+    print 'Saving pools'
+    pools_to_save.each do |pool| 
+      pool.save(nsc)
+      print '.'
+    end
+    puts 'Done!'
+  rescue ArgumentError
+    puts 'Port must be an integer'
     @retval = 1
 
   rescue SocketError => ex
@@ -108,13 +111,13 @@ if __FILE__ == $0
     puts ex
     @retval = 1
 
-  rescue Exception => ex
+  rescue StandardError => ex
     puts ex
     @retval = 1
 
   ensure
-    nsc.logout if nsc.session_id rescue nil
-    @file.close if @file rescue nil
+    nsc&.logout if nsc&.session_id
+    @file&.close
     exit @retval
   end
 end
