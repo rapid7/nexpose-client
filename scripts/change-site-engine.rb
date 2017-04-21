@@ -9,7 +9,6 @@ include Nexpose
 
 CSV_HEADER = "Site ID,Site Name"
 @src_engine = nil
-@dst_engine = nil
 @output_file = nil
 @input_file = nil
 @username = nil
@@ -34,16 +33,13 @@ if __FILE__ == $0
   begin
     STDOUT.sync = true
     OptionParser.new do |opt|
-      opt.banner = "Usage: #{$0} <nexpose_host> OPTIONS"
+      opt.banner = "Usage: #{$0} <nexpose_host> <dst_engine> <-s src_engine | -i input_file> [options]"
       opt.on('-p',
              '--port PORT',
              'The Nexpose listening port') { |o| @port = o }
       opt.on('-s', 
              '--source-engine SRC_ENGINE', 
              'The engine from which the sites will be moved') { |o| @src_engine = o }
-      opt.on('-d',
-             '--dest-engine DST_ENGINE',
-             'The engine in which the sites will be moved') { |o| @dst_engine = o }
       opt.on('-o',
              '--output FILE',
              'The output FILE where the touched sites will be written') { |o| @output_file = File.open(o, "w") }
@@ -58,15 +54,15 @@ if __FILE__ == $0
                 'Print this help message.') { puts opt; exit }
     end.parse!
  
-    hostname = ARGV.pop
+    hostname = ARGV.shift
+    dst_engine = ARGV.shift
     port = Integer(@port)
     username = @username
     src_engine = @src_engine
-    dst_engine = @dst_engine
 
     raise OptionParser::MissingArgument, "You must specify the nexpose host." unless hostname
-    raise OptionParser::InvalidArgument, "You must specify either the source engine or the filename" unless (!src_engine.nil? ^ !@input_file.nil?) # XOR
     raise OptionParser::MissingArgument, "You must specify the engine in which the sites will be moved" unless dst_engine
+    raise OptionParser::InvalidArgument, "You must specify either the source engine or the filename" unless (!src_engine.nil? ^ !@input_file.nil?) # XOR
 
     puts "Enter your Nexpose credentials."
     print "Username: " unless username
