@@ -5,7 +5,7 @@ require 'optparse'
 
 include Nexpose
 
-DEFAULT_ENGINE_POOL = 'Default Engine Pool'
+@DEFAULT_ENGINE_POOL = 'Default Engine Pool'
 
 @port = 3780
 @file = nil
@@ -35,12 +35,10 @@ if __FILE__ == $0
       opt.on('-l',
              '--login LOGIN_NAME',
              'The login name to use') { |o| @username = o }
-      opt.on_tail('-h',
-                  '--help',
-                  'Print this help message.') { 
-                  puts opt
-                  exit 0
-                  }
+      opt.on_tail('-h', '--help', 'Print this help message.') do |o|
+        puts opt
+        exit 0
+      end
     end.parse!
 
     hostname = ARGV.shift
@@ -65,7 +63,7 @@ if __FILE__ == $0
     nsc.login
 
     engine = nsc.engines.each.detect { |e| e.name == engine_name }
-    raise 'Engine not found' unless engine 
+    raise 'Engine not found' unless engine
 
     pools_to_save = []
     print 'Removing engines from pools...'
