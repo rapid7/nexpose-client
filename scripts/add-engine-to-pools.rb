@@ -31,11 +31,11 @@ if __FILE__ == $0
     port = Integer(@port)
     username = @username
 
-    @file = File.open(filename)
 
     raise OptionParser::MissingArgument, "You must specify the nexpose host." unless hostname
     raise OptionParser::MissingArgument, "You must specify the engine that will be removed from pools" unless engine_name
     raise OptionParser::MissingArgument, "You must specify the file containing the name of engine pools" unless filename
+    raise IOError, "File not found" unless File.file? filename
 
     puts "Enter your Nexpose credentials."
     print "Username: " unless username
@@ -54,6 +54,7 @@ if __FILE__ == $0
 
     pools_to_save = []
 
+    @file = File.open(filename)
     print "Adding engine to pools"
     @file.each_line do |line|
       pool_name = line.chomp
