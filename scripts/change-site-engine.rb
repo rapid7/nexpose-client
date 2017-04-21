@@ -34,7 +34,7 @@ if __FILE__ == $0
   begin
     STDOUT.sync = true
     OptionParser.new do |opt|
-      opt.banner = "Usage: #{$0} <nexpose_hostname> OPTIONS"
+      opt.banner = "Usage: #{$0} <nexpose_host> OPTIONS"
       opt.on('-p',
              '--port PORT',
              'The Nexpose listening port') { |o| @port = o }

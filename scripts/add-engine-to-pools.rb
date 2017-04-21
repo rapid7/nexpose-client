@@ -18,7 +18,7 @@ if __FILE__ == $0
   begin
     STDOUT.sync = true
     OptionParser.new do |opt|
-      opt.banner = "Usage: #{File::basename($0)} <nexpose_hostname> <engine> <input_file> [options]"
+      opt.banner = "Usage: #{File::basename($0)} <nexpose_host> <engine> <input_file> [options]"
       opt.on('-p', '--port PORT', 'The Nexpose listening port') { |o| @port = o }
       opt.on('-l', '--login LOGIN_NAME', 'The login name to use') { |o| @username = o }
       opt.on_tail('-h', '--help', 'Print this help message.') { puts opt; exit }
