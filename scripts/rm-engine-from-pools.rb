@@ -1,11 +1,13 @@
-#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# !/usr/bin/env ruby
 require 'nexpose'
 require 'io/console'
 require 'optparse'
 
 include Nexpose
 
-@DEFAULT_ENGINE_POOL = 'Default Engine Pool'
+DEFAULT_ENGINE_POOL = 'Default Engine Pool'
 
 @port = 3780
 @file = nil
@@ -21,11 +23,11 @@ def output(msg)
   end
 end
 
-if __FILE__ == $0
+if __FILE__ == $PROGRAM_NAME
   begin
     STDOUT.sync = true
     OptionParser.new do |opt|
-      opt.banner = "Usage: #{File.basename($0)} <nexpose_host> <engine> [options]"
+      opt.banner = "Usage: #{$PROGRAM_NAME} <nexpose_host> <engine> [options]"
       opt.on('-p',
              '--port PORT',
              'The Nexpose listening port') { |o| @port = o }
@@ -35,7 +37,7 @@ if __FILE__ == $0
       opt.on('-l',
              '--login LOGIN_NAME',
              'The login name to use') { |o| @username = o }
-      opt.on_tail('-h', '--help', 'Print this help message.') do |o|
+      opt.on_tail('-h', '--help', 'Print this help message.') do
         puts opt
         exit 0
       end
@@ -94,27 +96,21 @@ if __FILE__ == $0
   rescue ArgumentError
     puts 'Port must be an integer'
     @retval = 1
-
   rescue SocketError => ex
     puts ex
     @retval = 1
-
   rescue APIError => ex
     puts ex.reason
     @retval = 1
-
   rescue IOError, SystemCallError => ex
     puts ex
     @retval = 1
-
   rescue RuntimeError => ex
     puts ex
     @retval = 1
-
   rescue StandardError => ex
     puts ex
     @retval = 1
-
   ensure
     nsc&.logout if nsc&.session_id
     @file&.close
