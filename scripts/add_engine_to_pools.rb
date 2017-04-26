@@ -59,7 +59,7 @@ if __FILE__ == $PROGRAM_NAME
     nsc = Connection.new(hostname, username, password, port)
     nsc.login
 
-    engine = nsc.engines.each.find { |e| e.name == engine_name }
+    engine = nsc.engines.each.detect { |e| e.name == engine_name }
     raise 'Engine not found' unless engine
 
     pools_to_save = []
