@@ -31,7 +31,7 @@ module Nexpose
       # load includes admin users, but save will fail if they are included.
       admins = nsc.users.select { |u| u.is_admin }.map { |u| u.id }
       @users.reject! { |id| admins.member? id }
-      params = @id ? { 'entityid' => @id, 'mode' => 'edit' } : { 'entityid' => false, 'mode' => false } 
+      params = @id ? { 'entityid' => @id, 'mode' => 'edit' } : { 'entityid' => false, 'mode' => false }
       uri = AJAX.parameterize_uri('/data/assetGroup/saveAssetGroup', params)
       data = JSON.parse(AJAX.post(nsc, uri, _to_entity_details, AJAX::CONTENT_TYPE::JSON))
       data['response'] == 'success.'
@@ -47,7 +47,7 @@ module Nexpose
       json = JSON.parse(AJAX.get(nsc, "/data/assetGroup/loadAssetGroup?entityid=#{id}"))
       raise APIError.new(json, json['message']) if json['response'] =~ /failure/
       raise ArgumentError.new('Not a dynamic asset group.') unless json['dynamic']
-      dag = new(json['name'], Criteria.parse(json['searchCriteria']), json['tag'])
+      dag = new(json['name'], Criteria.parse(json['searchCriteria']), json['description'])
       dag.id = id
       dag.users = json['users']
       dag
@@ -56,7 +56,7 @@ module Nexpose
     def _to_entity_details
       obj = { 'searchCriteria' => @criteria.to_h,
               'name' => @name,
-              'tag' => @description.nil? ? '' : @description,
+              'description' => @description.nil? ? '' : @description,
               'dynamic' => true,
               'users' => @users }
       JSON.generate(obj)
