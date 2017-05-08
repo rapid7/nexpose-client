@@ -235,7 +235,7 @@ module Nexpose
         xml.add_element('range', 'from' => asset.from, 'to' => asset.to)
       else  # Assume HostName
         host = REXML::Element.new('host')
-        host.text = asset.host
+        host.text = asset
         xml.add_element(host)
       end
     end
