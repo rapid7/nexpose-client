@@ -723,7 +723,7 @@ module Nexpose
       return false unless single_ip.respond_to? :from
       from = IPAddr.new(@from)
       to = @to.nil? ? from : IPAddr.new(@to)
-      other = IPAddr.new(single_ip)
+      other = IPAddr.new(single_ip.to_s)
 
       if other < from
         false
