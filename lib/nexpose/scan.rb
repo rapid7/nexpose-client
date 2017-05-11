@@ -549,6 +549,22 @@ module Nexpose
       @scan_id, @site_id, @engine_id, @status, @start_time, @end_time = scan_id, site_id, engine_id, status, start_time, end_time
       @message, @tasks, @nodes, @vulnerabilities = message, tasks, nodes, vulnerabilities
     end
+    
+    # Generate an XML representation of this scan summary
+    # @return [String] XML of scan summary and sub-elements
+    def to_xml
+      xml = %Q(<ScanSummary scan-id='#{scan_id}' site-id='#{site_id}' name='' startTime='#{start_time.getutc.strftime('%Y%m%dT%H%M%S%L')}' endTime='#{end_time.getutc.strftime('%Y%m%dT%H%M%S%L')}' engine-id='#{engine_id}' status='#{status}'>)
+
+      xml << %Q(<message>#{message}</message>) if message
+
+      xml << tasks.to_xml
+
+      xml << nodes.to_xml
+
+      xml << vulnerabilities.to_xml
+
+      xml << %Q(</ScanSummary>)
+    end
 
     # Parse a response from a Nexpose console into a valid ScanSummary object.
     #
@@ -596,6 +612,12 @@ module Nexpose
       def initialize(pending, active, completed)
         @pending, @active, @completed = pending, active, completed
       end
+      
+      # Generate an XML representation of this scan summary's tasks
+      # @return [String] XML of tasks summary
+      def to_xml
+        xml = %Q(<tasks active='#{active}' completed='#{completed}' pending='#{pending}' />)
+      end
 
       # Parse REXML to Tasks object.
       #
@@ -617,6 +639,12 @@ module Nexpose
 
       def initialize(live, dead, filtered, unresolved, other)
         @live, @dead, @filtered, @unresolved, @other = live, dead, filtered, unresolved, other
+      end
+      
+      # Generate an XML representation of this scan summary's nodes
+      # @return [String] XML of nodes summary
+      def to_xml
+        xml = %Q(<nodes dead='#{dead}' filtered='#{filtered}' live='#{live}' other='#{other}' unresolved='#{unresolved}' />)
       end
 
       # Parse REXML to Nodes object.
@@ -650,6 +678,26 @@ module Nexpose
             vuln_exploit, vuln_version, vuln_potential,
             not_vuln_exploit, not_vuln_version,
             error, disabled, other
+      end
+      
+      # Generate an XML representation of this scan's vulnerabilities
+      # @return [String] XML of vulnerabilites
+      def to_xml
+        xml = %Q(<vulnerabilities count='#{not_vuln_exploit.count}' status='not-vuln-exploit' />)
+
+        xml << %Q(<vulnerabilities count='#{not_vuln_version.count}' status='not-vuln-version' />)
+
+        vuln_exploit.severities.each { |severity, count| xml << %Q(<vulnerabilities count='#{count}' severity='#{severity}' status='vuln-exploit' />) }
+
+        vuln_version.severities.each { |severity, count| xml << %Q(<vulnerabilities count='#{count}' severity='#{severity}' status='vuln-version' />) }
+
+        vuln_potential.severities.each { |severity, count| xml << %Q(<vulnerabilities count='#{count}' severity='#{severity}' status='vuln-potential' />) }
+
+        xml << %Q(<vulnerabilities count='#{error.count}' status='error' />)
+
+        xml << %Q(<vulnerabilities count='#{disabled.count}' status='disabled' />)
+
+        xml << %Q(<vulnerabilities count='#{other.count}' status='other' />)
       end
 
       # Parse REXML to Vulnerabilities object.
