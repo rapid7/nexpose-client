@@ -123,4 +123,19 @@ module Nexpose
       arr.map(&:flatten).map { |p| { 'key' => p.first.to_s, 'value' => p.last.to_s } }
     end
   end
+
+  module SymbolizeHashKeys
+    module_function
+
+    # Convert any Hash keys into Symbols.
+    #
+    # @param [Hash] A hash which has keys that need to be converted to symbols.
+    # @return [Hash] Hash formatted where all keys are symbols.
+    #
+    def symbolize(hash)
+      JSON.parse(hash.to_json, symbolize_names: true).to_hash
+    end
+  end
+
+
 end
