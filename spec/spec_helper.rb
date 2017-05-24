@@ -38,3 +38,6 @@ end
 SimpleCov.start
 
 require 'nexpose'
+
+def testCamelCaseComment(from: 'hound')
+end
