@@ -28,7 +28,7 @@ Our coding standards include:
 ## License
 
 The nexpose-client gem is provided under the 3-Clause BSD License. See [COPYING](COPYING) for details.
- 
+
 ## Credits
 
 Rapid7, Inc.
