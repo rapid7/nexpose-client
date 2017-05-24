@@ -56,8 +56,8 @@ module Nexpose
     # scope of credential
     attr_accessor :scope
 
-    #Create a credential object using name, id, description, host and port
-    def self.for_service(name, id = -1, desc = nil, host = nil, port = nil, service = Credential::Service::CIFS)
+    # Create a credential object using name, id, description, host and port
+    def self.for_service(name, service = Credential::Service::CIFS, id = -1, desc = nil, host = nil, port = nil)
       cred = new
       cred.name = name
       cred.id = id.to_i
