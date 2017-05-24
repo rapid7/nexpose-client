@@ -321,6 +321,47 @@ module Nexpose
         raise "#{e.message} in given IP range"
       end
     end
+    
+    # Delete an asset to this site by host name.
+    #
+    # @param [String] hostname FQDN or DNS-resolvable host name of an asset.
+    def delete_host(hostname)
+      @assets = assets.reject { |asset| asset == HostName.new(hostname) } 
+    end
+
+    # Delete an asset to this site by IP address.
+    #
+    # @param [String] ip IP address of an asset.
+    def delete_ip(ip)
+      @assets = assets.reject { |asset| asset == IPRange.new(ip) }
+    end
+
+    # Delete assets to this site by IP address range.
+    #
+    # @param [String] from Beginning IP address of a range.
+    # @param [String] to Ending IP address of a range.
+    def delete_ip_range(from, to)
+      @assets = assets.reject { |asset| asset == IPRange.new(from, to) }
+    end
+
+    # Delete an asset to this site, resolving whether an IP or hostname is
+    # provided.
+    #
+    # @param [String] asset Identifier of an asset, either IP or host name.
+    #
+    def delete_asset(asset)
+      begin
+        # If the asset registers as a valid IP, store as IP.
+        ip = IPAddr.new(asset)
+        delete_ip(asset)
+      rescue ArgumentError => e
+        if e.message == 'invalid address'
+          delete_host(asset)
+        else
+          raise "Unable to parse asset: '#{asset}'. #{e.message}"
+        end
+      end
+    end
 
     # Adds an asset to this site excluded scan targets, resolving whether an IP or hostname is
     # provided.
