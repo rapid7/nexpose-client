@@ -52,6 +52,7 @@ module Nexpose
       begin
         prepare_http_client
         @http.read_timeout = options[:timeout] if options.key? :timeout
+        @http.open_timeout = options.key?(:open_timeout) ? options[:open_timeout] : 60
         @raw_response = @http.post(@uri.path, @req, @headers)
         @raw_response_data = @raw_response.read_body
 
