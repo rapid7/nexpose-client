@@ -225,6 +225,7 @@ module Nexpose
       conn.protocol = xml.attributes['protocol']
       conn.port = xml.attributes['port'].to_i
       conn.status = xml.attributes['connection-status']
+      conn.engine_id = xml.attributes['engine-id'].to_i
       conn
     end
 
