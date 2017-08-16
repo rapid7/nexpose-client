@@ -34,7 +34,9 @@ module Nexpose
     # Domain or realm.
     attr_accessor :domain
     # User name.
-    attr_accessor :username
+    attr_accessor :user_name
+    alias :username :user_name
+    alias :username= :user_name=
     # User name to use when elevating permissions (e.g., sudo).
     attr_accessor :privilege_username
     # Boolean to indicate whether this credential applies to all sites.
@@ -48,7 +50,7 @@ module Nexpose
       cred.name = json['name']
       cred.type = json['service']
       cred.domain = json['domain']
-      cred.username = json['username']
+      cred.user_name = json['username']
       cred.privilege_username = json['privilegeElevationUsername']
       cred.all_sites = json['scope'] == 'ALL_SITES_ENABLED_DEFAULT'
       cred.last_modified = Time.at(json['lastModified']['time'] / 1000)
@@ -133,7 +135,7 @@ module Nexpose
       account.add_element('Field', { 'name' => 'database' }).add_text(@database)
 
       account.add_element('Field', { 'name' => 'domain' }).add_text(@domain)
-      account.add_element('Field', { 'name' => 'username' }).add_text(@username)
+      account.add_element('Field', { 'name' => 'username' }).add_text(@user_name)
       account.add_element('Field', { 'name' => 'ntlmhash' }).add_text(@ntlm_hash) if @ntlm_hash
       account.add_element('Field', { 'name' => 'password' }).add_text(@password) if @password
       account.add_element('Field', { 'name' => 'pemkey' }).add_text(@pem_key) if @pem_key
@@ -193,7 +195,7 @@ module Nexpose
         sc_creds_svc: @service,
         sc_creds_database: @database,
         sc_creds_domain: @domain,
-        sc_creds_uname: @username,
+        sc_creds_uname: @user_name,
         sc_creds_password: @password,
         sc_creds_pemkey: @pem_key,
         sc_creds_port: port,
@@ -225,7 +227,7 @@ module Nexpose
           when 'domain'
             cred.domain = field.text
           when 'username'
-            cred.username = field.text
+            cred.user_name = field.text
           when 'password'
             cred.password = field.text
           when 'ntlmhash'
