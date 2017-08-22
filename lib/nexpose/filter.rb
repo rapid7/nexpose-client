@@ -197,6 +197,7 @@ module Nexpose
       DO_NOT_INCLUDE = 'DO_NOT_INCLUDE'
       IS_APPLIED = 'IS_APPLIED'
       IS_NOT_APPLIED = 'IS_NOT_APPLIED'
+      LIKE = 'LIKE'
     end
 
     # Specialized values used by certain search fields
