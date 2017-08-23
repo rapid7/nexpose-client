@@ -56,6 +56,50 @@ module Nexpose
     # scope of credential
     attr_accessor :scope
 
+    # Test this credential against a target where the credentials should apply.
+    # Only works for a newly created credential. Loading an existing credential
+    # will likely fail due to the API not sending password.
+    #
+    # @param [Connection] nsc An active connection to the security console.
+    # @param [String] target Target host to check credentials against.
+    # @param [Fixnum] engine_id ID of the engine to use for testing credentials.
+    #    Will default to the local engine if none is provided.
+    # @param [Fixnum] siteid
+    # @return [Boolean] If the credential is able to connect to the target.
+    #
+    def test(nsc, target, engine_id = nil, siteid = -1)
+      unless engine_id
+        engine_id = nsc.engines.find { |e| e.name == 'Local scan engine' }.id
+      end
+      @port = Credential::DEFAULT_PORTS[@service] if @port.nil?
+      parameters = _to_param(target, engine_id, @port, siteid)
+      parameters = JSON.generate(parameters)
+      resp = JSON.parse(Nexpose::AJAX.post(nsc, "/data/credential/test", parameters, Nexpose::AJAX::CONTENT_TYPE::JSON))
+      resp['success'] == 'true'
+    end
+
+
+    def _to_param(target, engine_id, port, siteid)
+      {
+        dev: target,
+        port: port,
+        siteID: siteid,
+        engineID: engine_id,
+        service: @service,
+        domain: @domain,
+        database: @database,
+        userName: @user_name,
+        password: @password,
+        privilegeElevationUserName: @permission_elevation_user,
+        privilegeElevationPassword: @permission_elevation_password,
+        privilegeElevationType: @permission_elevation_type,
+        pemkey: @pem_format_private_key,
+        snmpv3AuthType: @authentication_type,
+        snmpv3PrivType: @privacy_type,
+        snmpv3PrivPassword: @privacy_password
+      }
+    end
+
     #Create a credential object using name, id, description, host and port
     def self.for_service(name, id = -1, desc = nil, host = nil, port = nil, service = Credential::Service::CIFS)
       cred = new

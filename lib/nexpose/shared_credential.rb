@@ -35,6 +35,8 @@ module Nexpose
     attr_accessor :domain
     # User name.
     attr_accessor :username
+    alias :user_name :username
+    alias :user_name= :username=
     # User name to use when elevating permissions (e.g., sudo).
     attr_accessor :privilege_username
     # Boolean to indicate whether this credential applies to all sites.
