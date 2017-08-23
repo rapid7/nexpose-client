@@ -100,7 +100,7 @@ module Nexpose
       # Valid Values (See Value::IPType): IPv4, IPv6
       IP_ALT_ADDRESS_TYPE = 'IP_ALT_ADDRESS_TYPE'
 
-      # Valid Operators: IS, IS_NOT, IN_RANGE, NOT_IN_RANGE, IN, NOT_IN
+      # Valid Operators: IS, IS_NOT, IN_RANGE, NOT_IN_RANGE, IN, NOT_IN, LIKE, NOT_LIKE
       IP_ADDRESS = 'IP_RANGE'
       IP_RANGE = IP_ADDRESS
 
@@ -197,6 +197,8 @@ module Nexpose
       DO_NOT_INCLUDE = 'DO_NOT_INCLUDE'
       IS_APPLIED = 'IS_APPLIED'
       IS_NOT_APPLIED = 'IS_NOT_APPLIED'
+      LIKE = 'LIKE'
+      NOT_LIKE = 'NOT_LIKE'
     end
 
     # Specialized values used by certain search fields
