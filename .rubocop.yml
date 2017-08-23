@@ -15,6 +15,9 @@ Layout/EmptyLinesAroundModuleBody:
 Layout/EmptyLinesAroundClassBody:
   Enabled: false
 
+Style/RedundantSelf:
+  Enabled: false
+
 Style/StringLiterals:
   EnforcedStyle: single_quotes
 
