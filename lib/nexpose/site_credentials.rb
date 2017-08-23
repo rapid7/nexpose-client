@@ -132,6 +132,7 @@ module Nexpose
     # Copy an existing configuration from a Nexpose instance.
     # Returned object will reset the credential ID and append "Copy" to the existing
     # name.
+    # Reminder: The password field will not be populated due to the API not sending password.
     #
     # @param [Connection] connection Connection to the security console.
     # @param [String] id Unique identifier of an site.
@@ -139,23 +140,25 @@ module Nexpose
     # @return [SiteCredentials] Site credential loaded from a Nexpose console.
     #
     def self.copy(connection, site_id, credential_id)
-      siteCredential = self.load(connection, site_id, credential_id)
-      siteCredential.id = -1
-      siteCredential.name = "#{siteCredential.name} Copy"
-      siteCredential
+      site_credential      = self.load(connection, site_id, credential_id)
+      site_credential.id   = -1
+      site_credential.name = "#{site_credential.name} Copy"
+      site_credential
     end
 
-    # # Copy an existing configuration from a site credential.
-    # # Returned object will reset the credential ID and append "Copy" to the existing
-    # # name.
-    # #
-    # # @return [SiteCredentials] modified.
-    # #
-    # def copy!!
-    #   siteCredential.id = -1
-    #   siteCredential.name = "#{siteCredential.name} Copy"
-    #   siteCredential
-    # end
+    # Copy an existing configuration from a site credential.
+    # Returned object will reset the credential ID and append "Copy" to the existing
+    # name.
+    # Reminder: The password field will not be populated due to the API not sending password.
+    #
+    # @return [SiteCredentials] modified.
+    #
+    def copy
+      site_credential      = self.clone
+      site_credential.id   = -1
+      site_credential.name = "#{site_credential.name} Copy"
+      site_credential
+    end
 
     def to_json
       JSON.generate(to_h)

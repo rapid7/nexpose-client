@@ -177,7 +177,7 @@ module Nexpose
 
     # Test this credential against a target where the credentials should apply.
     # Only works for a newly created credential. Loading an existing credential
-    # will likely fail.
+    # will likely fail due to the API not sending password.
     #
     # @param [Connection] nsc An active connection to the security console.
     # @param [String] target Target host to check credentials against.
