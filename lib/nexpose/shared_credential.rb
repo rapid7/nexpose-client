@@ -39,6 +39,8 @@ module Nexpose
     alias :user_name= :username=
     # User name to use when elevating permissions (e.g., sudo).
     attr_accessor :privilege_username
+    alias :permission_elevation_user :privilege_username
+    alias :permission_elevation_user= :privilege_username=
     # Boolean to indicate whether this credential applies to all sites.
     attr_accessor :all_sites
     # When this credential was last modified.
@@ -81,8 +83,12 @@ module Nexpose
     attr_accessor :pem_key
     # Password to use when elevating permissions (e.g., sudo).
     attr_accessor :privilege_password
+    alias :permission_elevation_password :privilege_password
+    alias :permission_elevation_password= :privilege_password=
     # Permission elevation type. See Nexpose::Credential::ElevationType.
     attr_accessor :privilege_type
+    alias :permission_elevation_type :privilege_type
+    alias :permission_elevation_type= :privilege_type=
     # Privacty password of SNMP v3 credential
     attr_accessor :privacy_password
     # Authentication type of SNMP v3 credential

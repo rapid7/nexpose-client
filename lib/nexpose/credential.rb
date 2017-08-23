@@ -67,6 +67,7 @@ module Nexpose
       SUDOSU = 'SUDOSU'
       SU     = 'SU'
       PBRUN  = 'PBRUN'
+      ENABLE = 'PRIVILEGEDEXEC'  # Cisco Enable/ Privileged Exec
     end
 
     #Authentication type for SNMP version 3
