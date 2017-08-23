@@ -35,8 +35,12 @@ module Nexpose
     attr_accessor :domain
     # User name.
     attr_accessor :username
+    alias :user_name :username
+    alias :user_name= :username=
     # User name to use when elevating permissions (e.g., sudo).
     attr_accessor :privilege_username
+    alias :permission_elevation_user :privilege_username
+    alias :permission_elevation_user= :privilege_username=
     # Boolean to indicate whether this credential applies to all sites.
     attr_accessor :all_sites
     # When this credential was last modified.
@@ -79,8 +83,12 @@ module Nexpose
     attr_accessor :pem_key
     # Password to use when elevating permissions (e.g., sudo).
     attr_accessor :privilege_password
+    alias :permission_elevation_password :privilege_password
+    alias :permission_elevation_password= :privilege_password=
     # Permission elevation type. See Nexpose::Credential::ElevationType.
     attr_accessor :privilege_type
+    alias :permission_elevation_type :privilege_type
+    alias :permission_elevation_type= :privilege_type=
     # Privacty password of SNMP v3 credential
     attr_accessor :privacy_password
     # Authentication type of SNMP v3 credential
@@ -98,8 +106,9 @@ module Nexpose
     attr_accessor :disabled
 
     def initialize(name, id = -1)
-      @name, @id = name, id.to_i
-      @sites = []
+      @name     = name
+      @id       = id.to_i
+      @sites    = []
       @disabled = []
     end
 
@@ -168,7 +177,7 @@ module Nexpose
 
     # Test this credential against a target where the credentials should apply.
     # Only works for a newly created credential. Loading an existing credential
-    # will likely fail.
+    # will likely fail due to the API not sending password.
     #
     # @param [Connection] nsc An active connection to the security console.
     # @param [String] target Target host to check credentials against.
@@ -177,7 +186,7 @@ module Nexpose
     #
     def test(nsc, target, engine_id = nil, siteid = -1)
       unless engine_id
-        engine_id = nsc.engines.find { |e| e.name == 'Local scan engine' }.id
+        engine_id = nsc.engines.detect { |e| e.name == 'Local scan engine' }.id
       end
       @port = Credential::DEFAULT_PORTS[@service] if @port.nil?
       parameters = _to_param(target, engine_id, @port, siteid)
@@ -185,7 +194,6 @@ module Nexpose
       result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
       result.attributes['success'].to_i == 1
     end
-
 
     def _to_param(target, engine_id, port, siteid)
       { engineid: engine_id,
