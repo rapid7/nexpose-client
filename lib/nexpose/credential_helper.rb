@@ -5,7 +5,7 @@ module Nexpose
     def set_cvs_service(username = nil, password = nil)
       self.user_name = username
       self.password  = password
-      self.service   = Service::CVS
+      self.service   = Credential::Service::CVS
     end
 
     # sets the DB2 service
@@ -13,14 +13,14 @@ module Nexpose
       self.database  = database
       self.user_name = username
       self.password  = password
-      self.service   = Service::DB2
+      self.service   = Credential::Service::DB2
     end
 
     # sets the File Transfer Protocol (FTP) service
     def set_ftp_service(username = nil, password = nil)
       self.user_name = username
       self.password  = password
-      self.service   = Service::FTP
+      self.service   = Credential::Service::FTP
     end
 
     # sets the IBM AS/400 service.
@@ -28,13 +28,13 @@ module Nexpose
       self.domain    = domain
       self.user_name = username
       self.password  = password
-      self.service   = Service::AS400
+      self.service   = Credential::Service::AS400
     end
 
     # sets the Lotus Notes/Domino service.
     def set_notes_service(password = nil)
       self.notes_id_password = password
-      self.service           = Service::NOTES
+      self.service           = Credential::Service::NOTES
     end
 
     # sets the Microsoft SQL Server service.
@@ -44,7 +44,7 @@ module Nexpose
       self.use_windows_auth = domain.nil?
       self.user_name        = username
       self.password         = password
-      self.service          = Service::TDS
+      self.service          = Credential::Service::TDS
     end
 
     # sets the Microsoft Windows/Samba (SMB/CIFS) service.
@@ -52,7 +52,7 @@ module Nexpose
       self.domain    = domain
       self.user_name = username
       self.password  = password
-      self.service   = Service::CIFS
+      self.service   = Credential::Service::CIFS
     end
 
     # sets the Microsoft Windows/Samba LM/NTLM Hash (SMB/CIFS) service.
@@ -60,7 +60,7 @@ module Nexpose
       self.domain    = domain
       self.user_name = username
       self.password  = password
-      self.service   = Service::CIFSHASH
+      self.service   = Credential::Service::CIFSHASH
     end
 
     # sets the MySQL Server service.
@@ -68,7 +68,7 @@ module Nexpose
       self.database  = database
       self.user_name = username
       self.password  = password
-      self.service   = Service::MYSQL
+      self.service   = Credential::Service::MYSQL
     end
 
     # sets the Oracle service.
@@ -76,14 +76,14 @@ module Nexpose
       self.database  = sid
       self.user_name = username
       self.password  = password
-      self.service   = Service::ORACLE
+      self.service   = Credential::Service::ORACLE
     end
 
     # sets the Post Office Protocol (POP) service.
     def set_pop_service(username = nil, password = nil)
       self.user_name = username
       self.password  = password
-      self.service   = Service::POP
+      self.service   = Credential::Service::POP
     end
 
     # sets the PostgreSQL service.
@@ -91,14 +91,14 @@ module Nexpose
       self.database  = database
       self.user_name = username
       self.password  = password
-      self.service   = Service::POSTGRESQL
+      self.service   = Credential::Service::POSTGRESQL
     end
 
     # sets the Remote Execution service.
     def set_remote_execution_service(username = nil, password = nil)
       self.user_name = username
       self.password  = password
-      self.service   = Service::REMOTE_EXECUTION
+      self.service   = Credential::Service::REMOTE_EXECUTION
     end
 
     # sets the Secure Shell (SSH) service.
@@ -108,7 +108,7 @@ module Nexpose
       self.permission_elevation_type     = elevation_type || ElevationType::NONE
       self.permission_elevation_user     = elevation_user
       self.permission_elevation_password = elevation_password
-      self.service                       = Service::SSH
+      self.service                       = Credential::Service::SSH
     end
 
     # sets the Secure Shell (SSH) Public Key service.
@@ -119,13 +119,13 @@ module Nexpose
       self.permission_elevation_type     = elevation_type || ElevationType::NONE
       self.permission_elevation_user     = elevation_user
       self.permission_elevation_password = elevation_password
-      self.service                       = Service::SSH_KEY
+      self.service                       = Credential::Service::SSH_KEY
     end
 
     # sets the Simple Network Management Protocol v1/v2c service.
     def set_snmp_service(community_name = nil)
       self.community_name = community_name
-      self.service        = Service::SNMP
+      self.service        = Credential::Service::SNMP
     end
 
     # sets the Simple Network Management Protocol v3 service.
@@ -135,7 +135,7 @@ module Nexpose
       self.password            = password
       self.privacy_type        = privacy_type
       self.privacy_password    = privacy_password
-      self.service             = Service::SNMPV3
+      self.service             = Credential::Service::SNMPV3
     end
 
     # sets the Sybase SQL Server service.
@@ -145,14 +145,14 @@ module Nexpose
       self.use_windows_auth = domain.nil?
       self.user_name        = username
       self.password         = password
-      self.service          = Service::SYBASE
+      self.service          = Credential::Service::SYBASE
     end
 
     # sets the Telnet service.
     def set_telnet_service(username = nil, password = nil)
       self.user_name = username
       self.password  = password
-      self.service   = Service::TELNET
+      self.service   = Credential::Service::TELNET
     end
 
     # sets the Web Site HTTP Authentication service.
@@ -160,7 +160,7 @@ module Nexpose
       self.domain    = domain
       self.user_name = username
       self.password  = password
-      self.service   = Service::HTTP
+      self.service   = Credential::Service::HTTP
     end
 
   end
