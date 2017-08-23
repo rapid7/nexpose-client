@@ -1,5 +1,28 @@
+AllCops:
+  Exclude:
+    - 'spec/**/*'
+    - 'test/**/*'
+    - 'coverage/**/*'
+    - 'examples/**/*'
+    - 'scripts/**/*'
+
+Layout/EmptyLineBetweenDefs:
+  NumberOfEmptyLines: [1,2]
+
+Layout/EmptyLinesAroundModuleBody:
+  Enabled: false
+
+Layout/EmptyLinesAroundClassBody:
+  Enabled: false
+
 Style/StringLiterals:
   EnforcedStyle: single_quotes
 
 Metrics/LineLength:
-  Max: 120
+  Max: 170
+
+Metrics/ModuleLength:
+  Max: 200
+
+Metrics/ClassLength:
+  Max: 200

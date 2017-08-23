@@ -106,8 +106,9 @@ module Nexpose
     attr_accessor :disabled
 
     def initialize(name, id = -1)
-      @name, @id = name, id.to_i
-      @sites = []
+      @name     = name
+      @id       = id.to_i
+      @sites    = []
       @disabled = []
     end
 
@@ -185,7 +186,7 @@ module Nexpose
     #
     def test(nsc, target, engine_id = nil, siteid = -1)
       unless engine_id
-        engine_id = nsc.engines.find { |e| e.name == 'Local scan engine' }.id
+        engine_id = nsc.engines.detect { |e| e.name == 'Local scan engine' }.id
       end
       @port = Credential::DEFAULT_PORTS[@service] if @port.nil?
       parameters = _to_param(target, engine_id, @port, siteid)
@@ -193,7 +194,6 @@ module Nexpose
       result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
       result.attributes['success'].to_i == 1
     end
-
 
     def _to_param(target, engine_id, port, siteid)
       { engineid: engine_id,

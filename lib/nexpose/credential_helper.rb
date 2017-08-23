@@ -1,3 +1,5 @@
+# frozen_string_literal: true.
+
 module Nexpose
   module CredentialHelper
 
@@ -112,7 +114,7 @@ module Nexpose
     end
 
     # sets the Secure Shell (SSH) Public Key service.
-    def set_ssh_key_service(username, pemkey,  password = nil, elevation_type = nil, elevation_user = nil, elevation_password = nil)
+    def set_ssh_key_service(username, pemkey, password = nil, elevation_type = nil, elevation_user = nil, elevation_password = nil)
       self.user_name                     = username
       self.password                      = password
       self.pem_format_private_key        = pemkey

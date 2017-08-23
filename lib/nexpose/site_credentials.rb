@@ -69,12 +69,12 @@ module Nexpose
     #
     def test(nsc, target, engine_id = nil, siteid = -1)
       unless engine_id
-        engine_id = nsc.engines.find { |e| e.name == 'Local scan engine' }.id
+        engine_id = nsc.engines.detect { |e| e.name == 'Local scan engine' }.id
       end
       @port = Credential::DEFAULT_PORTS[@service] if @port.nil?
       parameters = _to_param(target, engine_id, @port, siteid)
       parameters = JSON.generate(parameters)
-      resp = JSON.parse(Nexpose::AJAX.post(nsc, "/data/credential/test", parameters, Nexpose::AJAX::CONTENT_TYPE::JSON))
+      resp = JSON.parse(Nexpose::AJAX.post(nsc, '/data/credential/test', parameters, Nexpose::AJAX::CONTENT_TYPE::JSON))
       resp['success'] == 'true'
     end
 
@@ -145,18 +145,17 @@ module Nexpose
       siteCredential
     end
 
-    # Copy an existing configuration from a site credential.
-    # Returned object will reset the credential ID and append "Copy" to the existing
-    # name.
-    #
-    # @param [siteCredential] site credential to be copied.
-    # @return [SiteCredentials] modified.
-    #
-    def self.copy(siteCredential)
-      siteCredential.id = -1
-      siteCredential.name = "#{siteCredential.name} Copy"
-      siteCredential
-    end
+    # # Copy an existing configuration from a site credential.
+    # # Returned object will reset the credential ID and append "Copy" to the existing
+    # # name.
+    # #
+    # # @return [SiteCredentials] modified.
+    # #
+    # def copy!!
+    #   siteCredential.id = -1
+    #   siteCredential.name = "#{siteCredential.name} Copy"
+    #   siteCredential
+    # end
 
     def to_json
       JSON.generate(to_h)

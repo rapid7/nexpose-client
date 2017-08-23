@@ -25,14 +25,13 @@ module Nexpose
                       'ssh-key'          => 22,
                       'telnet'           => 23,
                       'mysql'            => 3306,
-                      'db2'              => 50000 }
-
+                      'db2'              => 50_000 }
 
     # Credential scope
     module Scope
-      ALL_SITES_ENABLED_DEFAULT = 'A'
+      ALL_SITES_ENABLED_DEFAULT  = 'A'
       ALL_SITES_DISABLED_DEFAULT = 'G'
-      SITE_SPECIFIC = 'S'
+      SITE_SPECIFIC              = 'S'
     end
 
     # Credential Service/Type Options.
@@ -59,7 +58,6 @@ module Nexpose
       DB2              = 'db2'              # DB2
     end
 
-
     # Permission Elevation / Privilege Escalation Types.
     module ElevationType
       NONE   = 'NONE'
@@ -67,27 +65,26 @@ module Nexpose
       SUDOSU = 'SUDOSU'
       SU     = 'SU'
       PBRUN  = 'PBRUN'
-      ENABLE = 'PRIVILEGEDEXEC'  # Cisco Enable/ Privileged Exec
+      ENABLE = 'PRIVILEGEDEXEC' # Cisco Enable/ Privileged Exec
     end
 
-    #Authentication type for SNMP version 3
+    # Authentication type for SNMP version 3
     module AuthenticationType
-      NOAUTH = 'noauth'   # No authentication protocol
-      SHA = 'sha'         # SHA authentication protocol
-      MD5 = 'md5'         # MD5 authentication protocol
+      NOAUTH = 'noauth' # No authentication protocol
+      SHA    = 'sha'    # SHA authentication protocol
+      MD5    = 'md5'    # MD5 authentication protocol
     end
 
     # PrivacyType for snmp version 3
     module PrivacyType
-      NOPRIV = 'nopriv'                                               # No privacy protocol
-      DES = 'des'                                                     # DES privacy protocol
-      AES128 = 'aes128'                                               # AES128 privacy protocol
-      AES192 = 'aes192'                                               # AES192 privacy protocol
-      AES192WITH3DESKEYEXTENSION = 'aes192with3deskeyextension'       # AES192 with 3 DES key extension privacy protocol
-      AES256 = 'aes256'                                               # AES256 privacy protocol
-      AES265WITH3DESKEYEXTENSION = 'aes265with3deskeyextension'       # AES256 with 3 DES key extension privacy protocol
+      NOPRIV                     = 'nopriv'                     # No privacy protocol
+      DES                        = 'des'                        # DES privacy protocol
+      AES128                     = 'aes128'                     # AES128 privacy protocol
+      AES192                     = 'aes192'                     # AES192 privacy protocol
+      AES192WITH3DESKEYEXTENSION = 'aes192with3deskeyextension' # AES192 with 3 DES key extension privacy protocol
+      AES256                     = 'aes256'                     # AES256 privacy protocol
+      AES265WITH3DESKEYEXTENSION = 'aes265with3deskeyextension' # AES256 with 3 DES key extension privacy protocol
     end
-
 
   end
 end
