@@ -769,6 +769,8 @@ module Nexpose
     attr_reader :type
     # Name of the engine where the scan was run. Not the unique ID.
     attr_reader :engine_name
+    # Name of the scan that was assigned.
+    attr_reader :scan_name
 
     # Internal constructor to be called by #parse_json.
     def initialize(&block)
@@ -790,6 +792,7 @@ module Nexpose
         @risk_score = json['riskScore']
         @type = json['startedByCD'] == 'S' ? :scheduled : :manual
         @engine_name = json['scanEngineName']
+        @scan_name = json['scanName']
       end
     end
 
@@ -822,6 +825,7 @@ module Nexpose
         @risk_score = json['riskScore']
         @type = json['Scan Type'] == 'Manual' ? :manual : :scheduled
         @engine_name = json['Scan Engine']
+        @scan_name = json['Scan Name']
       end
     end
 
