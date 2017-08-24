@@ -116,7 +116,7 @@ module Nexpose
           # If an explicit timeout is set, don't retry.
           retry unless options.key? :timeout
         end
-        @error = "Nexpose did not respond within #{@http.read_timeout} seconds."
+        @error = "Nexpose did not respond within #{@http.read_timeout} seconds after #{@conn_tries} attempts."
       rescue ::Errno::EHOSTUNREACH, ::Errno::ENETDOWN, ::Errno::ENETUNREACH, ::Errno::ENETRESET, ::Errno::EHOSTDOWN, ::Errno::EACCES, ::Errno::EINVAL, ::Errno::EADDRNOTAVAIL
         @error = 'Nexpose host is unreachable.'
         # Handle console-level interrupts
