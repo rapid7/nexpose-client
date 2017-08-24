@@ -47,6 +47,7 @@ module Nexpose
     end
 
     def execute(options = {})
+      time_tracker = Time.now
       @conn_tries = 0
       begin
         prepare_http_client
@@ -111,12 +112,16 @@ module Nexpose
           retry
         end
       rescue ::Timeout::Error
+        $stdout.puts @http.read_timeout
         if @conn_tries < 5
           @conn_tries += 1
-          # If an explicit timeout is set, don't retry.
-          retry unless options.key? :timeout
+          if options.key?(:timeout)
+            retry if (time_tracker + options[:timeout].to_i) > Time.now
+          else
+            retry
+          end
         end
-        @error = "Nexpose did not respond within #{@http.read_timeout} seconds after #{@conn_tries} attempts."
+        @error = "Nexpose did not respond within #{@http.read_timeout} seconds after #{@conn_tries} attempt(s)."
       rescue ::Errno::EHOSTUNREACH, ::Errno::ENETDOWN, ::Errno::ENETUNREACH, ::Errno::ENETRESET, ::Errno::EHOSTDOWN, ::Errno::EACCES, ::Errno::EINVAL, ::Errno::EADDRNOTAVAIL
         @error = 'Nexpose host is unreachable.'
         # Handle console-level interrupts
