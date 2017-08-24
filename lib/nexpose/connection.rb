@@ -115,8 +115,8 @@ module Nexpose
 
     # Execute an API request
     def execute(xml, version = '1.1', options = {})
-      options.store(:timeout, timeout) unless options.key?(:timeout)
-      options.store(:open_timeout, open_timeout)
+      options.store(:timeout, @timeout) unless options.key?(:timeout)
+      options.store(:open_timeout, @open_timeout)
       @request_xml = xml.to_s
       @api_version = version
       response = APIRequest.execute(@url, @request_xml, @api_version, options, @trust_store)
