@@ -51,14 +51,16 @@ module Nexpose
     attr_reader :url
     # The token used to login to the NSC
     attr_reader :token
-
     # The last XML request sent by this object, useful for debugging.
     attr_reader :request_xml
     # The last XML response received by this object, useful for debugging.
     attr_reader :response_xml
-
     # The trust store to validate connections against if any
     attr_reader :trust_store
+    # The main HTTP read_timeout value
+    attr_accessor :timeout
+    # The optional HTTP open_timeout value
+    attr_accessor :open_timeout
 
     # A constructor to load a Connection object from a URI
     def self.from_uri(uri, user, pass, silo_id = nil, token = nil, trust_cert = nil)
@@ -76,23 +78,23 @@ module Nexpose
     # @param [String] token The two-factor authentication (2FA) token for Nexpose sessions.
     # @param [String] trust_cert The PEM-formatted web certificate of the Nexpose console. Used for SSL validation.
     def initialize(ip, user, pass, port = 3780, silo_id = nil, token = nil, trust_cert = nil)
-      @host = ip
-      @port = port
-      @username = user
-      @password = pass
-      @token = token
-      @silo_id = silo_id
-      unless trust_cert.nil?
-        @trust_store = create_trust_store(trust_cert)
-      end
-      @session_id = nil
-      @url = "https://#{@host}:#{@port}/api/API_VERSION/xml"
+      @host         = ip
+      @username     = user
+      @password     = pass
+      @port         = port
+      @silo_id      = silo_id
+      @token        = token
+      @trust_store  = create_trust_store(trust_cert) unless trust_cert.nil?
+      @session_id   = nil
+      @url          = "https://#{@host}:#{@port}/api/API_VERSION/xml"
+      @timeout      = 60
+      @open_timeout = 60
     end
 
     # Establish a new connection and Session ID
     def login
       begin
-        login_hash = {'sync-id' => 0, 'password' => @password, 'user-id' => @username, 'token' => @token}
+        login_hash = { 'sync-id' => 0, 'password' => @password, 'user-id' => @username, 'token' => @token }
         login_hash['silo-id'] = @silo_id if @silo_id
         r = execute(make_xml('LoginRequest', login_hash))
         if r.success
@@ -106,13 +108,15 @@ module Nexpose
 
     # Logout of the current connection
     def logout
-      r = execute(make_xml('LogoutRequest', {'sync-id' => 0}))
+      r = execute(make_xml('LogoutRequest', { 'sync-id' => 0 }))
       return true if r.success
       raise APIError.new(r, 'Logout failed')
     end
 
     # Execute an API request
     def execute(xml, version = '1.1', options = {})
+      options.store(:timeout, timeout) unless options.key?(:timeout)
+      options.store(:open_timeout, open_timeout)
       @request_xml = xml.to_s
       @api_version = version
       response = APIRequest.execute(@url, @request_xml, @api_version, options, @trust_store)
@@ -127,17 +131,17 @@ module Nexpose
     #       Would need to do something more sophisticated to grab
     #       all the associated image files.
     def download(url, file_name = nil)
-      return nil if url.nil? or url.empty?
-      uri = URI.parse(url)
-      http = Net::HTTP.new(@host, @port)
+      return nil if (url.nil? || url.empty?)
+      uri          = URI.parse(url)
+      http         = Net::HTTP.new(@host, @port)
       http.use_ssl = true
       if @trust_store.nil?
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE # XXX: security issue
       else
         http.cert_store = @trust_store
       end
-      headers = {'Cookie' => "nexposeCCSessionID=#{@session_id}"}
-      resp = http.get(uri.to_s, headers)
+      headers = { 'Cookie' => "nexposeCCSessionID=#{@session_id}" }
+      resp    = http.get(uri.to_s, headers)
 
       if file_name
         ::File.open(file_name, 'wb') { |file| file.write(resp.body) }

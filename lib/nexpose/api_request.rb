@@ -42,13 +42,12 @@ module Nexpose
       else
         @http.cert_store = @trust_store
       end
-      @headers = {'Content-Type' => 'text/xml'}
+      @headers = { 'Content-Type' => 'text/xml' }
       @success = false
     end
 
     def execute(options = {})
       @conn_tries = 0
-
       begin
         prepare_http_client
         @http.read_timeout = options[:timeout] if options.key? :timeout
@@ -62,7 +61,7 @@ module Nexpose
             @success = true
           else
             @success = false
-            @error = "User requested raw XML response. Not parsing failures."
+            @error = 'User requested raw XML response. Not parsing failures.'
           end
         else
           @res = parse_xml(@raw_response_data)
@@ -74,19 +73,19 @@ module Nexpose
 
           @sid = attributes['session-id']
 
-          if (attributes['success'] and attributes['success'].to_i == 1)
+          if (attributes['success'] && attributes['success'].to_i == 1)
             @success = true
-          elsif @api_version =~ /1.2/ and @res and (@res.get_elements '//Exception').count < 1
+          elsif @api_version =~ /1.2/ && @res && (@res.get_elements '//Exception').count < 1
             @success = true
           else
             @success = false
             if @api_version =~ /1.2/
               @res.elements.each('//Exception/Message') do |message|
-              @error = message.text.sub(/.*Exception: */, '')
+                @error = message.text.sub(/.*Exception: */, '')
               end
-            @res.elements.each('//Exception/Stacktrace') do |stacktrace|
-              @trace = stacktrace.text
-            end
+              @res.elements.each('//Exception/Stacktrace') do |stacktrace|
+                @trace = stacktrace.text
+              end
             else
               @res.elements.each('//message') do |message|
                 @error = message.text.sub(/.*Exception: */, '')
@@ -97,16 +96,16 @@ module Nexpose
             end
           end
         end
-        # This is a hack to handle corner cases where a heavily loaded Nexpose instance
-        # drops our HTTP connection before processing. We try 5 times to establish a
-        # connection in these situations. The actual exception occurs in the Ruby
-        # http library, which is why we use such generic error classes.
-      rescue OpenSSL::SSL::SSLError => e
+      # This is a hack to handle corner cases where a heavily loaded Nexpose instance
+      # drops our HTTP connection before processing. We try 5 times to establish a
+      # connection in these situations. The actual exception occurs in the Ruby
+      # http library, which is why we use such generic error classes.
+      rescue OpenSSL::SSL::SSLError
         if @conn_tries < 5
           @conn_tries += 1
           retry
         end
-      rescue ::ArgumentError, ::NoMethodError => e
+      rescue ::ArgumentError, ::NoMethodError
         if @conn_tries < 5
           @conn_tries += 1
           retry
@@ -129,7 +128,7 @@ module Nexpose
         @error = "Error parsing response: #{exc.message}"
       end
 
-      if !(@success or @error)
+      if !(@success || @error)
         @error = "Nexpose service returned an unrecognized response: #{@raw_response_data.inspect}"
       end
 
@@ -137,7 +136,7 @@ module Nexpose
     end
 
     def attributes(*args)
-      return if not @res.root
+      return unless @res.root
       @res.root.attributes(*args)
     end
 
