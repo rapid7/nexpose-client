@@ -107,7 +107,7 @@ module Nexpose
     def set_ssh_service(username = nil, password = nil, elevation_type = nil, elevation_user = nil, elevation_password = nil)
       self.user_name                     = username
       self.password                      = password
-      self.permission_elevation_type     = elevation_type || ElevationType::NONE
+      self.permission_elevation_type     = elevation_type || Credential::ElevationType::NONE
       self.permission_elevation_user     = elevation_user
       self.permission_elevation_password = elevation_password
       self.service                       = Credential::Service::SSH
@@ -118,7 +118,7 @@ module Nexpose
       self.user_name                     = username
       self.password                      = password
       self.pem_format_private_key        = pemkey
-      self.permission_elevation_type     = elevation_type || ElevationType::NONE
+      self.permission_elevation_type     = elevation_type || Credential::ElevationType::NONE
       self.permission_elevation_user     = elevation_user
       self.permission_elevation_password = elevation_password
       self.service                       = Credential::Service::SSH_KEY
@@ -131,7 +131,7 @@ module Nexpose
     end
 
     # sets the Simple Network Management Protocol v3 service.
-    def set_snmpv3_service(authentication_type = AuthenticationType::NOAUTH, username = nil, password = nil, privacy_type = PrivacyType::NOPRIV, privacy_password = nil)
+    def set_snmpv3_service(authentication_type = Credential::AuthenticationType::NOAUTH, username = nil, password = nil, privacy_type = Credential::PrivacyType::NOPRIV, privacy_password = nil)
       self.authentication_type = authentication_type
       self.user_name           = username
       self.password            = password
