@@ -47,7 +47,6 @@ module Nexpose
     end
 
     def execute(options = {})
-      time_tracker = Time.now
       @conn_tries = 0
       begin
         prepare_http_client
@@ -101,26 +100,20 @@ module Nexpose
       # drops our HTTP connection before processing. We try 5 times to establish a
       # connection in these situations. The actual exception occurs in the Ruby
       # http library, which is why we use such generic error classes.
-      rescue OpenSSL::SSL::SSLError
+      rescue OpenSSL::SSL::SSLError => error
         if @conn_tries < 5
           @conn_tries += 1
+          $stderr.puts "\n\nRetrying the request due to #{error}. If you see this message please open an Issue on Github with the error.\n\n"
           retry
         end
-      rescue ::ArgumentError, ::NoMethodError
+      rescue ::ArgumentError, ::NoMethodError => error
         if @conn_tries < 5
           @conn_tries += 1
+          $stderr.puts "\n\nRetrying the request due to #{error}. If you see this message please open an Issue on Github with the error.\n\n"
           retry
         end
       rescue ::Timeout::Error => error
-        if @conn_tries < 5
-          @conn_tries += 1
-          if options.key?(:timeout)
-            retry if (time_tracker + options[:timeout].to_i) > Time.now
-          else
-            retry
-          end
-        end
-        @error = "Nexpose did not respond within #{@http.read_timeout} seconds after #{@conn_tries} attempt(s)."
+        @error = "Nexpose did not respond within #{@http.open_timeout} seconds. See <README> for information on setting the different Timeout values."
       rescue ::Errno::EHOSTUNREACH, ::Errno::ENETDOWN, ::Errno::ENETUNREACH, ::Errno::ENETRESET, ::Errno::EHOSTDOWN, ::Errno::EACCES, ::Errno::EINVAL, ::Errno::EADDRNOTAVAIL
         @error = 'Nexpose host is unreachable.'
         # Handle console-level interrupts
