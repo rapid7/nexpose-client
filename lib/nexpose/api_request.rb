@@ -51,8 +51,8 @@ module Nexpose
       @conn_tries = 0
       begin
         prepare_http_client
-        @http.read_timeout = options[:timeout] if options.key? :timeout
-        @http.open_timeout = options.key?(:open_timeout) ? options[:open_timeout] : 60
+        @http.read_timeout = options.key?(:timeout) ? options[:timeout] : 120
+        @http.open_timeout = options.key?(:open_timeout) ? options[:open_timeout] : 120
         @raw_response = @http.post(@uri.path, @req, @headers)
         @raw_response_data = @raw_response.read_body
 
@@ -111,8 +111,7 @@ module Nexpose
           @conn_tries += 1
           retry
         end
-      rescue ::Timeout::Error
-        $stdout.puts @http.read_timeout
+      rescue ::Timeout::Error => error
         if @conn_tries < 5
           @conn_tries += 1
           if options.key?(:timeout)

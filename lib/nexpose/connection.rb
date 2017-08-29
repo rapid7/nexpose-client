@@ -87,8 +87,8 @@ module Nexpose
       @trust_store  = create_trust_store(trust_cert) unless trust_cert.nil?
       @session_id   = nil
       @url          = "https://#{@host}:#{@port}/api/API_VERSION/xml"
-      @timeout      = 60
-      @open_timeout = 60
+      @timeout      = 120
+      @open_timeout = 120
     end
 
     # Establish a new connection and Session ID
