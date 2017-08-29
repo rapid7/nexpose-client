@@ -58,8 +58,12 @@ module Nexpose
     # The trust store to validate connections against if any
     attr_reader :trust_store
     # The main HTTP read_timeout value
+    # For more information visit the link below:
+    # https://ruby-doc.org/stdlib-<RUBY_VERSION>/libdoc/net/http/rdoc/Net/HTTP.html#read_timeout-attribute-method
     attr_accessor :timeout
     # The optional HTTP open_timeout value
+    # For more information visit the link below:
+    # https://ruby-doc.org/stdlib-<RUBY_VERSION>/libdoc/net/http/rdoc/Net/HTTP.html#open_timeout-attribute-method
     attr_accessor :open_timeout
 
     # A constructor to load a Connection object from a URI
