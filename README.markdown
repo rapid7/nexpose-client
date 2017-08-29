@@ -3,7 +3,7 @@
 
 This is the official gem package for the Ruby Nexpose API client library.
 
-For assistance with using the gem, to share your scripts, or to discuss different approaches, please visit the Rapid7 community: https://community.rapid7.com/
+For assistance with using the gem or to discuss different approaches, please open an issue. To share or discuss scripts which use the gem head over to the [Nexpose Resources](https://github.com/rapid7/nexpose-resources) project.
 
 Check out the [wiki](https://github.com/rapid7/nexpose-client/wiki) for walk-throughs and other documentation. Submit bugs and feature requests on the [issues](https://github.com/rapid7/nexpose-client/issues) page.
 
@@ -24,6 +24,8 @@ Our coding standards include:
 * Favor returning classes over key-value maps. Classes tend to be easier for users to manipulate and use.
 * Unless otherwise noted, code should adhere to the Ruby Style Guide: https://github.com/bbatsov/ruby-style-guide
 * Use YARDoc comment style to improve the API documentation of the gem.
+
+Full usage examples or task-oriented scripts should be submitted to the [Nexpose Resources](https://github.com/rapid7/nexpose-resources) project. Smaller examples can be added to the [wiki](https://github.com/rapid7/nexpose-client/wiki).
 
 ## License
 
