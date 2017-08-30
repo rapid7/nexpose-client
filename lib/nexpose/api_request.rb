@@ -42,17 +42,16 @@ module Nexpose
       else
         @http.cert_store = @trust_store
       end
-      @headers = {'Content-Type' => 'text/xml'}
+      @headers = { 'Content-Type' => 'text/xml' }
       @success = false
     end
 
     def execute(options = {})
       @conn_tries = 0
-
       begin
         prepare_http_client
-        @http.read_timeout = options[:timeout] if options.key? :timeout
-        @http.open_timeout = options.key?(:open_timeout) ? options[:open_timeout] : 60
+        @http.read_timeout = options.key?(:timeout) ? options[:timeout] : 120
+        @http.open_timeout = options.key?(:open_timeout) ? options[:open_timeout] : 120
         @raw_response = @http.post(@uri.path, @req, @headers)
         @raw_response_data = @raw_response.read_body
 
@@ -62,7 +61,7 @@ module Nexpose
             @success = true
           else
             @success = false
-            @error = "User requested raw XML response. Not parsing failures."
+            @error = 'User requested raw XML response. Not parsing failures.'
           end
         else
           @res = parse_xml(@raw_response_data)
@@ -74,19 +73,19 @@ module Nexpose
 
           @sid = attributes['session-id']
 
-          if (attributes['success'] and attributes['success'].to_i == 1)
+          if (attributes['success'] && attributes['success'].to_i == 1)
             @success = true
-          elsif @api_version =~ /1.2/ and @res and (@res.get_elements '//Exception').count < 1
+          elsif @api_version =~ /1.2/ && @res && (@res.get_elements '//Exception').count < 1
             @success = true
           else
             @success = false
             if @api_version =~ /1.2/
               @res.elements.each('//Exception/Message') do |message|
-              @error = message.text.sub(/.*Exception: */, '')
+                @error = message.text.sub(/.*Exception: */, '')
               end
-            @res.elements.each('//Exception/Stacktrace') do |stacktrace|
-              @trace = stacktrace.text
-            end
+              @res.elements.each('//Exception/Stacktrace') do |stacktrace|
+                @trace = stacktrace.text
+              end
             else
               @res.elements.each('//message') do |message|
                 @error = message.text.sub(/.*Exception: */, '')
@@ -97,27 +96,24 @@ module Nexpose
             end
           end
         end
-        # This is a hack to handle corner cases where a heavily loaded Nexpose instance
-        # drops our HTTP connection before processing. We try 5 times to establish a
-        # connection in these situations. The actual exception occurs in the Ruby
-        # http library, which is why we use such generic error classes.
-      rescue OpenSSL::SSL::SSLError => e
+      # This is a hack to handle corner cases where a heavily loaded Nexpose instance
+      # drops our HTTP connection before processing. We try 5 times to establish a
+      # connection in these situations. The actual exception occurs in the Ruby
+      # http library, which is why we use such generic error classes.
+      rescue OpenSSL::SSL::SSLError => error
         if @conn_tries < 5
           @conn_tries += 1
+          $stderr.puts "\n\nRetrying the request due to #{error}. If you see this message please open an Issue on Github with the error.\n\n"
           retry
         end
-      rescue ::ArgumentError, ::NoMethodError => e
+      rescue ::ArgumentError, ::NoMethodError => error
         if @conn_tries < 5
           @conn_tries += 1
+          $stderr.puts "\n\nRetrying the request due to #{error}. If you see this message please open an Issue on Github with the error.\n\n"
           retry
         end
-      rescue ::Timeout::Error
-        if @conn_tries < 5
-          @conn_tries += 1
-          # If an explicit timeout is set, don't retry.
-          retry unless options.key? :timeout
-        end
-        @error = "Nexpose did not respond within #{@http.read_timeout} seconds."
+      rescue ::Timeout::Error => error
+        @error = "Nexpose did not respond within #{@http.open_timeout} seconds. See <README> for information on setting the different Timeout values."
       rescue ::Errno::EHOSTUNREACH, ::Errno::ENETDOWN, ::Errno::ENETUNREACH, ::Errno::ENETRESET, ::Errno::EHOSTDOWN, ::Errno::EACCES, ::Errno::EINVAL, ::Errno::EADDRNOTAVAIL
         @error = 'Nexpose host is unreachable.'
         # Handle console-level interrupts
@@ -129,7 +125,7 @@ module Nexpose
         @error = "Error parsing response: #{exc.message}"
       end
 
-      if !(@success or @error)
+      if !(@success || @error)
         @error = "Nexpose service returned an unrecognized response: #{@raw_response_data.inspect}"
       end
 
@@ -137,7 +133,7 @@ module Nexpose
     end
 
     def attributes(*args)
-      return if not @res.root
+      return unless @res.root
       @res.root.attributes(*args)
     end
 

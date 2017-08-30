@@ -1,4 +1,5 @@
 # encoding: utf-8
+
 module Nexpose
   # Accessor to the Nexpose AJAX API.
   # These core methods should allow direct access to underlying controllers
@@ -133,7 +134,8 @@ module Nexpose
     # Use the Nexpose::Connection to establish a correct HTTPS object.
     def https(nsc, timeout = nil)
       http = Net::HTTP.new(nsc.host, nsc.port)
-      http.read_timeout = timeout if timeout
+      http.read_timeout = (timeout || nsc.timeout)
+      http.open_timeout = nsc.open_timeout
       http.use_ssl = true
       if nsc.trust_store.nil?
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -183,8 +185,8 @@ module Nexpose
     def get_request_api_version(request)
       matches = request.path.match(API_PATTERN)
       matches[:version].to_f
-      rescue
-        0.0
+    rescue
+      0.0
     end
 
     # Get an error message from the response body if the request url api version
@@ -192,7 +194,7 @@ module Nexpose
     def get_error_message(request, response)
       version = get_request_api_version(request)
       data_request = use_response_error_message?(request, response)
-      return_response = (version >= 2.1 || data_request )
+      return_response = (version >= 2.1 || data_request)
       (return_response && response.body) ? "response body: #{response.body}" : "request body: #{request.body}"
     end
 
@@ -202,7 +204,7 @@ module Nexpose
       if (request.path.include?('/data/') && !response.content_type.nil?)
         response.content_type.include? 'text/plain'
       else
-        return false
+        false
       end
     end
 
@@ -253,7 +255,7 @@ module Nexpose
       pref_key = "#{pref}.rows"
       resp = get(nsc, uri)
       json = JSON.parse(resp)
-      if json.has_key?(pref_key)
+      if json.key?(pref_key)
         rows = json[pref_key].to_i
         rows > 0 ? rows : 10
       else
