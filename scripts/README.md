@@ -1,4 +1,6 @@
-# Scripts
+# Scripts have been moved!
 
-This directory is for scripts which run against the gem and are designed to
-achieve a particular task.
+Find all your scripts in the [Nexpose-Resources Repo](https://github.com/rapid7/nexpose-resources).
+https://github.com/rapid7/nexpose-resources
+
+
