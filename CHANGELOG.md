@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/rapid7/nexpose-client/tree/HEAD)
-
-[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v6.1.1...HEAD)
+## [v7.0.0](https://github.com/rapid7/nexpose-client/tree/v7.0.0) (2017-08-31)
+[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v6.1.1...v7.0.0)
 
 **Fixed bugs:**
 
