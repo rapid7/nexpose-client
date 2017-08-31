@@ -112,8 +112,13 @@ module Nexpose
           $stderr.puts "\n\nRetrying the request due to #{error}. If you see this message please open an Issue on Github with the error.\n\n"
           retry
         end
+      ### HTTP Specific Timeout Errors.
+      rescue ::Net::ReadTimeout, ::Net::OpenTimeout => error
+        timeout_value = error.instance_of?(Net::ReadTimeout) ? @http.read_timeout : @http.open_timeout
+        @error = "Nexpose did not respond within #{timeout_value} seconds #{error}. Reference the Wiki for information on setting the different Timeout values."
+      ### Catch all Timeout Error.
       rescue ::Timeout::Error => error
-        @error = "Nexpose did not respond within #{@http.read_timeout} seconds. Reference the Wiki for information on setting the different Timeout values."
+        @error = "Nexpose did not respond within #{@http.read_timeout} seconds #{error}. Reference the Wiki for information on setting the different Timeout values."
       rescue ::Errno::EHOSTUNREACH, ::Errno::ENETDOWN, ::Errno::ENETUNREACH, ::Errno::ENETRESET, ::Errno::EHOSTDOWN, ::Errno::EACCES, ::Errno::EINVAL, ::Errno::EADDRNOTAVAIL
         @error = 'Nexpose host is unreachable.'
         # Handle console-level interrupts
