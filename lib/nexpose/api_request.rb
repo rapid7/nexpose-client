@@ -113,7 +113,7 @@ module Nexpose
           retry
         end
       rescue ::Timeout::Error => error
-        @error = "Nexpose did not respond within #{@http.read_timeout} seconds. See <README> for information on setting the different Timeout values."
+        @error = "Nexpose did not respond within #{@http.read_timeout} seconds. Reference the Wiki for information on setting the different Timeout values."
       rescue ::Errno::EHOSTUNREACH, ::Errno::ENETDOWN, ::Errno::ENETUNREACH, ::Errno::ENETRESET, ::Errno::EHOSTDOWN, ::Errno::EACCES, ::Errno::EINVAL, ::Errno::EADDRNOTAVAIL
         @error = 'Nexpose host is unreachable.'
         # Handle console-level interrupts
