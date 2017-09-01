@@ -97,17 +97,15 @@ module Nexpose
 
     # Establish a new connection and Session ID
     def login
-      begin
-        login_hash = { 'sync-id' => 0, 'password' => @password, 'user-id' => @username, 'token' => @token }
-        login_hash['silo-id'] = @silo_id if @silo_id
-        r = execute(make_xml('LoginRequest', login_hash))
-        if r.success
-          @session_id = r.sid
-          true
-        end
-      rescue APIError
-        raise AuthenticationFailed.new(r)
+      login_hash = { 'sync-id' => 0, 'password' => @password, 'user-id' => @username, 'token' => @token }
+      login_hash['silo-id'] = @silo_id if @silo_id
+      r = execute(make_xml('LoginRequest', login_hash))
+      if r.success
+        @session_id = r.sid
+        true
       end
+    rescue APIError
+      raise AuthenticationFailed.new(r)
     end
 
     # Logout of the current connection
