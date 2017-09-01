@@ -42,7 +42,7 @@ module Nexpose
     attr_accessor :unique_identifiers
 
     def initialize
-      @addresses = []
+      @addresses  = []
       @host_names = []
     end
 
@@ -53,7 +53,7 @@ module Nexpose
     # @return [Asset] The requested asset, if found.
     #
     def self.load(nsc, id)
-      uri = "/api/2.1/assets/#{id}"
+      uri  = "/api/2.1/assets/#{id}"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
       new.object_from_hash(nsc, hash)
@@ -97,9 +97,9 @@ module Nexpose
 
     def <=>(other)
       c = port <=> other.port
-      return c unless c == 0
+      return c unless c.zero?
       c = protocol <=> other.protocol
-      return c unless c == 0
+      return c unless c.zero?
       name <=> other.name
     end
 
@@ -114,27 +114,27 @@ module Nexpose
     # Valid protocol values for a service endpoint.
     module Protocol
       # Internet Protocol
-      IP = 'IP'
+      IP   = 'IP'
       # Internet Control Message Protocol
       ICMP = 'ICMP'
       # Internet Group Management Protocol
       IGMP = 'IGMP'
       # Gateway-to-Gateway Protocol
-      GGP = 'GGP'
+      GGP  = 'GGP'
       # Transmission Control Protocol
-      TCP = 'TCP'
+      TCP  = 'TCP'
       # PARC Universal Protocol
-      PUP = 'PUP'
+      PUP  = 'PUP'
       # User Datagram Protocol
-      UDP = 'UDP'
+      UDP  = 'UDP'
       # Internet Datagram Protocol
-      IDP = 'IDP'
+      IDP  = 'IDP'
       # Encapsulating Security Payload
-      ESP = 'ESP'
+      ESP  = 'ESP'
       # Network Disk Protocol
-      ND = 'ND'
+      ND   = 'ND'
       # Raw Packet (or unknown)
-      RAW = 'RAW'
+      RAW  = 'RAW'
     end
   end
 
@@ -163,11 +163,11 @@ module Nexpose
 
     def <=>(other)
       c = name <=> other.name
-      return c unless c == 0
+      return c unless c.zero?
       c = id <=> other.id
-      return c unless c == 0
+      return c unless c.zero?
       c = full_name <=> other.full_name
-      return c unless c == 0
+      return c unless c.zero?
       attributes <=> other.attributes
     end
 
@@ -204,9 +204,9 @@ module Nexpose
 
     def <=>(other)
       c = name <=> other.name
-      return c unless c == 0
+      return c unless c.zero?
       c = id <=> other.id
-      return c unless c == 0
+      return c unless c.zero?
       attributes <=> other.attributes
     end
 
@@ -248,11 +248,11 @@ module Nexpose
 
     def <=>(other)
       c = name <=> other.name
-      return c unless c == 0
+      return c unless c.zero?
       c = size <=> other.size
-      return c unless c == 0
+      return c unless c.zero?
       c = directory <=> other.directory
-      return c unless c == 0
+      return c unless c.zero?
       attributes <=> other.attributes
     end
 
@@ -274,7 +274,7 @@ module Nexpose
     attr_reader :id
 
     def initialize(source = nil, id = nil)
-      @id = id
+      @id     = id
       @source = source
     end
 
@@ -285,7 +285,7 @@ module Nexpose
 
     def <=>(other)
       c = source <=> other.source
-      return c unless c == 0
+      return c unless c.zero?
       id <=> other.id
     end
 
