@@ -4,21 +4,21 @@ module Nexpose
 
     def list_shared_credentials
       creds = DataTable._get_json_table(self,
-                                   '/data/credential/shared/listing',
-                                   { 'sort' => -1,
-                                     'table-id' => 'credential-listing' })
+                                        '/data/credential/shared/listing',
+                                        { 'sort' => -1,
+                                          'table-id' => 'credential-listing' })
       creds.map { |c| SharedCredentialSummary.from_json(c) }
     end
 
-    alias_method :list_shared_creds, :list_shared_credentials
-    alias_method :shared_credentials, :list_shared_credentials
-    alias_method :shared_creds, :list_shared_credentials
+    alias list_shared_creds list_shared_credentials
+    alias shared_credentials list_shared_credentials
+    alias shared_creds list_shared_credentials
 
     def delete_shared_credential(id)
       AJAX.post(self, "/data/credential/shared/delete?credid=#{id}")
     end
 
-    alias_method :delete_shared_cred, :delete_shared_credential
+    alias delete_shared_cred delete_shared_credential
   end
 
   class SharedCredentialSummary < Credential
@@ -29,18 +29,18 @@ module Nexpose
     attr_accessor :name
     # The credential service/type. See Nexpose::Credential::Service.
     attr_accessor :service
-    alias :type :service
-    alias :type= :service=
+    alias type service
+    alias type= service=
     # Domain or realm.
     attr_accessor :domain
     # User name.
     attr_accessor :username
-    alias :user_name :username
-    alias :user_name= :username=
+    alias user_name username
+    alias user_name= username=
     # User name to use when elevating permissions (e.g., sudo).
     attr_accessor :privilege_username
-    alias :permission_elevation_user :privilege_username
-    alias :permission_elevation_user= :privilege_username=
+    alias permission_elevation_user privilege_username
+    alias permission_elevation_user= privilege_username=
     # Boolean to indicate whether this credential applies to all sites.
     attr_accessor :all_sites
     # When this credential was last modified.
@@ -48,14 +48,14 @@ module Nexpose
 
     def self.from_json(json)
       cred = new
-      cred.id = json['credentialID']['ID']
-      cred.name = json['name']
-      cred.type = json['service']
-      cred.domain = json['domain']
-      cred.username = json['username']
+      cred.id                 = json['credentialID']['ID']
+      cred.name               = json['name']
+      cred.type               = json['service']
+      cred.domain             = json['domain']
+      cred.username           = json['username']
       cred.privilege_username = json['privilegeElevationUsername']
-      cred.all_sites = json['scope'] == 'ALL_SITES_ENABLED_DEFAULT'
-      cred.last_modified = Time.at(json['lastModified']['time'] / 1000)
+      cred.all_sites          = json['scope'] == 'ALL_SITES_ENABLED_DEFAULT'
+      cred.last_modified      = Time.at(json['lastModified']['time'] / 1000)
       cred
     end
 
@@ -83,12 +83,12 @@ module Nexpose
     attr_accessor :pem_key
     # Password to use when elevating permissions (e.g., sudo).
     attr_accessor :privilege_password
-    alias :permission_elevation_password :privilege_password
-    alias :permission_elevation_password= :privilege_password=
+    alias permission_elevation_password privilege_password
+    alias permission_elevation_password= privilege_password=
     # Permission elevation type. See Nexpose::Credential::ElevationType.
     attr_accessor :privilege_type
-    alias :permission_elevation_type :privilege_type
-    alias :permission_elevation_type= :privilege_type=
+    alias permission_elevation_type privilege_type
+    alias permission_elevation_type= privilege_type=
     # Privacty password of SNMP v3 credential
     attr_accessor :privacy_password
     # Authentication type of SNMP v3 credential
@@ -130,17 +130,14 @@ module Nexpose
     def as_xml
       xml = REXML::Element.new('Credential')
       xml.add_attribute('id', @id)
-
-      name = xml.add_element('Name').add_text(@name)
-
-      desc = xml.add_element('Description').add_text(@description)
+      xml.add_element('Name').add_text(@name)
+      xml.add_element('Description').add_text(@description)
 
       services = xml.add_element('Services')
-      service = services.add_element('Service').add_attribute('type', @service)
+      services.add_element('Service').add_attribute('type', @service)
 
       (account = xml.add_element('Account')).add_attribute('type', 'nexpose')
       account.add_element('Field', { 'name' => 'database' }).add_text(@database)
-
       account.add_element('Field', { 'name' => 'domain' }).add_text(@domain)
       account.add_element('Field', { 'name' => 'username' }).add_text(@username)
       account.add_element('Field', { 'name' => 'ntlmhash' }).add_text(@ntlm_hash) if @ntlm_hash
@@ -188,10 +185,10 @@ module Nexpose
       unless engine_id
         engine_id = nsc.engines.detect { |e| e.name == 'Local scan engine' }.id
       end
-      @port = Credential::DEFAULT_PORTS[@service] if @port.nil?
+      @port      = Credential::DEFAULT_PORTS[@service] if @port.nil?
       parameters = _to_param(target, engine_id, @port, siteid)
-      xml = AJAX.form_post(nsc, '/data/credential/shared/test', parameters)
-      result = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
+      xml        = AJAX.form_post(nsc, '/data/credential/shared/test', parameters)
+      result     = REXML::XPath.first(REXML::Document.new(xml), 'TestAdminCredentialsResult')
       result.attributes['success'].to_i == 1
     end
 

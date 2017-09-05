@@ -24,14 +24,14 @@ module Nexpose
     attr_accessor :cancellation_window
 
     def initialize(start:, enabled: true, type:, interval:, reindex: false, compress: true, cleanup: true, pause_local_scans: true, cancellation_window: 0)
-      @schedule_start = start
-      @enabled = enabled
-      @schedule_type = type
-      @schedule_interval = interval.to_i
-      @reindex = reindex
-      @compress = compress
-      @cleanup = cleanup
-      @pause_local_scans = pause_local_scans
+      @schedule_start      = start
+      @enabled             = enabled
+      @schedule_type       = type
+      @schedule_interval   = interval.to_i
+      @reindex             = reindex
+      @compress            = compress
+      @cleanup             = cleanup
+      @pause_local_scans   = pause_local_scans
       @cancellation_window = cancellation_window.to_i
     end
 
@@ -77,7 +77,7 @@ module Nexpose
     end
 
     def self.load(nsc)
-      uri = '/api/2.1/schedule_maintenance/'
+      uri  = '/api/2.1/schedule_maintenance/'
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true).first
       Nexpose::ScheduledMaintenance.from_hash(hash || [])

@@ -49,7 +49,7 @@ module Nexpose
     attr_accessor :use_windows_auth
     # sid for oracle
     attr_accessor :sid
-    #for ssh public key require pem format private key
+    # for ssh public key require pem format private key
     attr_accessor :pem_format_private_key
     # for snmp v1/v2
     attr_accessor :community_name
@@ -71,13 +71,12 @@ module Nexpose
       unless engine_id
         engine_id = nsc.engines.detect { |e| e.name == 'Local scan engine' }.id
       end
-      @port = Credential::DEFAULT_PORTS[@service] if @port.nil?
+      @port      = Credential::DEFAULT_PORTS[@service] if @port.nil?
       parameters = _to_param(target, engine_id, @port, siteid)
       parameters = JSON.generate(parameters)
-      resp = JSON.parse(Nexpose::AJAX.post(nsc, '/data/credential/test', parameters, Nexpose::AJAX::CONTENT_TYPE::JSON))
+      resp       = JSON.parse(Nexpose::AJAX.post(nsc, '/data/credential/test', parameters, Nexpose::AJAX::CONTENT_TYPE::JSON))
       resp['success'] == 'true'
     end
-
 
     def _to_param(target, engine_id, port, siteid)
       {
@@ -100,17 +99,17 @@ module Nexpose
       }
     end
 
-    #Create a credential object using name, id, description, host and port
+    # Create a credential object using name, id, description, host and port
     def self.for_service(name, id = -1, desc = nil, host = nil, port = nil, service = Credential::Service::CIFS)
-      cred = new
-      cred.name = name
-      cred.id = id.to_i
-      cred.enabled = true
-      cred.description = desc
-      cred.host_restriction = host
-      cred.port_restriction = port
-      cred.service = service
-      cred.scope = Credential::Scope::SITE_SPECIFIC
+      cred                           = new
+      cred.name                      = name
+      cred.id                        = id.to_i
+      cred.enabled                   = true
+      cred.description               = desc
+      cred.host_restriction          = host
+      cred.port_restriction          = port
+      cred.service                   = service
+      cred.scope                     = Credential::Scope::SITE_SPECIFIC
       cred.permission_elevation_type = Credential::ElevationType::NONE
       cred
     end
@@ -123,7 +122,7 @@ module Nexpose
     # @return [SiteCredential] The requested credential of site, if found.
     #
     def self.load(nsc, site_id, credential_id)
-      uri = "/api/2.1/sites/#{site_id}/credentials/#{credential_id}"
+      uri  = "/api/2.1/sites/#{site_id}/credentials/#{credential_id}"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
       new.object_from_hash(nsc, hash)
@@ -187,8 +186,7 @@ module Nexpose
         sid: sid,
         pem_format_private_key: pem_format_private_key,
         community_name: community_name,
-        scope: scope
-      }
+        scope: scope }
     end
 
     def ==(other)
