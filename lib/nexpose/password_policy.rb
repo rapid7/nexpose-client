@@ -11,12 +11,12 @@ module Nexpose
     attr_accessor :expiration_days
 
     def initialize(policy_name:, min_length:, max_length:, special_chars:, capitals:, digits:, expiration_days: 0)
-      @policy_name = policy_name.to_s
-      @min_length = min_length.to_i
-      @max_length = max_length.to_i
-      @special_chars = special_chars.to_i
-      @capitals = capitals.to_i
-      @digits = digits.to_i
+      @policy_name     = policy_name.to_s
+      @min_length      = min_length.to_i
+      @max_length      = max_length.to_i
+      @special_chars   = special_chars.to_i
+      @capitals        = capitals.to_i
+      @digits          = digits.to_i
       @expiration_days = expiration_days.to_i
     end
 
@@ -32,13 +32,13 @@ module Nexpose
 
     def to_h
       {
-          policyName: @policy_name,
-          minLength: @min_length,
-          maxLength: @max_length,
-          specialChars: @special_chars,
-          capitals: @capitals,
-          digits: @digits,
-          expirationDays: @expiration_days
+        policyName: @policy_name,
+        minLength: @min_length,
+        maxLength: @max_length,
+        specialChars: @special_chars,
+        capitals: @capitals,
+        digits: @digits,
+        expirationDays: @expiration_days
       }
     end
 
@@ -52,7 +52,7 @@ module Nexpose
     end
 
     def self.load(nsc)
-      uri = '/api/2.1/password_policy/'
+      uri  = '/api/2.1/password_policy/'
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
       self.from_hash(hash)
