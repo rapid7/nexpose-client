@@ -19,9 +19,8 @@ module Nexpose
     # Private constructor. See #load method for retrieving a settings object.
     #
     def initialize(xml)
-      @xml = xml
-
-      @asset_linking = parse_asset_linking_from_xml(xml)
+      @xml              = xml
+      @asset_linking    = parse_asset_linking_from_xml(xml)
       @asset_exclusions = HostOrIP.parse(xml)
       @control_scanning = parse_control_scanning_from_xml(xml)
     end

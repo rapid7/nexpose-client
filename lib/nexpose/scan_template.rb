@@ -11,7 +11,7 @@ module Nexpose
       templates['resources'].map { |t| ScanTemplateSummary.new(t) }
     end
 
-    alias_method :scan_templates, :list_scan_templates
+    alias scan_templates list_scan_templates
 
     # Delete a scan template from the console.
     # Cannot be used to delete a built-in template.
@@ -31,7 +31,7 @@ module Nexpose
 
     def initialize(json)
       @name = json['name']
-      @id = json['id']
+      @id   = json['id']
     end
   end
 
@@ -110,7 +110,7 @@ module Nexpose
     # @return [Boolean] Whether control scanning in enabled.
     def control_scanning?
       global_controls_scan = REXML::XPath.first(@xml, 'ScanTemplate/ControlsScan/globalControlsScanEnabled')
-      local_controls_scan = REXML::XPath.first(@xml, 'ScanTemplate/ControlsScan/localControlsScanEnabled')
+      local_controls_scan  = REXML::XPath.first(@xml, 'ScanTemplate/ControlsScan/localControlsScanEnabled')
 
       global_controls_scan.attributes['enabled'] == '1' || local_controls_scan.attributes['enabled'] == '1'
     end
@@ -237,31 +237,31 @@ module Nexpose
     # @param [Array] ports Ports to scan for TCP service discovery
     def tcp_service_discovery_ports=(ports)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/TCPPortScan')
-      service_ports.attributes['mode'] = "custom"
-      service_ports.attributes['method'] = "syn"
-      REXML::XPath.first(service_ports, './portList').text = ports.join(",")
+      service_ports.attributes['mode'] = 'custom'
+      service_ports.attributes['method'] = 'syn'
+      REXML::XPath.first(service_ports, './portList').text = ports.join(',')
     end
 
     # Exclude TCP ports during TCP service discovery
     # @param [Array] ports TCP ports to exclude from TCP service discovery
     def exclude_tcp_service_discovery_ports=(ports)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/ExcludedTCPPortScan')
-      REXML::XPath.first(service_ports, './portList').text = ports.join(",")
+      REXML::XPath.first(service_ports, './portList').text = ports.join(',')
     end
 
     # Set custom UDP ports to scan for UDP service discovery
     # @param [Array] ports Ports to scan during UDP service discovery
     def udp_service_discovery_ports=(ports)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/UDPPortScan')
-      service_ports.attributes['mode'] = "custom"
-      REXML::XPath.first(service_ports, './portList').text = ports.join(",")
+      service_ports.attributes['mode'] = 'custom'
+      REXML::XPath.first(service_ports, './portList').text = ports.join(',')
     end
 
     # Exclude UDP ports when performing UDP service discovery
     # @param [Array] ports UDP ports to exclude from UDP service discovery
     def exclude_udp_service_discovery_ports=(ports)
       service_ports = REXML::XPath.first(@xml, 'ScanTemplate/ServiceDiscovery/ExcludedUDPPortScan')
-      REXML::XPath.first(service_ports, './portList').text = ports.join(",")
+      REXML::XPath.first(service_ports, './portList').text = ports.join(',')
     end
 
     # Enable or disable UDP service discovery
@@ -509,7 +509,7 @@ module Nexpose
     #
     def self.copy(nsc, id)
       dupe = load(nsc, id)
-      dupe.id = '#NewScanTemplate#'
+      dupe.id   = '#NewScanTemplate#'
       dupe.name = "#{dupe.name} Copy"
       dupe
     end
@@ -532,14 +532,14 @@ module Nexpose
       return if level.nil?
       return unless ['full', 'default', 'none'].include? level.downcase
       logging = REXML::XPath.first(@xml, 'ScanTemplate/Logging')
-      if (logging.nil?)
+      if logging.nil?
         logging = REXML::Element.new('Logging')
         @xml.add_element(logging)
       end
       aces = REXML::XPath.first(logging, 'aces')
-      if (aces.nil?)
-         aces = REXML::Element.new('aces')
-         logging.add_element(aces)
+      if aces.nil?
+        aces = REXML::Element.new('aces')
+        logging.add_element(aces)
       end
       aces.attributes['level'] = level
     end
@@ -551,13 +551,13 @@ module Nexpose
       return 'default' if logging.nil?
       aces = REXML::XPath.first(logging, 'aces')
       return 'default' if aces.nil?
-      return aces.attributes['level']
+      aces.attributes['level']
     end
 
     # @return [Boolean] whether asset configuration scanning is enabled for
     #   this template.
     def aces_enabled?
-      return 'full' == aces_level
+      aces_level == 'full'
     end
 
     # Enable or disable the debug logging.

@@ -1,3 +1,4 @@
+# here uh what
 module Nexpose
 
   # Nexpose console configuration class.
@@ -32,13 +33,12 @@ module Nexpose
     #
     def initialize(xml)
       @xml = xml
-
-      nsc = REXML::XPath.first(@xml, 'NeXposeSecurityConsole')
-      @scan_threads_limit = nsc.attributes['scanThreadsLimit'].to_i
+      nsc                       = REXML::XPath.first(@xml, 'NeXposeSecurityConsole')
+      @scan_threads_limit       = nsc.attributes['scanThreadsLimit'].to_i
       @incremental_scan_results = nsc.attributes['realtimeIntegration'] == '1'
 
-      web_server = REXML::XPath.first(nsc, 'WebServer')
-      @session_timeout = web_server.attributes['sessionTimeout'].to_i
+      web_server                = REXML::XPath.first(nsc, 'WebServer')
+      @session_timeout          = web_server.attributes['sessionTimeout'].to_i
     end
 
     # Load existing Nexpose security console configuration.
@@ -56,15 +56,15 @@ module Nexpose
     # @return [Boolean] true if configuration successfully saved.
     #
     def save(connection)
-      nsc = REXML::XPath.first(@xml, 'NeXposeSecurityConsole')
-      nsc.attributes['scanThreadsLimit'] = @scan_threads_limit.to_i
+      nsc                                   = REXML::XPath.first(@xml, 'NeXposeSecurityConsole')
+      nsc.attributes['scanThreadsLimit']    = @scan_threads_limit.to_i
       nsc.attributes['realtimeIntegration'] = @incremental_scan_results ? '1' : '0'
 
-      web_server = REXML::XPath.first(nsc, 'WebServer')
+      web_server                              = REXML::XPath.first(nsc, 'WebServer')
       web_server.attributes['sessionTimeout'] = @session_timeout.to_i
 
       response = REXML::Document.new(Nexpose::AJAX.post(connection, '/data/admin/config/nsc', @xml))
-      saved = REXML::XPath.first(response, 'SaveConfig')
+      saved    = REXML::XPath.first(response, 'SaveConfig')
       saved.attributes['success'] == '1'
     end
   end

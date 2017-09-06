@@ -6,13 +6,11 @@ module Nexpose
       data.each do |key, value|
         if respond_to?(key)
           property = value
-
           if value.respond_to? :each
             obj = resolve_type(key)
-
             unless obj.nil?
               if value.is_a?(Array)
-                property = value.map { |dv|  ((dv.respond_to? :each) ? create_object(obj, dv).deserialize(dv): dv) }
+                property = value.map { |dv| ((dv.respond_to? :each) ? create_object(obj, dv).deserialize(dv) : dv) }
               else
                 property = create_object(obj, value).deserialize(value)
               end
@@ -20,20 +18,15 @@ module Nexpose
           elsif value.is_a?(String) && value.match(/^\d{8}T\d{6}\.\d{3}/)
             property = ISO8601.to_time(value)
           end
-
           instance_variable_set("@#{key}", property)
         end
       end
-
       self
     end
 
-    def serialize()
+    def serialize
       hash = to_hash(Hash.new)
-
-      unless hash.nil?
-        JSON.generate(hash)
-      end
+      JSON.generate(hash) unless hash.nil?
     end
 
     def to_hash(hash)
@@ -41,7 +34,6 @@ module Nexpose
         value = self.instance_variable_get(m)
         hash[m.to_s.delete('@')] = do_hash(value)
       end
-
       hash
     end
 
@@ -51,12 +43,10 @@ module Nexpose
       if obj.is_a?(Array)
         obj = obj.map do |el|
           do_hash(el)
-
         end
       elsif obj.class.included_modules.include? JsonSerializer
         obj = obj.to_hash(Hash.new)
       end
-
       obj
     end
 
