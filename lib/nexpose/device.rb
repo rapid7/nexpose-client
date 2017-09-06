@@ -18,18 +18,16 @@ module Nexpose
       r = execute(make_xml('SiteDeviceListingRequest', { 'site-id' => site_id }))
       if r.success
         device = REXML::XPath.first(r.res, "SiteDeviceListingResponse/SiteDevices/device[@address='#{address}']")
-        if device
-          return Device.new(device.attributes['id'].to_i,
-                            device.attributes['address'],
-                            device.parent.attributes['site-id'],
-                            device.attributes['riskfactor'].to_f,
-                            device.attributes['riskscore'].to_f)
-        end
+        return Device.new(device.attributes['id'].to_i,
+                          device.attributes['address'],
+                          device.parent.attributes['site-id'],
+                          device.attributes['riskfactor'].to_f,
+                          device.attributes['riskscore'].to_f) if device
       end
       nil
     end
 
-    alias find_asset_by_address find_device_by_address
+    alias_method :find_asset_by_address, :find_device_by_address
 
     # Retrieve a list of all of the assets in a site.
     #
@@ -59,10 +57,10 @@ module Nexpose
       devices
     end
 
-    alias devices list_site_devices
-    alias list_devices list_site_devices
-    alias assets list_site_devices
-    alias list_assets list_site_devices
+    alias_method :devices, :list_site_devices
+    alias_method :list_devices, :list_site_devices
+    alias_method :assets, :list_site_devices
+    alias_method :list_assets, :list_site_devices
 
     # Get a list of all assets currently associated with a group.
     #
@@ -91,9 +89,9 @@ module Nexpose
       json.map { |vuln| VulnFinding.new(vuln) }
     end
 
-    alias list_asset_vulns list_device_vulns
-    alias asset_vulns list_device_vulns
-    alias device_vulns list_device_vulns
+    alias_method :list_asset_vulns, :list_device_vulns
+    alias_method :asset_vulns, :list_device_vulns
+    alias_method :device_vulns, :list_device_vulns
 
     # Retrieve a list of assets which completed in a given scan. If called
     # during a scan, this method returns currently completed assets. A
@@ -131,7 +129,7 @@ module Nexpose
       r.success
     end
 
-    alias delete_asset delete_device
+    alias_method :delete_asset, :delete_device
 
     # Retrieve the scan history for an asset.
     # Note: This is not optimized for querying many assets.
@@ -176,11 +174,11 @@ module Nexpose
     attr_reader :site_id
 
     def initialize(id, address, site_id, risk_factor = 1.0, risk_score = 0.0)
-      @id          = id.to_i
-      @address     = address
-      @site_id     = site_id.to_i
+      @id = id.to_i
+      @address = address
+      @site_id = site_id.to_i
       @risk_factor = risk_factor.to_f
-      @risk_score  = risk_score.to_f
+      @risk_score = risk_score.to_f
     end
   end
 
@@ -222,13 +220,13 @@ module Nexpose
     # object.
     def self.parse_json(json)
       new do
-        @id        = json['assetID'].to_i
-        @ip        = json['ipAddress']
+        @id = json['assetID'].to_i
+        @ip = json['ipAddress']
         @host_name = json['hostName']
-        @os        = json['operatingSystem']
-        @vulns     = json['vulnerabilityCount']
-        @status    = json['scanStatusTranslation'].downcase.to_sym
-        @duration  = json['duration']
+        @os = json['operatingSystem']
+        @vulns = json['vulnerabilityCount']
+        @status = json['scanStatusTranslation'].downcase.to_sym
+        @duration = json['duration']
       end
     end
   end
@@ -237,6 +235,7 @@ module Nexpose
   #
   class IncompleteAsset < CompletedAsset
   end
+
 
   # Summary object of a scan for a particular asset.
   #
@@ -269,15 +268,15 @@ module Nexpose
 
     def self.parse_json(json)
       new do
-        @asset_id    = json['assetID'].to_i
-        @scan_id     = json['scanID'].to_i
-        @site_id     = json['siteID'].to_i
-        @ip          = json['ipAddress']
-        @host_name   = json['hostname']
-        @os          = json['operatingSystem']
-        @vulns       = json['vulnCount']
-        @end_time    = Time.at(json['completed'].to_i / 1000)
-        @site_name   = json['siteName']
+        @asset_id = json['assetID'].to_i
+        @scan_id = json['scanID'].to_i
+        @site_id = json['siteID'].to_i
+        @ip = json['ipAddress']
+        @host_name = json['hostname']
+        @os = json['operatingSystem']
+        @vulns = json['vulnCount']
+        @end_time = Time.at(json['completed'].to_i / 1000)
+        @site_name = json['siteName']
         @engine_name = json['scanEngineName']
       end
     end

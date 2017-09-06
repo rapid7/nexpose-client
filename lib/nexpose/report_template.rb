@@ -19,7 +19,7 @@ module Nexpose
       templates
     end
 
-    alias report_templates list_report_templates
+    alias_method :report_templates, :list_report_templates
 
     # Deletes an existing, custom report template.
     # Cannot delete built-in templates.
@@ -53,11 +53,11 @@ module Nexpose
     attr_reader :description
 
     def initialize(id, name, type, scope, built_in, description)
-      @id          = id
-      @name        = name
-      @type        = type
-      @scope       = scope
-      @built_in    = built_in
+      @id = id
+      @name = name
+      @type = type
+      @scope = scope
+      @built_in = built_in
       @description = description
     end
 
@@ -109,18 +109,19 @@ module Nexpose
     attr_accessor :attributes
     # Display asset names with IPs.
     attr_accessor :show_asset_names
-    alias show_device_names show_asset_names
-    alias show_device_names= show_asset_names=
+    alias :show_device_names :show_asset_names
+    alias :show_device_names= :show_asset_names=
 
     def initialize(name, type = 'document', id = -1, scope = 'silo', built_in = false)
-      @name             = name
-      @type             = type
-      @id               = id
-      @scope            = scope
-      @built_in         = built_in
-      @sections         = []
-      @properties       = {}
-      @attributes       = []
+      @name = name
+      @type = type
+      @id = id
+      @scope = scope
+      @built_in = built_in
+
+      @sections = []
+      @properties = {}
+      @attributes = []
       @show_asset_names = false
     end
 
@@ -218,7 +219,7 @@ module Nexpose
     attr_accessor :properties
 
     def initialize(name)
-      @name       = name
+      @name = name
       @properties = {}
     end
 

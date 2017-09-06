@@ -14,7 +14,7 @@ module Nexpose
     #
     def filter(field, operator, value = '')
       criterion = Criterion.new(field, operator, value)
-      criteria  = Criteria.new(criterion)
+      criteria = Criteria.new(criterion)
       search(criteria)
     end
 
@@ -34,7 +34,9 @@ module Nexpose
     # @return [Array[FilteredAsset]] List of matching assets.
     #
     def search(criteria)
-      results = DataTable._get_json_table(self, '/data/asset/filterAssets', criteria._to_payload)
+      results = DataTable._get_json_table(self,
+                                          '/data/asset/filterAssets',
+                                          criteria._to_payload)
       results.map { |a| FilteredAsset.new(a) }
     end
   end
@@ -171,32 +173,32 @@ module Nexpose
     # List of acceptable operators. Not all fields accept all operators.
     #
     module Operator
-      ARE             = 'ARE'
-      BETWEEN         = 'BETWEEN'
-      CONTAINS        = 'CONTAINS'
-      DO_NOT_INCLUDE  = 'DO_NOT_INCLUDE'
-      EARLIER_THAN    = 'EARLIER_THAN'
-      ENDS_WITH       = 'ENDS_WITH'
-      GREATER_THAN    = 'GREATER_THAN'
-      IN              = 'IN'
-      INCLUDE         = 'INCLUDE'
-      IN_RANGE        = 'IN_RANGE'
-      IS              = 'IS'
-      IS_APPLIED      = 'IS_APPLIED'
-      IS_EMPTY        = 'IS_EMPTY'
-      IS_NOT          = 'IS_NOT'
-      IS_NOT_APPLIED  = 'IS_NOT_APPLIED'
-      IS_NOT_EMPTY    = 'IS_NOT_EMPTY'
-      LESS_THAN       = 'LESS_THAN'
-      LIKE            = 'LIKE'
-      NOT_CONTAINS    = 'NOT_CONTAINS'
-      NOT_IN          = 'NOT_IN'
-      NOT_IN_RANGE    = 'NOT_IN_RANGE'
-      NOT_LIKE        = 'NOT_LIKE'
-      ON_OR_AFTER     = 'ON_OR_AFTER'
-      ON_OR_BEFORE    = 'ON_OR_BEFORE'
-      STARTS_WITH     = 'STARTS_WITH'
+      CONTAINS = 'CONTAINS'
+      NOT_CONTAINS = 'NOT_CONTAINS'
+      IS = 'IS'
+      IS_NOT = 'IS_NOT'
+      ARE = 'ARE'
+      IN = 'IN'
+      NOT_IN = 'NOT_IN'
+      IN_RANGE = 'IN_RANGE'
+      NOT_IN_RANGE = 'NOT_IN_RANGE'
+      STARTS_WITH = 'STARTS_WITH'
+      ENDS_WITH = 'ENDS_WITH'
+      ON_OR_BEFORE = 'ON_OR_BEFORE'
+      ON_OR_AFTER = 'ON_OR_AFTER'
+      BETWEEN = 'BETWEEN'
+      EARLIER_THAN = 'EARLIER_THAN'
       WITHIN_THE_LAST = 'WITHIN_THE_LAST'
+      GREATER_THAN = 'GREATER_THAN'
+      LESS_THAN = 'LESS_THAN'
+      IS_EMPTY = 'IS_EMPTY'
+      IS_NOT_EMPTY = 'IS_NOT_EMPTY'
+      INCLUDE = 'INCLUDE'
+      DO_NOT_INCLUDE = 'DO_NOT_INCLUDE'
+      IS_APPLIED = 'IS_APPLIED'
+      IS_NOT_APPLIED = 'IS_NOT_APPLIED'
+      LIKE = 'LIKE'
+      NOT_LIKE = 'NOT_LIKE'
     end
 
     # Specialized values used by certain search fields
@@ -204,36 +206,36 @@ module Nexpose
     module Value
       # Constants for filtering on access complexity.
       module AccessComplexity
-        LOW    = 'L'
+        LOW = 'L'
         MEDIUM = 'M'
-        HIGH   = 'H'
+        HIGH = 'H'
       end
 
       # Constants for filtering on access vector.
       module AccessVector
-        LOCAL    = 'L'
+        LOCAL = 'L'
         ADJACENT = 'A'
-        NETWORK  = 'N'
+        NETWORK = 'N'
       end
 
       # Constants for filtering on whether authentication is required.
       module AuthenticationRequired
-        NONE     = 'N'
-        SINGLE   = 'S'
+        NONE = 'N'
+        SINGLE = 'S'
         MULTIPLE = 'M'
       end
 
       # Constants for filtering on CVSS impact.
       module CVSSImpact
-        NONE     = 'N'
-        PARTIAL  = 'P'
+        NONE = 'N'
+        PARTIAL = 'P'
         COMPLETE = 'C'
       end
 
       # Constants for filtering on host type.
       module HostType
-        UNKNOWN    = '0'
-        VIRTUAL    = '1'
+        UNKNOWN = '0'
+        VIRTUAL = '1'
         HYPERVISOR = '2'
         BARE_METAL = '3'
       end
@@ -261,15 +263,15 @@ module Nexpose
       # Constants for filtering on vulnerability validations.
       module ValidatedVulnerability
         NOT_PRESENT = 1
-        PRESENT     = 0
+        PRESENT = 0
       end
 
       # Constants for filtering on vulnerability exposure.
       module VulnerabilityExposure
-        MALWARE    = 'type:"malware_type", name:"malwarekit"'
+        MALWARE = 'type:"malware_type", name:"malwarekit"'
         # TODO: A problem in Nexpose causes these values to not be constant.
         METASPLOIT = 'type:"exploit_source_type", name:"2"'
-        DATABASE   = 'type:"exploit_source_type", name:"1"'
+        DATABASE = 'type:"exploit_source_type", name:"1"'
       end
     end
   end
@@ -286,8 +288,7 @@ module Nexpose
     attr_accessor :value
 
     def initialize(field, operator, value = '')
-      @field    = field.upcase
-      @operator = operator.upcase
+      @field, @operator = field.upcase, operator.upcase
       if value.is_a? Array
         @value = value.map(&:to_s)
       else
@@ -383,17 +384,17 @@ module Nexpose
     attr_reader :last_scan
 
     def initialize(json)
-      @id            = json['assetID']
-      @ip            = json['assetIP']
-      @name          = json['assetName']
-      @os            = json['assetOSName']
+      @id = json['assetID']
+      @ip = json['assetIP']
+      @name = json['assetName']
+      @os = json['assetOSName']
       @exploit_count = json['exploitCount'].to_i
       @malware_count = json['malwareCount'].to_i
-      @vuln_count    = json['vulnCount'].to_i
-      @risk_score    = json['riskScore'].to_f
-      @site_ids      = json['sitePermissions'].map { |site| site['siteID'] }
-      @site_id       = @site_ids.first
-      @last_scan     = Time.at(json['lastScanDate'].to_i / 1000)
+      @vuln_count = json['vulnCount'].to_i
+      @risk_score = json['riskScore'].to_f
+      @site_ids = json['sitePermissions'].map { |site| site['siteID'] }
+      @site_id = @site_ids.first
+      @last_scan = Time.at(json['lastScanDate'].to_i / 1000)
     end
   end
 end

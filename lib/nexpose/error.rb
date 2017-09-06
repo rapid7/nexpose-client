@@ -1,13 +1,12 @@
 module Nexpose
-
   class APIError < ::RuntimeError
     attr_accessor :req, :reason
     attr_reader :code
 
     def initialize(req, reason = '', code = 400)
-      @req    = req
+      @req = req
       @reason = reason
-      @code   = code
+      @code = code
     end
 
     def to_s
@@ -17,16 +16,15 @@ module Nexpose
 
   class AuthenticationFailed < APIError
     def initialize(req)
-      @req    = req
-      @reason = 'Login Failed'
+      @req = req
+      @reason = "Login Failed"
     end
   end
 
   class PermissionError < APIError
     def initialize(req)
-      @req    = req
+      @req = req
       @reason = 'User does not have permission to perform this action.'
     end
   end
-
 end

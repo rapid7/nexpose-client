@@ -22,7 +22,7 @@ module Nexpose
     #
     def object_from_hash(nsc, hash)
       hash.each do |k, v|
-        next if k == :url # Do not store self-referential URL.
+        next if k == :url  # Do not store self-referential URL.
         # Store resource URLs separately and create lazy accessors.
         if v.is_a?(Hash) && v.key?(:url)
           self.class.send(:define_method, k, proc { |conn = nsc| load_resource(conn, k, v[:url].gsub(/.*\/api/, '/api')) })
@@ -52,7 +52,7 @@ module Nexpose
     # @return [Array[?]] Collection of "k" marshalled object.
     #
     def load_resource(nsc, k, url)
-      obj  = class_from_string(k)
+      obj = class_from_string(k)
       resp = AJAX.get(nsc, url, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
       if hash.is_a?(Array)
@@ -85,6 +85,7 @@ module Nexpose
 
   module TypedAccessor
     def typed_accessor(name, type)
+
       # here we dynamically define accessor methods
       define_method(name) do
         instance_variable_get("@#{name}")
@@ -99,5 +100,4 @@ module Nexpose
       end
     end
   end
-
 end

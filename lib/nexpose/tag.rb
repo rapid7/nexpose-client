@@ -8,13 +8,13 @@ module Nexpose
     #
     def tags
       tag_summary = []
-      tags        = JSON.parse(AJAX.get(self, '/api/2.0/tags', AJAX::CONTENT_TYPE::JSON, { per_page: 2_147_483_647 }))
+      tags = JSON.parse(AJAX.get(self, '/api/2.0/tags', AJAX::CONTENT_TYPE::JSON, { per_page: 2_147_483_647 }))
       tags['resources'].each do |json|
         tag_summary << TagSummary.parse(json)
       end
       tag_summary
     end
-    alias list_tags tags
+    alias_method :list_tags, :tags
 
     # Deletes a tag by ID
     #
@@ -31,13 +31,13 @@ module Nexpose
     #
     def asset_tags(asset_id)
       tag_summary = []
-      asset_tag   = JSON.parse(AJAX.get(self, "/api/2.0/assets/#{asset_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2_147_483_647 }))
+      asset_tag = JSON.parse(AJAX.get(self, "/api/2.0/assets/#{asset_id}/tags", AJAX::CONTENT_TYPE::JSON, { per_page: 2_147_483_647 }))
       asset_tag['resources'].select { |r| r['asset_ids'].find { |i| i == asset_id } }.each do |json|
         tag_summary << TagSummary.parse(json)
       end
       tag_summary
     end
-    alias list_asset_tags asset_tags
+    alias_method :list_asset_tags, :asset_tags
 
     # Removes a tag from an asset
     #
@@ -61,7 +61,7 @@ module Nexpose
       end
       tag_summary
     end
-    alias list_site_tags site_tags
+    alias_method :list_site_tags, :site_tags
 
     # Removes a tag from a site
     #
@@ -85,8 +85,8 @@ module Nexpose
       end
       tag_summary
     end
-    alias group_tags asset_group_tags
-    alias list_asset_group_tags asset_group_tags
+    alias_method :group_tags, :asset_group_tags
+    alias_method :list_asset_group_tags, :asset_group_tags
 
     # Removes a tag from an asset_group
     #
@@ -96,7 +96,7 @@ module Nexpose
     def remove_tag_from_asset_group(asset_group_id, tag_id)
       AJAX.delete(self, "/api/2.0/asset_groups/#{asset_group_id}/tags/#{tag_id}")
     end
-    alias remove_tag_from_group remove_tag_from_asset_group
+    alias_method :remove_tag_from_group, :remove_tag_from_asset_group
 
     # Returns the criticality value which takes precedent for an asset
     #
@@ -123,9 +123,7 @@ module Nexpose
     attr_accessor :type
 
     def initialize(name, type, id)
-      @name = name
-      @type = type
-      @id   = id
+      @name, @type, @id = name, type, id
     end
 
     def self.parse(json)
@@ -156,27 +154,27 @@ module Nexpose
       # Criticality tag types
       module Level
         VERY_HIGH = 'Very High'
-        HIGH      = 'High'
-        MEDIUM    = 'Medium'
-        LOW       = 'Low'
-        VERY_LOW  = 'Very Low'
+        HIGH = 'High'
+        MEDIUM = 'Medium'
+        LOW = 'Low'
+        VERY_LOW = 'Very Low'
       end
 
       # Tag types
       module Generic
-        CUSTOM      = 'CUSTOM'
-        OWNER       = 'OWNER'
-        LOCATION    = 'LOCATION'
+        CUSTOM = 'CUSTOM'
+        OWNER = 'OWNER'
+        LOCATION = 'LOCATION'
         CRITICALITY = 'CRITICALITY'
       end
 
       module Color
-        BLUE    = '#496a77'
-        DEFAULT = '#f6f6f6'
-        GREEN   = '#7d8a58'
-        ORANGE  = '#de7200'
-        PURPLE  = '#844f7d'
-        RED     = '#a0392e'
+        BLUE = "#496a77"
+        DEFAULT = "#f6f6f6"
+        GREEN = "#7d8a58"
+        ORANGE = "#de7200"
+        PURPLE = "#844f7d"
+        RED = "#a0392e"
       end
     end
 
@@ -200,28 +198,26 @@ module Nexpose
 
     # Array containing Asset Group IDs to be associated with tag
     attr_accessor :asset_group_ids
-    alias group_ids asset_group_ids
-    alias group_ids= asset_group_ids=
+    alias_method :group_ids, :asset_group_ids
+    alias_method :group_ids=, :asset_group_ids=
 
     # A TagCriteria
     attr_accessor :search_criteria
 
     def initialize(name, type, id = -1)
-      @name   = name
-      @type   = type
-      @id     = id
+      @name, @type, @id = name, type, id
       @source = 'nexpose-client'
-      @color  = @type == Type::Generic::CUSTOM ? Type::Color::DEFAULT : nil
+      @color = @type == Type::Generic::CUSTOM ? Type::Color::DEFAULT : nil
     end
 
     # Set the color but validate it
     def color=(hex)
-      valid_colors = Type::Color.constants.map { |c| Type::Color.const_get(c) }
+      valid_colors = Type::Color::constants.map { |c| Type::Color.const_get(c) }
       unless hex.nil? || valid_colors.include?(hex.to_s.downcase)
         raise ArgumentError, "Unable to set color to an invalid color.\nUse one of #{valid_colors}"
-      end
+      end 
 
-      @color = hex
+      @color = hex 
     end
 
     # Create list of tag objects from hash
@@ -237,12 +233,12 @@ module Nexpose
     # Create tag object from hash
     def self.create(hash)
       attributes = hash[:attributes]
-      color      = attributes.find { |attr| attr[:tag_attribute_name] == 'COLOR' }
-      color      = color[:tag_attribute_value] if color
-      source     = attributes.find { |attr| attr[:tag_attribute_name] == 'SOURCE' }
-      source     = source[:tag_attribute_value] if source
-      tag        = Tag.new(hash[:tag_name], hash[:tag_type], hash[:tag_id])
-      tag.color  = color
+      color = attributes.find { |attr| attr[:tag_attribute_name] == 'COLOR' }
+      color = color[:tag_attribute_value] if color
+      source = attributes.find { |attr| attr[:tag_attribute_name] == 'SOURCE' }
+      source = source[:tag_attribute_value] if source
+      tag = Tag.new(hash[:tag_name], hash[:tag_type], hash[:tag_id])
+      tag.color = color
       tag.source = source
       tag
     end
@@ -252,9 +248,15 @@ module Nexpose
         tag_id: id,
         tag_name: name,
         tag_type: type,
-        attributes: [
-          { tag_attribute_name: 'COLOR', tag_attribute_value: color },
-          { tag_attribute_name: 'SOURCE', tag_attribute_value: source }
+        attributes:[
+          {
+            tag_attribute_name: "COLOR",
+            tag_attribute_value: color
+          },
+          {
+            tag_attribute_name: "SOURCE",
+            tag_attribute_value: source
+          }
         ]
       }
     end
@@ -287,15 +289,18 @@ module Nexpose
     end
 
     def to_json
-      json = { 'tag_name' => @name,
-               'tag_type' => @type,
-               'tag_id' => @id,
-               'attributes' => [{ 'tag_attribute_name' => 'SOURCE',
-                                  'tag_attribute_value' => @source }],
-               'tag_config' => { 'site_ids' => @site_ids,
-                                 'tag_associated_asset_ids' => @associated_asset_ids,
-                                 'asset_group_ids' => @asset_group_ids,
-                                 'search_criteria' => @search_criteria ? @search_criteria.to_h : nil } }
+      json = {
+          'tag_name' => @name,
+          'tag_type' => @type,
+          'tag_id' => @id,
+          'attributes' => [{ 'tag_attribute_name' => 'SOURCE',
+                             'tag_attribute_value' => @source }],
+          'tag_config' => { 'site_ids' => @site_ids,
+                            'tag_associated_asset_ids' => @associated_asset_ids,
+                            'asset_group_ids' => @asset_group_ids,
+                            'search_criteria' => @search_criteria ? @search_criteria.to_h : nil
+          }
+      }
       if @type == Type::Generic::CUSTOM
         json['attributes'] << { 'tag_attribute_name' => 'COLOR', 'tag_attribute_value' => @color }
       end
@@ -311,23 +316,25 @@ module Nexpose
     end
 
     def self.parse(json)
-      color         = json['attributes'].find { |attr| attr['tag_attribute_name'] == 'COLOR' }
-      color         = color['tag_attribute_value'] if color
-      source        = json['attributes'].find { |attr| attr['tag_attribute_name'] == 'SOURCE' }
-      source        = source['tag_attribute_value'] if source
-      tag           = Tag.new(json['tag_name'], json['tag_type'], json['tag_id'])
-      tag.color     = color
-      tag.source    = source
+      color = json['attributes'].find { |attr| attr['tag_attribute_name'] == 'COLOR' }
+      color = color['tag_attribute_value'] if color
+      source = json['attributes'].find { |attr| attr['tag_attribute_name'] == 'SOURCE' }
+      source = source['tag_attribute_value'] if source
+      tag = Tag.new(json['tag_name'], json['tag_type'], json['tag_id'])
+      tag.color = color
+      tag.source = source
       tag.asset_ids = json['asset_ids']
       if json['tag_config']
-        tag.site_ids             = json['tag_config']['site_ids']
+        tag.site_ids = json['tag_config']['site_ids']
         tag.associated_asset_ids = json['tag_config']['tag_associated_asset_ids']
-        tag.asset_group_ids      = json['tag_config']['asset_group_ids']
-        criteria                 = json['tag_config']['search_criteria']
-        tag.search_criteria      = criteria ? Criteria.parse(criteria) : nil
+        tag.asset_group_ids = json['tag_config']['asset_group_ids']
+        criteria = json['tag_config']['search_criteria']
+        tag.search_criteria =  criteria ? Criteria.parse(criteria) : nil
       end
       modifier = json['attributes'].find { |attr| attr['tag_attribute_name'] == 'RISK_MODIFIER' }
-      tag.risk_modifier = modifier['tag_attribute_value'].to_i if modifier
+      if modifier
+        tag.risk_modifier = modifier['tag_attribute_value'].to_i
+      end
       tag
     end
 
@@ -339,9 +346,9 @@ module Nexpose
     #
     def add_to_asset(connection, asset_id)
       params = to_json_for_add
-      url    = "/api/2.0/assets/#{asset_id}/tags"
-      uri    = AJAX.post(connection, url, params, AJAX::CONTENT_TYPE::JSON)
-      @id    = uri.split('/').last.to_i
+      url = "/api/2.0/assets/#{asset_id}/tags"
+      uri = AJAX.post(connection, url, params, AJAX::CONTENT_TYPE::JSON)
+      @id = uri.split('/').last.to_i
     end
 
     # Adds a tag to a site
@@ -352,9 +359,9 @@ module Nexpose
     #
     def add_to_site(connection, site_id)
       params = to_json_for_add
-      url    = "/api/2.0/sites/#{site_id}/tags"
-      uri    = AJAX.post(connection, url, params, AJAX::CONTENT_TYPE::JSON)
-      @id    = uri.split('/').last.to_i
+      url = "/api/2.0/sites/#{site_id}/tags"
+      uri = AJAX.post(connection, url, params, AJAX::CONTENT_TYPE::JSON)
+      @id = uri.split('/').last.to_i
     end
 
     # Adds a tag to an asset group
@@ -365,11 +372,11 @@ module Nexpose
     #
     def add_to_group(connection, group_id)
       params = to_json_for_add
-      url    = "/api/2.0/asset_groups/#{group_id}/tags"
-      uri    = AJAX.post(connection, url, params, AJAX::CONTENT_TYPE::JSON)
-      @id    = uri.split('/').last.to_i
+      url = "/api/2.0/asset_groups/#{group_id}/tags"
+      uri = AJAX.post(connection, url, params, AJAX::CONTENT_TYPE::JSON)
+      @id = uri.split('/').last.to_i
     end
-    alias add_to_asset_group add_to_group
+    alias_method :add_to_asset_group, :add_to_group
 
     private
 

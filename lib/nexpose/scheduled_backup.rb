@@ -22,14 +22,14 @@ module Nexpose
     attr_accessor :cancellation_window
 
     def initialize(start:, enabled: true, type:, interval:, platform_independent: true, description: nil, pause_local_scans: true, cancellation_window: 0)
-      @schedule_start       = start
-      @enabled              = enabled
-      @schedule_type        = type
-      @schedule_interval    = interval.to_i
+      @schedule_start = start
+      @enabled = enabled
+      @schedule_type = type
+      @schedule_interval = interval.to_i
       @platform_independent = platform_independent
-      @description          = description
-      @pause_local_scans    = pause_local_scans
-      @cancellation_window  = cancellation_window.to_i
+      @description = description
+      @pause_local_scans = pause_local_scans
+      @cancellation_window = cancellation_window.to_i
     end
 
     def to_json
@@ -72,7 +72,7 @@ module Nexpose
     end
 
     def self.load(nsc)
-      uri  = '/api/2.1/schedule_backup/'
+      uri = '/api/2.1/schedule_backup/'
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true).first
       Nexpose::ScheduledBackup.from_hash(hash || [])
