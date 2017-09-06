@@ -60,8 +60,8 @@ module Nexpose
     #
     def scan_devices_with_schedule(devices, schedules)
       site_id = devices.map(&:site_id).uniq.first
-      xml     = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
-      elem    = REXML::Element.new('Devices')
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
+      elem = REXML::Element.new('Devices')
       devices.each do |device|
         elem.add_element('device', 'id' => "#{device.id}")
       end
@@ -107,7 +107,7 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_assets(site_id, assets)
-      xml   = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       hosts = REXML::Element.new('Hosts')
       assets.each { |asset| _append_asset!(hosts, asset) }
       xml.add_element(hosts)
@@ -129,7 +129,7 @@ module Nexpose
     # @return [Status] whether the request was successful
     #
     def scan_assets_with_schedule(site_id, assets, schedules)
-      xml   = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       hosts = REXML::Element.new('Hosts')
       assets.each { |asset| _append_asset!(hosts, asset) }
       xml.add_element(hosts)
@@ -155,7 +155,7 @@ module Nexpose
     # @return [Status] whether the request was successful
     #
     def scan_ips_with_schedule(site_id, ip_addresses, schedules)
-      xml   = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       hosts = REXML::Element.new('Hosts')
       ip_addresses.each do |ip|
         xml.add_element('range', 'from' => ip)
@@ -183,7 +183,7 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_ips(site_id, ip_addresses)
-      xml   = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
+      xml = make_xml('SiteDevicesScanRequest', 'site-id' => site_id)
       hosts = REXML::Element.new('Hosts')
       ip_addresses.each do |ip|
         xml.add_element('range', 'from' => ip)
@@ -199,7 +199,7 @@ module Nexpose
     # @return [Scan] Scan launch information.
     #
     def scan_site(site_id)
-      xml      = make_xml('SiteScanRequest', 'site-id' => site_id)
+      xml = make_xml('SiteScanRequest', 'site-id' => site_id)
       response = execute(xml)
       Scan.parse(response.res) if response.success
     end
@@ -233,7 +233,7 @@ module Nexpose
     def _append_asset!(xml, asset)
       if asset.is_a? Nexpose::IPRange
         xml.add_element('range', 'from' => asset.from, 'to' => asset.to)
-      else # Assume HostName
+      else  # Assume HostName
         host = REXML::Element.new('host')
         host.text = asset
         xml.add_element(host)
@@ -368,8 +368,8 @@ module Nexpose
     #   recently completed first.
     #
     def past_scans(limit = nil)
-      uri    = '/data/scan/global/scan-history'
-      rows   = AJAX.row_pref_of(limit)
+      uri = '/data/scan/global/scan-history'
+      rows = AJAX.row_pref_of(limit)
       params = { 'sort' => 'endTime', 'dir' => 'DESC', 'startIndex' => 0 }
       AJAX.preserving_preference(self, 'global-completed-scans') do
         data = DataTable._get_json_table(self, uri, params, rows, limit)
@@ -386,15 +386,15 @@ module Nexpose
     #
     def paused_scans(site_id = nil, limit = nil)
       if site_id
-        uri    = "/data/scan/site/#{site_id}?status=active"
-        rows   = AJAX.row_pref_of(limit)
+        uri = "/data/scan/site/#{site_id}?status=active"
+        rows = AJAX.row_pref_of(limit)
         params = { 'sort' => 'endTime', 'dir' => 'DESC', 'startIndex' => 0 }
         AJAX.preserving_preference(self, 'site-active-scans') do
           data = DataTable._get_json_table(self, uri, params, rows, limit).select { |scan| scan['paused'] }
           data.map(&ActiveScan.method(:parse_json))
         end
       else
-        uri  = '/data/site/scans/dyntable.xml?printDocType=0&tableID=siteScansTable&activeOnly=true'
+        uri = '/data/site/scans/dyntable.xml?printDocType=0&tableID=siteScansTable&activeOnly=true'
         data = DataTable._get_dyn_table(self, uri).select { |scan| (scan['Status'].include? 'Paused') }
         data.map(&ActiveScan.method(:parse_dyntable))
       end
@@ -409,9 +409,10 @@ module Nexpose
     #   zip_file, if provided. Otherwise, returns raw ZIP binary data.
     #
     def export_scan(scan_id, zip_file = nil)
-      http              = AJAX.https(self)
-      headers           = { 'Cookie' => "nexposeCCSessionID=#{@session_id}", 'Accept-Encoding' => 'identity' }
-      resp              = http.get("/data/scan/#{scan_id}/export", headers)
+      http = AJAX.https(self)
+      headers = { 'Cookie' => "nexposeCCSessionID=#{@session_id}",
+                  'Accept-Encoding' => 'identity' }
+      resp = http.get("/data/scan/#{scan_id}/export", headers)
 
       case resp
       when Net::HTTPSuccess
@@ -501,12 +502,7 @@ module Nexpose
 
     # Constructor
     def initialize(scan_id, site_id, engine_id, status, start_time, end_time)
-      @scan_id    = scan_id
-      @site_id    = site_id
-      @engine_id  = engine_id
-      @status     = status
-      @start_time = start_time
-      @end_time   = end_time
+      @scan_id, @site_id, @engine_id, @status, @start_time, @end_time = scan_id, site_id, engine_id, status, start_time, end_time
     end
 
     def self.parse(xml)
@@ -550,16 +546,8 @@ module Nexpose
 
     # Constructor
     def initialize(scan_id, site_id, engine_id, status, start_time, end_time, message, tasks, nodes, vulnerabilities)
-      @scan_id         = scan_id
-      @site_id         = site_id
-      @engine_id       = engine_id
-      @status          = status
-      @start_time      = start_time
-      @end_time        = end_time
-      @message         = message
-      @tasks           = tasks
-      @nodes           = nodes
-      @vulnerabilities = vulnerabilities
+      @scan_id, @site_id, @engine_id, @status, @start_time, @end_time = scan_id, site_id, engine_id, status, start_time, end_time
+      @message, @tasks, @nodes, @vulnerabilities = message, tasks, nodes, vulnerabilities
     end
 
     # Parse a response from a Nexpose console into a valid ScanSummary object.
@@ -606,9 +594,7 @@ module Nexpose
       attr_reader :pending, :active, :completed
 
       def initialize(pending, active, completed)
-        @pending   = pending
-        @active    = active
-        @completed = completed
+        @pending, @active, @completed = pending, active, completed
       end
 
       # Parse REXML to Tasks object.
@@ -630,11 +616,7 @@ module Nexpose
       attr_reader :live, :dead, :filtered, :unresolved, :other
 
       def initialize(live, dead, filtered, unresolved, other)
-        @live       = live
-        @dead       = dead
-        @filtered   = filtered
-        @unresolved = unresolved
-        @other      = other
+        @live, @dead, @filtered, @unresolved, @other = live, dead, filtered, unresolved, other
       end
 
       # Parse REXML to Nodes object.
@@ -655,17 +637,19 @@ module Nexpose
     # Value class for tracking vulnerability counts.
     #
     class Vulnerabilities
-      attr_reader :vuln_exploit, :vuln_version, :vuln_potential, :not_vuln_exploit, :not_vuln_version, :error, :disabled, :other
+      attr_reader :vuln_exploit, :vuln_version, :vuln_potential,
+                  :not_vuln_exploit, :not_vuln_version,
+                  :error, :disabled, :other
 
-      def initialize(vuln_exploit, vuln_version, vuln_potential, not_vuln_exploit, not_vuln_version, error, disabled, other)
-        @vuln_exploit     = vuln_exploit
-        @vuln_version     = vuln_version
-        @vuln_potential   = vuln_potential
-        @not_vuln_exploit = not_vuln_exploit
-        @not_vuln_version = not_vuln_version
-        @error            = error
-        @disabled         = disabled
-        @other            = other
+      def initialize(vuln_exploit, vuln_version, vuln_potential,
+                     not_vuln_exploit, not_vuln_version,
+                     error, disabled, other)
+        @vuln_exploit, @vuln_version, @vuln_potential,
+            @not_vuln_exploit, @not_vuln_version,
+            @error, @disabled, @other =
+            vuln_exploit, vuln_version, vuln_potential,
+            not_vuln_exploit, not_vuln_version,
+            error, disabled, other
       end
 
       # Parse REXML to Vulnerabilities object.
@@ -707,11 +691,11 @@ module Nexpose
         def initialize(severity = nil, count = 0)
           if severity
             @severities = {}
-            @count      = 0
+            @count = 0
             add_severity(severity.to_i, count)
           else
             @severities = nil
-            @count      = count
+            @count = count
           end
         end
 
@@ -734,8 +718,7 @@ module Nexpose
     attr_reader :engine
 
     def initialize(scan_id, engine_id)
-      @id     = scan_id
-      @engine = engine_id
+      @id, @engine = scan_id, engine_id
     end
 
     def self.parse(xml)
@@ -798,18 +781,18 @@ module Nexpose
     # object.
     def self.parse_json(json)
       new do
-        @id          = json['scanID']
-        @site_id     = json['siteID']
-        @status      = CompletedScan._parse_status(json['status'])
-        @start_time  = Time.at(json['startTime'] / 1000)
-        @end_time    = Time.at(json['endTime'] / 1000)
-        @duration    = json['duration']
-        @vulns       = json['vulnerabilityCount']
-        @assets      = json['liveHosts']
-        @risk_score  = json['riskScore']
-        @type        = json['startedByCD'] == 'S' ? :scheduled : :manual
+        @id = json['scanID']
+        @site_id = json['siteID']
+        @status = CompletedScan._parse_status(json['status'])
+        @start_time = Time.at(json['startTime'] / 1000)
+        @end_time = Time.at(json['endTime'] / 1000)
+        @duration = json['duration']
+        @vulns = json['vulnerabilityCount']
+        @assets = json['liveHosts']
+        @risk_score = json['riskScore']
+        @type = json['startedByCD'] == 'S' ? :scheduled : :manual
         @engine_name = json['scanEngineName']
-        @scan_name   = json['scanName']
+        @scan_name = json['scanName']
       end
     end
 
@@ -831,18 +814,18 @@ module Nexpose
   class ActiveScan < CompletedScan
     def self.parse_dyntable(json)
       new do
-        @id          = json['Scan ID']
-        @site_id     = json['Site ID']
-        @status      = CompletedScan._parse_status(json['Status Code'])
-        @start_time  = Time.at(json['Started'].to_i / 1000)
-        @end_time    = Time.at(json['Progress'].to_i / 1000)
-        @duration    = json['Elapsed'].to_i
-        @vulns       = json['Vulnerabilities Discovered'].to_i
-        @assets      = json['Devices Discovered'].to_i
-        @risk_score  = json['riskScore']
-        @type        = json['Scan Type'] == 'Manual' ? :manual : :scheduled
+        @id = json['Scan ID']
+        @site_id = json['Site ID']
+        @status = CompletedScan._parse_status(json['Status Code'])
+        @start_time = Time.at(json['Started'].to_i / 1000)
+        @end_time = Time.at(json['Progress'].to_i / 1000)
+        @duration = json['Elapsed'].to_i
+        @vulns = json['Vulnerabilities Discovered'].to_i
+        @assets = json['Devices Discovered'].to_i
+        @risk_score = json['riskScore']
+        @type = json['Scan Type'] == 'Manual' ? :manual : :scheduled
         @engine_name = json['Scan Engine']
-        @scan_name   = json['Scan Name']
+        @scan_name = json['Scan Name']
       end
     end
 

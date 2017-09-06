@@ -76,7 +76,7 @@ module Nexpose
 
     # load a particular site alert
     def self.load(nsc, site_id, alert_id)
-      uri  = "/api/2.1/site_configurations/#{site_id}/alerts/#{alert_id}"
+      uri = "/api/2.1/site_configurations/#{site_id}/alerts/#{alert_id}"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
 
       unless resp.to_s == ''
@@ -92,7 +92,7 @@ module Nexpose
 
     # load a list of alerts for a given site
     def self.list_alerts(nsc, site_id)
-      uri  = "/api/2.1/site_configurations/#{site_id}/alerts"
+      uri = "/api/2.1/site_configurations/#{site_id}/alerts"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       data = JSON.parse(resp, symbolize_names: true)
       load_alerts(data) unless data.nil?
@@ -120,7 +120,7 @@ module Nexpose
     def save(nsc, site_id)
       validate
       uri = "/api/2.1/site_configurations/#{site_id}/alerts"
-      id  = AJAX.put(nsc, uri, self.to_json, AJAX::CONTENT_TYPE::JSON)
+      id = AJAX.put(nsc, uri, self.to_json, AJAX::CONTENT_TYPE::JSON)
       @id = id.to_i
     end
 
@@ -130,10 +130,12 @@ module Nexpose
       raise ArgumentError.new('Vuln filter is a required attribute.') unless @vuln_filter
     end
 
+    private
+
     def self.create(hash)
       alert_type = hash[:alert_type]
       raise 'An alert must have an alert type' if alert_type.nil?
-      raise 'Alert name cannot be empty.' if !hash.key?(:name) || hash[:name].to_s == ''
+      raise 'Alert name cannot be empty.' if !hash.has_key?(:name) || hash[:name].to_s == ''
       raise 'SNMP and Syslog alerts must have a server defined' if ['SNMP', 'Syslog'].include?(alert_type) && hash[:server].to_s == ''
 
       case alert_type
@@ -172,23 +174,22 @@ module Nexpose
     attr_accessor :recipients, :sender, :verbose
 
     def initialize(name, sender, server, recipients, enabled = 1, max_alerts = -1, verbose = 0)
-      unless recipients.is_a?(Array) && !recipients.empty?
+      unless recipients.is_a?(Array) && recipients.length > 0
         raise 'An SMTP alert must contain an array of recipient emails with at least 1 recipient'
       end
-
-      recipients.each do |recipient|
+      recipients.each do |recipient| 
         unless recipient =~ /^.+@.+\..+$/
           raise "Recipients must contain valid emails, #{recipient} has an invalid format"
         end
       end
 
       @alert_type = 'SMTP'
-      @name       = name
-      @enabled    = enabled
+      @name = name
+      @enabled = enabled
       @max_alerts = max_alerts
-      @sender     = sender
-      @server     = server
-      @verbose    = verbose
+      @sender = sender
+      @server = server
+      @verbose = verbose
       @recipients = recipients.nil? ? [] : recipients
     end
 
@@ -208,12 +209,13 @@ module Nexpose
 
     def initialize(name, community, server, enabled = 1, max_alerts = -1)
       raise 'SNMP alerts must have a community defined.' if community.nil?
+
       @alert_type = 'SNMP'
-      @name       = name
-      @enabled    = enabled
+      @name = name
+      @enabled = enabled
       @max_alerts = max_alerts
-      @community  = community
-      @server     = server
+      @community = community
+      @server = server
     end
   end
 
@@ -223,11 +225,10 @@ module Nexpose
 
     def initialize(name, server, enabled = 1, max_alerts = -1)
       @alert_type = 'Syslog'
-      @name       = name
-      @enabled    = enabled
+      @name = name
+      @enabled = enabled
       @max_alerts = max_alerts
-      @server     = server
+      @server = server
     end
   end
-
 end
