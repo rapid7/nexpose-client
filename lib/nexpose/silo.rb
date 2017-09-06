@@ -18,14 +18,14 @@ module Nexpose
       arr
     end
 
-    alias silos list_silos
+    alias_method :silos, :list_silos
 
     # Delete the specified silo
     #
     # @return Whether or not the delete request succeeded.
     #
     def delete_silo(silo_id)
-      r = execute(make_xml('SiloDeleteRequest', { 'silo-id' => silo_id }), '1.2')
+      r = execute(make_xml('SiloDeleteRequest', {'silo-id' => silo_id}), '1.2')
       r.success
     end
   end
@@ -39,13 +39,13 @@ module Nexpose
     attr_accessor :max_users
     attr_accessor :max_hosted_assets
 
-    # Optional fields
+    #Optional fields
     attr_accessor :description
     attr_accessor :merchant
     attr_accessor :organization
 
     def initialize(&block)
-      instance_eval(&block) if block_given?
+      instance_eval &block if block_given?
     end
 
     # Copy an existing configuration from a Nexpose instance.
@@ -56,8 +56,8 @@ module Nexpose
     # @return [Silo] Silo configuration loaded from a Nexpose console.
     #
     def self.copy(connection, id)
-      silo      = load(connection, id)
-      silo.id   = nil
+      silo = load(connection, id)
+      silo.id = nil
       silo.name = nil
       silo
     end
@@ -69,7 +69,7 @@ module Nexpose
     # @return [Silo] Silo configuration loaded from a Nexpose console.
     #
     def self.load(connection, id)
-      r = connection.execute(connection.make_xml('SiloConfigRequest', { 'silo-id' => id }), '1.2')
+      r = connection.execute(connection.make_xml('SiloConfigRequest', {'silo-id' => id}), '1.2')
 
       if r.success
         r.res.elements.each('SiloConfigResponse/SiloConfig') do |config|
@@ -80,10 +80,12 @@ module Nexpose
     end
 
     def save(connection)
-      update(connection)
-    rescue APIError => error
-      raise error unless error.message =~ /A silo .* does not exist./
-      create(connection)
+      begin
+        update(connection)
+      rescue APIError => error
+        raise error unless (error.message =~ /A silo .* does not exist./)
+        create(connection)
+      end
     end
 
     # Updates this silo on a Nexpose console.
@@ -116,8 +118,7 @@ module Nexpose
 
     def as_xml
       xml = REXML::Element.new('SiloConfig')
-      xml.add_attributes({ 'description' => @description, 'name' => @name, 'id' => @id, 'silo-profile-id' => @profile_id,
-                           'max-assets' => @max_assets, 'max-users' => @max_users, 'max-hosted-assets' => @max_hosted_assets })
+      xml.add_attributes({'description' => @description, 'name' => @name, 'id' => @id, 'silo-profile-id' => @profile_id, 'max-assets' => @max_assets, 'max-users' => @max_users, 'max-hosted-assets' => @max_hosted_assets})
       xml.add(@merchant.as_xml) if @merchant
       xml.add(@organization.as_xml) if @organization
       xml
@@ -129,13 +130,13 @@ module Nexpose
 
     def self.parse(xml)
       new do |silo|
-        silo.id                = xml.attributes['id']
-        silo.profile_id        = xml.attributes['silo-profile-id']
-        silo.name              = xml.attributes['name']
-        silo.max_assets        = xml.attributes['max-assets'].to_i
-        silo.max_users         = xml.attributes['max-users'].to_i
+        silo.id = xml.attributes['id']
+        silo.profile_id = xml.attributes['silo-profile-id']
+        silo.name = xml.attributes['name']
+        silo.max_assets = xml.attributes['max-assets'].to_i
+        silo.max_users = xml.attributes['max-users'].to_i
         silo.max_hosted_assets = xml.attributes['max-hosted-assets'].to_i
-        silo.description       = xml.attributes['description']
+        silo.description = xml.attributes['description']
 
         xml.elements.each('Merchant') do |merchant|
           silo.merchant = Merchant.parse(merchant)
@@ -155,24 +156,25 @@ module Nexpose
       attr_accessor :zip
       attr_accessor :country
 
+
       def initialize(&block)
-        instance_eval(&block) if block_given?
+        instance_eval &block if block_given?
       end
 
       def self.parse(xml)
         new do |address|
-          address.line1   = xml.attributes['line1']
-          address.line2   = xml.attributes['line2']
-          address.city    = xml.attributes['city']
-          address.state   = xml.attributes['state']
-          address.zip     = xml.attributes['zip']
+          address.line1 = xml.attributes['line1']
+          address.line2 = xml.attributes['line2']
+          address.city = xml.attributes['city']
+          address.state = xml.attributes['state']
+          address.zip = xml.attributes['zip']
           address.country = xml.attributes['country']
         end
       end
 
       def as_xml
         xml = REXML::Element.new('Address')
-        xml.add_attributes({ 'city' => @city, 'country' => @country, 'line1' => @line1, 'line2' => @line2, 'state' => @state, 'zip' => @zip })
+        xml.add_attributes({'city' => @city, 'country' => @country, 'line1' => @line1, 'line2' => @line2, 'state' => @state, 'zip' => @zip})
         xml
       end
     end
@@ -188,29 +190,28 @@ module Nexpose
       attr_accessor :url
 
       def initialize(&block)
-        instance_eval(&block) if block_given?
+        instance_eval &block if block_given?
       end
 
       def as_xml
         xml = REXML::Element.new('Organization')
-        xml.add_attributes({ 'company' => @company, 'email-address' => @email, 'first-name' => @first_name,
-                             'last-name' => @last_name, 'phone-number' => @phone, 'title' => @title, 'url' => @url })
+        xml.add_attributes({'company' => @company, 'email-address' => @email, 'first-name' => @first_name, 'last-name' => @last_name, 'phone-number' => @phone, 'title' => @title, 'url' => @url})
         xml.add(@address.as_xml)
         xml
       end
 
       def self.parse(xml)
         new do |organization|
-          organization.company    = xml.attributes['company']
+          organization.company = xml.attributes['company']
           organization.first_name = xml.attributes['first-name']
-          organization.last_name  = xml.attributes['last-name']
-          organization.phone      = xml.attributes['phone-number']
+          organization.last_name = xml.attributes['last-name']
+          organization.phone = xml.attributes['phone-number']
           xml.elements.each('Address') do |address|
             organization.address = Address.parse(address)
           end
           organization.email = xml.attributes['email']
           organization.title = xml.attributes['title']
-          organization.url   = xml.attributes['url']
+          organization.url = xml.attributes['url']
         end
       end
     end
@@ -232,32 +233,32 @@ module Nexpose
       attr_accessor :qsa
 
       def initialize(&block)
-        instance_eval(&block) if block_given?
-        @dbas       = Array(@dbas)
+        instance_eval &block if block_given?
+        @dbas = Array(@dbas)
         @industries = Array(@industries)
-        @qsa        = Array(@qsa)
+        @qsa = Array(@qsa)
       end
 
       def self.parse(xml)
         new do |merchant|
           merchant.acquirer_relationship = xml.attributes['acquirer-relationship'].to_s.chomp.eql?('true')
-          merchant.agent_relationship    = xml.attributes['agent-relationship'].to_s.chomp.eql?('true')
-          merchant.ecommerce             = xml.attributes['ecommerce'].to_s.chomp.eql?('true')
-          merchant.grocery               = xml.attributes['grocery'].to_s.chomp.eql?('true')
-          merchant.mail_order            = xml.attributes['mail-order'].to_s.chomp.eql?('true')
-          merchant.payment_application   = xml.attributes['payment-application']
-          merchant.payment_version       = xml.attributes['payment-version']
-          merchant.petroleum             = xml.attributes['petroleum'].to_s.chomp.eql?('true')
-          merchant.retail                = xml.attributes['retail'].to_s.chomp.eql?('true')
-          merchant.telecommunication     = xml.attributes['telecommunication'].to_s.chomp.eql?('true')
-          merchant.travel                = xml.attributes['travel'].to_s.chomp.eql?('true')
-          merchant.company               = xml.attributes['company']
-          merchant.first_name            = xml.attributes['first-name']
-          merchant.last_name             = xml.attributes['last-name']
-          merchant.phone                 = xml.attributes['phone-number']
-          merchant.email                 = xml.attributes['email']
-          merchant.title                 = xml.attributes['title']
-          merchant.url                   = xml.attributes['url']
+          merchant.agent_relationship = xml.attributes['agent-relationship'].to_s.chomp.eql?('true')
+          merchant.ecommerce = xml.attributes['ecommerce'].to_s.chomp.eql?('true')
+          merchant.grocery = xml.attributes['grocery'].to_s.chomp.eql?('true')
+          merchant.mail_order = xml.attributes['mail-order'].to_s.chomp.eql?('true')
+          merchant.payment_application = xml.attributes['payment-application']
+          merchant.payment_version = xml.attributes['payment-version']
+          merchant.petroleum = xml.attributes['petroleum'].to_s.chomp.eql?('true')
+          merchant.retail = xml.attributes['retail'].to_s.chomp.eql?('true')
+          merchant.telecommunication = xml.attributes['telecommunication'].to_s.chomp.eql?('true')
+          merchant.travel = xml.attributes['travel'].to_s.chomp.eql?('true')
+          merchant.company = xml.attributes['company']
+          merchant.first_name = xml.attributes['first-name']
+          merchant.last_name = xml.attributes['last-name']
+          merchant.phone = xml.attributes['phone-number']
+          merchant.email = xml.attributes['email']
+          merchant.title = xml.attributes['title']
+          merchant.url = xml.attributes['url']
 
           xml.elements.each('Address') do |address|
             merchant.address = Address.parse(address)
@@ -283,22 +284,20 @@ module Nexpose
       def as_xml
         xml = super
         xml.name = 'Merchant'
-        xml.add_attributes({ 'acquirer-relationship' => @acquirer_relationship, 'agent-relationship' => @agent_relationship,
-                             'ecommerce' => @ecommerce, 'grocery' => @grocery, 'mail-order' => @mail_order })
-        xml.add_attributes({ 'payment-application' => @payment_application, 'payment-version' => @payment_version,
-                             'petroleum' => @petroleum, 'retail' => @retail, 'telecommunication' => @telecommunication, 'travel' => @travel })
+        xml.add_attributes({'acquirer-relationship' => @acquirer_relationship, 'agent-relationship' => @agent_relationship, 'ecommerce' => @ecommerce, 'grocery' => @grocery, 'mail-order' => @mail_order})
+        xml.add_attributes({'payment-application' => @payment_application, 'payment-version' => @payment_version, 'petroleum' => @petroleum, 'retail' => @retail, 'telecommunication' => @telecommunication, 'travel' => @travel})
 
         unless dbas.empty?
           dbas = REXML::Element.new('DBAs')
           @dbas.each do |dba|
-            dbas.add_element('DBA', { 'name' => dba })
+            dbas.add_element('DBA', {'name' => dba})
           end
         end
 
         unless @industries.empty?
           industries = REXML::Element.new('OtherIndustries')
           @industries.each do |industry|
-            industries.add_element('Industry', { 'name' => industry })
+            industries.add_element('Industry', {'name' => industry})
           end
         end
 
@@ -332,24 +331,23 @@ module Nexpose
     attr_reader :max_users
 
     def initialize(&block)
-      instance_eval(&block) if block_given?
+      instance_eval &block if block_given?
     end
 
     def self.parse(xml)
       new do
-        @id          = xml.attributes['id']
-        @name        = xml.attributes['name']
+        @id = xml.attributes['id']
+        @name = xml.attributes['name']
         @description = xml.attributes['description']
-        @profile_id  = xml.attributes['silo-profile-id']
+        @profile_id = xml.attributes['silo-profile-id']
         xml.elements.each('LicenseSummary') do |license|
-          @assets            = license.attributes['assets']
-          @max_assets        = license.attributes['max-assets']
+          @assets = license.attributes['assets']
+          @max_assets = license.attributes['max-assets']
           @max_hosted_assets = license.attributes['max-hosted-assets']
-          @users             = license.attributes['users']
-          @max_users         = license.attributes['max-users']
+          @users = license.attributes['users']
+          @max_users = license.attributes['max-users']
         end
       end
     end
   end
-
 end

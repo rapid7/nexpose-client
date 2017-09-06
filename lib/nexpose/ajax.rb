@@ -15,7 +15,7 @@ module Nexpose
     # Content type strings acceptect by Nexpose.
     #
     module CONTENT_TYPE
-      XML  = 'text/xml; charset=UTF-8'
+      XML = 'text/xml; charset=UTF-8'
       JSON = 'application/json; charset-utf-8'
       FORM = 'application/x-www-form-urlencoded; charset=UTF-8'
     end
@@ -192,8 +192,8 @@ module Nexpose
     # Get an error message from the response body if the request url api version
     # is 2.1 or greater otherwise use the request body
     def get_error_message(request, response)
-      version         = get_request_api_version(request)
-      data_request    = use_response_error_message?(request, response)
+      version = get_request_api_version(request)
+      data_request = use_response_error_message?(request, response)
       return_response = (version >= 2.1 || data_request)
       (return_response && response.body) ? "response body: #{response.body}" : "request body: #{request.body}"
     end
@@ -220,10 +220,12 @@ module Nexpose
     # @param [String] pref Preference key value to preserve.
     #
     def preserving_preference(nsc, pref)
-      orig = get_rows(nsc, pref)
-      yield
-    ensure
-      set_rows(nsc, pref, orig)
+      begin
+        orig = get_rows(nsc, pref)
+        yield
+      ensure
+        set_rows(nsc, pref, orig)
+      end
     end
 
     # Get a valid row preference value.
@@ -249,10 +251,10 @@ module Nexpose
     end
 
     def get_rows(nsc, pref)
-      uri      = '/data/user/preferences/all'
+      uri = '/data/user/preferences/all'
       pref_key = "#{pref}.rows"
-      resp     = get(nsc, uri)
-      json     = JSON.parse(resp)
+      resp = get(nsc, uri)
+      json = JSON.parse(resp)
       if json.key?(pref_key)
         rows = json[pref_key].to_i
         rows > 0 ? rows : 10
@@ -262,8 +264,10 @@ module Nexpose
     end
 
     def set_rows(nsc, pref, value)
-      uri    = '/data/user/preference'
-      params = { 'name' => "#{pref}.rows", 'value' => value }
+      uri = '/data/user/preference'
+      params = { 'name'  => "#{pref}.rows",
+                 'value' => value }
+
       form_post(nsc, uri, params)
     end
 

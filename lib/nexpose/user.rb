@@ -18,7 +18,7 @@ module Nexpose
       arr
     end
 
-    alias users list_users
+    alias_method :users, :list_users
 
     # Retrieve the User ID based upon the user's login name.
     #
@@ -47,16 +47,16 @@ module Nexpose
     attr_reader :is_admin, :is_disabled, :is_locked, :site_count, :group_count
 
     def initialize(id, auth_source, auth_module, name, full_name, email, is_admin, is_disabled, is_locked, site_count, group_count)
-      @id          = id
+      @id = id
       @auth_source = auth_source
       @auth_module = auth_module
-      @name        = name
-      @full_name   = full_name
-      @email       = email
-      @is_admin    = is_admin
+      @name = name
+      @full_name = full_name
+      @email = email
+      @is_admin = is_admin
       @is_disabled = is_disabled
-      @is_locked   = is_locked
-      @site_count  = site_count
+      @is_locked = is_locked
+      @site_count = site_count
       @group_count = group_count
     end
 
@@ -97,19 +97,19 @@ module Nexpose
     attr_accessor :all_sites, :all_groups
 
     def initialize(name, full_name, password, role_name = 'user', id = -1, enabled = 1, email = nil, all_sites = false, all_groups = false, token = nil)
-      @name       = name
-      @password   = password
-      @token      = token
-      @role_name  = role_name
-      @authsrcid  = 'global-admin'.eql?(@role_name) ? '1' : '2'
-      @id         = id
-      @enabled    = enabled
-      @full_name  = full_name
-      @email      = email
-      @all_sites  = all_sites || role_name == 'global-admin'
+      @name = name
+      @password = password
+      @token = token
+      @role_name = role_name
+      @authsrcid = ('global-admin'.eql? @role_name) ? '1' : '2'
+      @id = id
+      @enabled = enabled
+      @full_name = full_name
+      @email = email
+      @all_sites = all_sites || role_name == 'global-admin'
       @all_groups = all_groups || role_name == 'global-admin'
-      @sites      = []
-      @groups     = []
+      @sites = []
+      @groups = []
     end
 
     def to_xml
@@ -160,17 +160,17 @@ module Nexpose
       r = connection.execute(xml, '1.1')
       if r.success
         r.res.elements.each('UserConfigResponse/UserConfig') do |config|
-          id         = config.attributes['id']
-          role_name  = config.attributes['role-name']
-          # authsrcid  = config.attributes['authsrcid']
-          name       = config.attributes['name']
-          fullname   = config.attributes['fullname']
+          id = config.attributes['id']
+          role_name = config.attributes['role-name']
+          #authsrcid = config.attributes['authsrcid']
+          name = config.attributes['name']
+          fullname = config.attributes['fullname']
 
-          email      = config.attributes['email']
-          password   = config.attributes['password']
-          token      = config.attributes['token']
-          enabled    = config.attributes['enabled'].to_i
-          all_sites  = config.attributes['allSites'] == 'true' ? true : false
+          email = config.attributes['email']
+          password = config.attributes['password']
+          token = config.attributes['token']
+          enabled = config.attributes['enabled'].to_i
+          all_sites = config.attributes['allSites'] == 'true' ? true : false
           all_groups = config.attributes['allGroups'] == 'true' ? true : false
           # Not trying to load sites and groups.
           # Looks like API currently doesn't return that info to load.

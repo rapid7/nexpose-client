@@ -18,14 +18,14 @@ module Nexpose
       arr
     end
 
-    alias silo_profiles list_silo_profiles
+    alias_method :silo_profiles, :list_silo_profiles
 
     # Delete the specified silo profile
     #
     # @return Whether or not the delete request succeeded.
     #
     def delete_silo_profile(silo_profile_id)
-      r = execute(make_xml('SiloProfileDeleteRequest', { 'silo-profile-id' => silo_profile_id }), '1.2')
+      r = execute(make_xml('SiloProfileDeleteRequest', {'silo-profile-id' => silo_profile_id}), '1.2')
       r.success
     end
   end
@@ -46,24 +46,24 @@ module Nexpose
     attr_accessor :restricted_report_sections
 
     def initialize(&block)
-      instance_eval(&block) if block_given?
-      @global_report_templates    = Array(@global_report_templates)
-      @global_scan_engines        = Array(@global_scan_engines)
-      @global_scan_templates      = Array(@global_scan_templates)
-      @licensed_modules           = Array(@licensed_modules)
-      @restricted_report_formats  = Array(@restricted_report_formats)
+      instance_eval &block if block_given?
+      @global_report_templates = Array(@global_report_templates)
+      @global_scan_engines = Array(@global_scan_engines)
+      @global_scan_templates = Array(@global_scan_templates)
+      @licensed_modules = Array(@licensed_modules)
+      @restricted_report_formats = Array(@restricted_report_formats)
       @restricted_report_sections = Array(@restricted_report_sections)
     end
 
     def self.copy(connection, id)
-      profile      = load(connection, id)
-      profile.id   = nil
+      profile = load(connection, id)
+      profile.id = nil
       profile.name = nil
       profile
     end
 
     def self.load(connection, id)
-      r = connection.execute(connection.make_xml('SiloProfileConfigRequest', { 'silo-profile-id' => id }), '1.2')
+      r = connection.execute(connection.make_xml('SiloProfileConfigRequest', {'silo-profile-id' => id}), '1.2')
 
       if r.success
         r.res.elements.each('SiloProfileConfigResponse/SiloProfileConfig') do |config|
@@ -75,13 +75,13 @@ module Nexpose
 
     def self.parse(xml)
       new do |profile|
-        profile.id                          = xml.attributes['id']
-        profile.name                        = xml.attributes['name']
-        profile.description                 = xml.attributes['description']
-        profile.all_licensed_modules        = xml.attributes['all-licensed-modules'].to_s.chomp.eql?('true')
-        profile.all_global_engines          = xml.attributes['all-global-engines'].to_s.chomp.eql?('true')
+        profile.id = xml.attributes['id']
+        profile.name = xml.attributes['name']
+        profile.description = xml.attributes['description']
+        profile.all_licensed_modules = xml.attributes['all-licensed-modules'].to_s.chomp.eql?('true')
+        profile.all_global_engines = xml.attributes['all-global-engines'].to_s.chomp.eql?('true')
         profile.all_global_report_templates = xml.attributes['all-global-report-templates'].to_s.chomp.eql?('true')
-        profile.all_global_scan_templates   = xml.attributes['all-global-scan-templates'].to_s.chomp.eql?('true')
+        profile.all_global_scan_templates = xml.attributes['all-global-scan-templates'].to_s.chomp.eql?('true')
 
         profile.global_report_templates = []
         xml.elements.each('GlobalReportTemplates/GlobalReportTemplate') { |template| profile.global_report_templates << template.attributes['name'] }
@@ -104,10 +104,12 @@ module Nexpose
     end
 
     def save(connection)
-      update(connection)
-    rescue APIError => error
-      raise error unless error.message =~ /silo profile(\S*|.*?)does not exist/i
-      create(connection)
+      begin
+        update(connection)
+      rescue APIError => error
+        raise error unless (error.message =~ /silo profile(\S*|.*?)does not exist/i)
+        create(connection)
+      end
     end
 
     # Updates an existing silo profile on a Nexpose console.
@@ -140,53 +142,53 @@ module Nexpose
 
     def as_xml
       xml = REXML::Element.new('SiloProfileConfig')
-      xml.add_attributes({ 'id' => @id,
-                           'name' => @name,
-                           'description' => @description,
-                           'all-licensed-modules' => @all_licensed_modules,
-                           'all-global-engines' => @all_global_engines,
-                           'all-global-report-templates' => @all_global_report_templates,
-                           'all-global-scan-templates' => @all_global_scan_templates })
+      xml.add_attributes({'id' => @id,
+                          'name' => @name,
+                          'description' => @description,
+                          'all-licensed-modules' => @all_licensed_modules,
+                          'all-global-engines' => @all_global_engines,
+                          'all-global-report-templates' => @all_global_report_templates,
+                          'all-global-scan-templates' => @all_global_scan_templates})
 
       unless @global_report_templates.empty?
         templates = xml.add_element('GlobalReportTemplates')
         @global_report_templates.each do |template|
-          templates.add_element('GlobalReportTemplate', { 'name' => template })
+          templates.add_element('GlobalReportTemplate', {'name' => template})
         end
       end
 
       unless @global_scan_engines.empty?
         engines = xml.add_element('GlobalScanEngines')
         @global_scan_engines.each do |engine|
-          engines.add_element('GlobalScanEngine', { 'name' => engine })
+          engines.add_element('GlobalScanEngine', {'name' => engine})
         end
       end
 
       unless @global_scan_templates.empty?
         templates = xml.add_element('GlobalScanTemplates')
         @global_scan_templates.each do |template|
-          templates.add_element('GlobalScanTemplate', { 'name' => template })
+          templates.add_element('GlobalScanTemplate', {'name' => template})
         end
       end
 
       unless @licensed_modules.empty?
         licensed_modules = xml.add_element('LicensedModules')
         @licensed_modules.each do |licensed_module|
-          licensed_modules.add_element('LicensedModule', { 'name' => licensed_module })
+          licensed_modules.add_element('LicensedModule', {'name' => licensed_module})
         end
       end
 
       unless @restricted_report_formats.empty?
         formats = xml.add_element('RestrictedReportFormats')
         @restricted_report_formats.each do |format|
-          formats.add_element('RestrictedReportFormat', { 'name' => format })
+          formats.add_element('RestrictedReportFormat', {'name' => format})
         end
       end
 
       unless @restricted_report_sections.empty?
         sections = xml.add_element('RestrictedReportSections')
         @restricted_report_sections.each do |section|
-          sections.add_element('RestrictedReportSection', { 'name' => section })
+          sections.add_element('RestrictedReportSection', {'name' => section})
         end
       end
 
@@ -212,24 +214,25 @@ module Nexpose
     attr_reader :all_global_report_templates
     attr_reader :all_global_scan_templates
 
+
     def initialize(&block)
-      instance_eval(&block) if block_given?
+      instance_eval &block if block_given?
     end
 
     def self.parse(xml)
       new do
-        @id                              = xml.attributes['id']
-        @name                            = xml.attributes['name']
-        @description                     = xml.attributes['description']
-        @global_report_template_count    = xml.attributes['global-report-template-count']
-        @global_scan_engine_count        = xml.attributes['global-scan-engine-count']
-        @global_scan_template_count      = xml.attributes['global-scan-template-count']
-        @licensed_module_count           = xml.attributes['licensed-module-count']
+        @id = xml.attributes['id']
+        @name = xml.attributes['name']
+        @description = xml.attributes['description']
+        @global_report_template_count = xml.attributes['global-report-template-count']
+        @global_scan_engine_count = xml.attributes['global-scan-engine-count']
+        @global_scan_template_count = xml.attributes['global-scan-template-count']
+        @licensed_module_count = xml.attributes['licensed-module-count']
         @restricted_report_section_count = xml.attributes['restricted-report-section-count']
-        @all_licensed_modules            = xml.attributes['all-licensed-modules']
-        @all_global_engines              = xml.attributes['all-global-engines']
-        @all_global_report_templates     = xml.attributes['all-global-report-templates']
-        @all_global_scan_templates       = xml.attributes['all-global-scan-templates']
+        @all_licensed_modules = xml.attributes['all-licensed-modules']
+        @all_global_engines = xml.attributes['all-global-engines']
+        @all_global_report_templates = xml.attributes['all-global-report-templates']
+        @all_global_scan_templates = xml.attributes['all-global-scan-templates']
       end
     end
   end

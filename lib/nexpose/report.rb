@@ -19,7 +19,7 @@ module Nexpose
       reports
     end
 
-    alias reports list_reports
+    alias_method :reports, :list_reports
 
     # Generate a new report using the specified report definition.
     def generate_report(report_id, wait = false)
@@ -38,7 +38,7 @@ module Nexpose
         return summary unless summary.status == 'Started'
         sleep 5
         so_far += 5
-        if (so_far % 60).zero?
+        if so_far % 60 == 0
           puts "Still waiting. Current status: #{summary.status}"
         end
       end
@@ -101,13 +101,13 @@ module Nexpose
     attr_reader :scope
 
     def initialize(config_id, name, template_id, status, generated_on, uri, scope)
-      @config_id    = config_id.to_i
-      @name         = name
-      @template_id  = template_id
-      @status       = status
+      @config_id = config_id.to_i
+      @name = name
+      @template_id = template_id
+      @status = status
       @generated_on = generated_on
-      @uri          = uri
-      @scope        = scope
+      @uri = uri
+      @scope = scope
     end
 
     def self.parse(xml)
@@ -138,11 +138,11 @@ module Nexpose
     attr_reader :uri
 
     def initialize(id, config_id, status, generated_on, uri)
-      @id           = id
-      @config_id    = config_id.to_i
-      @status       = status
+      @id = id
+      @config_id = config_id.to_i
+      @status = status
       @generated_on = generated_on
-      @uri          = uri
+      @uri = uri
     end
 
     # Delete this report.
@@ -194,11 +194,11 @@ module Nexpose
 
     def initialize(template_id, format, site_id = nil, owner = nil, time_zone = nil)
       @template_id = template_id
-      @format      = format
-      @owner       = owner
-      @time_zone   = time_zone
+      @format = format
+      @owner = owner
+      @time_zone = time_zone
 
-      @filters     = []
+      @filters = []
       @filters << Filter.new('site', site_id) if site_id
     end
 
@@ -289,14 +289,15 @@ module Nexpose
 
     # Construct a basic ReportConfig object.
     def initialize(name, template_id, format, id = -1, owner = nil, time_zone = nil)
-      @name        = name
+      @name = name
       @template_id = template_id
-      @format      = format
-      @id          = id
-      @owner       = owner
-      @time_zone   = time_zone
-      @filters     = []
-      @users       = []
+      @format = format
+      @id = id
+      @owner = owner
+      @time_zone = time_zone
+
+      @filters = []
+      @users = []
     end
 
     # Retrieve the configuration for an existing report definition.
@@ -305,7 +306,7 @@ module Nexpose
       ReportConfig.parse(connection.execute(xml))
     end
 
-    alias get load
+    alias_method :get, :load
 
     # Build and save a report configuration against the specified site using
     # the supplied type and format.
@@ -435,8 +436,11 @@ module Nexpose
       %(<filter id="#{replace_entities(@id)}" type="#{@type}" />)
     end
 
-    def ==(other)
-      other.equal?(self) || (other.instance_of?(self.class) && other.type == @type && other.id == @id)
+    def ==(object)
+      object.equal?(self) ||
+      (object.instance_of?(self.class) &&
+       object.type == @type &&
+       object.id == @id)
     end
 
     def self.parse(xml)
@@ -462,8 +466,8 @@ module Nexpose
 
     def initialize(after_scan, scheduled, schedule = nil)
       @after_scan = after_scan
-      @scheduled  = scheduled
-      @schedule   = schedule
+      @scheduled = scheduled
+      @schedule = schedule
     end
 
     def to_xml
@@ -606,9 +610,9 @@ module Nexpose
       xml.elements.each('//credentials') do |creds|
         credential = ExportCredential.new(creds.text)
         # The following attributes may not exist.
-        credential.user_id  = creds.attributes['userid']
+        credential.user_id = creds.attributes['userid']
         credential.password = creds.attributes['password']
-        credential.realm    = creds.attributes['realm']
+        credential.realm = creds.attributes['realm']
         return credential
       end
       nil

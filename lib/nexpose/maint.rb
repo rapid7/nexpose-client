@@ -46,10 +46,11 @@ module Nexpose
     #
     def db_maintenance(clean_up = false, compress = false, reindex = false)
       return unless compress || clean_up || reindex
-      parameters = { 'cmd' => 'startMaintenance', 'targetTask' => 'dbMaintenance' }
-      parameters['cleanup']  = 1 if clean_up
+      parameters = { 'cmd' => 'startMaintenance',
+                     'targetTask' => 'dbMaintenance' }
+      parameters['cleanup'] = 1 if clean_up
       parameters['compress'] = 1 if compress
-      parameters['reindex']  = 1 if reindex
+      parameters['reindex'] = 1 if reindex
       xml = AJAX.form_post(self, '/admin/global/maintenance/maintCmd.txml', parameters)
       if !!(xml =~ /succeded="true"/)
         _maintenance_restart
@@ -84,12 +85,12 @@ module Nexpose
     attr_reader :size
 
     def initialize(name, date, description, version, independent, size)
-      @name                 = name
-      @date                 = date
-      @description          = description
-      @version              = version
+      @name = name
+      @date = date
+      @description = description
+      @version = version
       @platform_independent = independent
-      @size                 = size
+      @size = size
     end
 
     # Restore this backup to the Nexpose console.
