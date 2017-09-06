@@ -22,7 +22,7 @@ module Nexpose
 
     def ==(other)
       return false unless self.class == other.class
-      return false unless key_string.casecmp(other.key_string)
+      return false unless key_string.downcase == other.key_string.downcase
       true
     end
     alias eql? ==

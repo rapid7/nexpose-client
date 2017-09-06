@@ -125,7 +125,7 @@ module Nexpose
 
     def status_string_to_constant(status)
       Nexpose::VulnException::Status.constants.find do |name|
-        Nexpose::VulnException::Status.const_get(name).to_s.casecmp(status.downcase) || status.to_sym.casecmp(name)
+        Nexpose::VulnException::Status.const_get(name).to_s.downcase == status.downcase || status.to_sym.downcase == name.downcase
       end
     end
 

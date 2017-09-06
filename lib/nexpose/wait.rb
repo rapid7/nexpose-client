@@ -61,7 +61,7 @@ module Nexpose
     end
 
     def integration_status_proc(nexpose_connection:, scan_id:, status:)
-      proc { nexpose_connection.scan_status(scan_id).casecmp(status) }
+      proc { nexpose_connection.scan_status(scan_id).downcase == status.downcase }
     end
 
     def timeout_retry?
