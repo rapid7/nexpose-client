@@ -4,44 +4,44 @@ module Nexpose
   module Privilege
 
     module Global
-      CREATE_REPORTS = 'CreateReports'
-      CONFIGURE_GLOBAL_SETTINGS = 'ConfigureGlobalSettings'
-      MANAGE_SITES = 'ManageSites'
-      MANAGE_ASSET_GROUPS = 'ManageAssetGroups'
+      CREATE_REPORTS              = 'CreateReports'
+      CONFIGURE_GLOBAL_SETTINGS   = 'ConfigureGlobalSettings'
+      MANAGE_SITES                = 'ManageSites'
+      MANAGE_ASSET_GROUPS         = 'ManageAssetGroups'
       MANAGE_DYNAMIC_ASSET_GROUPS = 'ManageDynamicAssetGroups'
-      MANAGE_SCAN_TEMPLATES = 'ManageScanTemplates'
-      MANAGE_REPORT_TEMPLATES = 'ManageReportTemplates'
+      MANAGE_SCAN_TEMPLATES       = 'ManageScanTemplates'
+      MANAGE_REPORT_TEMPLATES     = 'ManageReportTemplates'
       GENERATE_RESTRICTED_REPORTS = 'GenerateRestrictedReports'
-      MANAGE_SCAN_ENGINES = 'ManageScanEngines'
-      SUBMIT_VULN_EXCEPTIONS = 'SubmitVulnExceptions'
-      APPROVE_VULN_EXCEPTIONS = 'ApproveVulnExceptions'
-      DELETE_VULN_EXCEPTIONS = 'DeleteVulnExceptions'
-      CREATE_TICKETS = 'CreateTickets'
-      CLOSE_TICKETS = 'CloseTickets'
-      TICKET_ASSIGNEE = 'TicketAssignee'
-      ADD_USERS_TO_SITE = 'AddUsersToSite'
-      ADD_USERS_TO_GROUP = 'AddUsersToGroup'
-      ADD_USERS_TO_REPORT = 'AddUsersToReport'
-      MANAGE_POLICIES = 'ManagePolicies'
-      MANAGE_TAGS = 'ManageTags'
+      MANAGE_SCAN_ENGINES         = 'ManageScanEngines'
+      SUBMIT_VULN_EXCEPTIONS      = 'SubmitVulnExceptions'
+      APPROVE_VULN_EXCEPTIONS     = 'ApproveVulnExceptions'
+      DELETE_VULN_EXCEPTIONS      = 'DeleteVulnExceptions'
+      CREATE_TICKETS              = 'CreateTickets'
+      CLOSE_TICKETS               = 'CloseTickets'
+      TICKET_ASSIGNEE             = 'TicketAssignee'
+      ADD_USERS_TO_SITE           = 'AddUsersToSite'
+      ADD_USERS_TO_GROUP          = 'AddUsersToGroup'
+      ADD_USERS_TO_REPORT         = 'AddUsersToReport'
+      MANAGE_POLICIES             = 'ManagePolicies'
+      MANAGE_TAGS                 = 'ManageTags'
     end
 
     module Site
-      VIEW_ASSET_DATA = 'ViewAssetData'  # NOTE Duplicated between Site and AssetGroup
-      CONFIGURE_ALERTS = 'ConfigureAlerts'
-      CONFIGURE_CREDENTIALS = 'ConfigureCredentials'
-      CONFIGURE_ENGINES = 'ConfigureEngines'
+      VIEW_ASSET_DATA          = 'ViewAssetData' # NOTE Duplicated between Site and AssetGroup
+      CONFIGURE_ALERTS         = 'ConfigureAlerts'
+      CONFIGURE_CREDENTIALS    = 'ConfigureCredentials'
+      CONFIGURE_ENGINES        = 'ConfigureEngines'
       CONFIGURE_SCAN_TEMPLATES = 'ConfigureScanTemplates'
       CONFIGURE_SCHEDULE_SCANS = 'ConfigureScheduleScans'
-      CONFIGURE_SITE_SETTINGS = 'ConfigureSiteSettings'
-      CONFIGURE_TARGETS = 'ConfigureTargets'
-      MANUAL_SCANS = 'ManualScans'
-      PURGE_DATA = 'PurgeData'
+      CONFIGURE_SITE_SETTINGS  = 'ConfigureSiteSettings'
+      CONFIGURE_TARGETS        = 'ConfigureTargets'
+      MANUAL_SCANS             = 'ManualScans'
+      PURGE_DATA               = 'PurgeData'
     end
 
     module AssetGroup
       CONFIGURE_ASSETS = 'ConfigureAssets'
-      VIEW_ASSET_DATA = 'ViewAssetData'  # NOTE Duplicated between Site and AssetGroup
+      VIEW_ASSET_DATA  = 'ViewAssetData' # NOTE Duplicated between Site and AssetGroup
     end
   end
 
@@ -51,27 +51,27 @@ module Nexpose
     # Returns a summary list of all roles.
     #
     def role_listing
-      xml = make_xml('RoleListingRequest')
-      r = execute(xml, '1.2')
+      xml   = make_xml('RoleListingRequest')
+      r     = execute(xml, '1.2')
       roles = []
       if r.success
         r.res.elements.each('RoleListingResponse/RoleSummary') do |summary|
-          roles << RoleSummary::parse(summary)
+          roles << RoleSummary.parse(summary)
         end
       end
       roles
     end
 
-    alias_method :roles, :role_listing
+    alias roles role_listing
 
     def role_delete(role, scope = Scope::SILO)
       xml = make_xml('RoleDeleteRequest')
-      xml.add_element('Role', {'name' => role, 'scope' => scope})
+      xml.add_element('Role', { 'name' => role, 'scope' => scope })
       response = execute(xml, '1.2')
       response.success
     end
 
-    alias_method :delete_role, :role_delete
+    alias delete_role role_delete
   end
 
   # Role summary object encapsulating information about a role.
@@ -98,7 +98,12 @@ module Nexpose
     attr_accessor :scope
 
     def initialize(name, full_name, id, description, enabled = true, scope = Scope::SILO)
-      @name, @full_name, @id, @description, @enabled, @scope = name, full_name, id.to_i, description, enabled, scope
+      @name        = name
+      @full_name   = full_name
+      @id          = id.to_i
+      @description = description
+      @enabled     = enabled
+      @scope       = scope
     end
 
     def self.parse(xml)
@@ -116,12 +121,12 @@ module Nexpose
 
     # Constants, mapping UI terms to role names expected by API.
 
-    GLOBAL_ADMINISTRATOR = 'global-admin'
-    ASSET_OWNER = 'system-admin'
+    GLOBAL_ADMINISTRATOR  = 'global-admin'
+    ASSET_OWNER           = 'system-admin'
     CONTROLS_INSIGHT_ONLY = 'controls-insight-only'
-    SECURITY_MANAGER = 'security-manager'
-    SITE_OWNER = 'site-admin'
-    USER = 'user'
+    SECURITY_MANAGER      = 'security-manager'
+    SITE_OWNER            = 'site-admin'
+    USER                  = 'user'
 
     # Array of all privileges which are enabled for this role.
     # Note: Although the underlying XML has different requirements, this only checks for presence.
@@ -133,7 +138,11 @@ module Nexpose
     attr_accessor :existing
 
     def initialize(name, full_name, id = -1, enabled = true, scope = Scope::SILO)
-      @name, @full_name, @id, @enabled, @scope = name, full_name, id.to_i, enabled, scope
+      @name       = name
+      @full_name  = full_name
+      @id         = id.to_i
+      @enabled    = enabled
+      @scope      = scope
       @privileges = []
     end
 
@@ -147,7 +156,7 @@ module Nexpose
     #
     def self.load(nsc, name, scope = Scope::SILO)
       xml = nsc.make_xml('RoleDetailsRequest')
-      xml.add_element('Role', {'name' => name, 'scope' => scope})
+      xml.add_element('Role', { 'name' => name, 'scope' => scope })
       response = APIRequest.execute(nsc.url, xml, '1.2')
 
       if response.success
@@ -156,7 +165,7 @@ module Nexpose
       end
     end
 
-    alias_method :get, :load
+    alias get load
 
     # Create or save a Role to the Nexpose console.
     #
@@ -170,9 +179,9 @@ module Nexpose
       end
       xml.add_element(as_xml)
 
-      response = APIRequest.execute(nsc.url, xml, '1.2')
-      xml = REXML::XPath.first(response.res, 'RoleCreateResponse')
-      @id = xml.attributes['id'].to_i unless @existing
+      response  = APIRequest.execute(nsc.url, xml, '1.2')
+      xml       = REXML::XPath.first(response.res, 'RoleCreateResponse')
+      @id       = xml.attributes['id'].to_i unless @existing
       @existing = true
       response.success
     end
@@ -186,9 +195,9 @@ module Nexpose
     # @return [Role] requested role.
     #
     def self.copy(nsc, name, scope = Scope::SILO)
-      role = load(nsc, name, scope)
-      role.name = role.full_name = nil
-      role.id = -1
+      role          = load(nsc, name, scope)
+      role.name     = role.full_name = nil
+      role.id       = -1
       role.existing = false
       role
     end
@@ -230,29 +239,29 @@ module Nexpose
 
     def as_xml
       xml = REXML::Element.new('Role')
-      xml.add_attributes({'name' => @name, 'full-name' => @full_name, 'enabled' => enabled , 'scope' => @scope})
+      xml.add_attributes({ 'name' => @name, 'full-name' => @full_name, 'enabled' => enabled, 'scope' => @scope })
       xml.add_attribute('id', @id) if @id > 0
       xml.add_element('Description').text = @description
 
       site_privileges = xml.add_element('SitePrivileges')
-      Privilege::Site::constants.each do |field|
+      Privilege::Site.constants.each do |field|
         as_s = Privilege::Site.const_get(field)
         enabled = privileges.member? as_s
-        site_privileges.add_element( as_s, {'enabled' => enabled})
+        site_privileges.add_element(as_s, { 'enabled' => enabled })
       end
 
       asset_group_privileges = xml.add_element('AssetGroupPrivileges')
-      Privilege::AssetGroup::constants.each do |field|
+      Privilege::AssetGroup.constants.each do |field|
         as_s = Privilege::AssetGroup.const_get(field)
         enabled = privileges.member? as_s
-        asset_group_privileges.add_element( as_s, {'enabled' => enabled})
+        asset_group_privileges.add_element(as_s, { 'enabled' => enabled })
       end
 
       global_privileges = xml.add_element('GlobalPrivileges')
-      Privilege::Global::constants.each do |field|
+      Privilege::Global.constants.each do |field|
         as_s = Privilege::Global.const_get(field)
         enabled = privileges.member? as_s
-        global_privileges.add_element( as_s, {'enabled' => enabled})
+        global_privileges.add_element(as_s, { 'enabled' => enabled })
       end
 
       xml

@@ -18,8 +18,7 @@ module Nexpose
 
     def to_h
       {
-          blackouts:
-              (@blackout || []).map { |blackout| blackout.to_h }
+        blackouts: (@blackout || []).map { |blackout| blackout.to_h }
       }
     end
 
@@ -32,11 +31,11 @@ module Nexpose
     end
 
     def self.load(nsc)
-      uri = '/api/2.1/silo_blackout/'
-      resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
-      hash = JSON.parse(resp, symbolize_names: true)
-      blackout = self.json_initializer(hash).deserialize(hash)
-      blackout.blackout = (hash[:blackouts] || []).map { |blackout| Nexpose::Blackout.from_hash(blackout) }
+      uri               = '/api/2.1/silo_blackout/'
+      resp              = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
+      hash              = JSON.parse(resp, symbolize_names: true)
+      blackout          = self.json_initializer(hash).deserialize(hash)
+      blackout.blackout = (hash[:blackouts] || []).map { |bout| Nexpose::Blackout.from_hash(bout) }
       blackout
     end
   end

@@ -4,14 +4,13 @@ module Nexpose
   module WebCredentials
 
     module WebAppAuthType
-      HTML_FORM = 'htmlform'  # Represent HTML form credentials.
+      HTML_FORM   = 'htmlform' # Represent HTML form credentials.
       HTTP_HEADER = 'httpheaders' # Represent HTTP header credentials.
     end
 
     # Object that represents Header name-value pairs, associated with Web Session Authentication.
     #
     class Header
-
       # Name, one per Header
       attr_reader :name
       # Value, one per Header
@@ -19,7 +18,7 @@ module Nexpose
 
       # Construct with name value pair
       def initialize(name, value)
-        @name = name
+        @name  = name
         @value = value
       end
 
@@ -28,16 +27,16 @@ module Nexpose
       end
 
       def to_h
-        header = Hash.new
+        header        = {}
         header[@name] = @value
         header
       end
+
     end
 
     # Object that represents Headers, associated with Web Session Authentication.
     #
     class Headers < APIObject
-
       # A regular expression used to match against the response to identify authentication failures.
       attr_reader :soft403Pattern
       # Base URL of the application for which the form authentication applies.
@@ -48,20 +47,19 @@ module Nexpose
       attr_reader :name
       # is this enable for the site configuration
       attr_accessor :enabled
-      #service type of header
+      # service type of header
       attr_reader :service
       # id of the header
       attr_reader :id
 
-
       def initialize(name, baseURL, soft403Pattern, id = -1, enabled = true)
-        @headers = {}
-        @name = name
-        @baseURL = baseURL
+        @headers        = {}
+        @name           = name
+        @baseURL        = baseURL
         @soft403Pattern = soft403Pattern
-        @service = WebAppAuthType::HTTP_HEADER
-        @enabled = enabled
-        @id = id
+        @service        = WebAppAuthType::HTTP_HEADER
+        @enabled        = enabled
+        @id             = id
       end
 
       def add_header(header)
@@ -79,8 +77,7 @@ module Nexpose
           name: name,
           headers: headers,
           baseURL: baseURL,
-          soft403Pattern: soft403Pattern
-        }
+          soft403Pattern: soft403Pattern }
       end
 
       def ==(other)
@@ -96,7 +93,8 @@ module Nexpose
         baseURL.eql?(other.baseURL) &&
         soft403Pattern.eql?(other.soft403Pattern)
       end
-   end
+
+    end
 
     # When using HTML form, this represents the login form information.
     #
@@ -116,9 +114,9 @@ module Nexpose
       attr_reader :checked
 
       def initialize(name, value, type, dynamic, checked)
-        @name = name
-        @value = value
-        @type = type
+        @name    = name
+        @value   = value
+        @type    = type
         @dynamic = dynamic
         @checked = checked
       end
@@ -136,12 +134,12 @@ module Nexpose
           checked: checked
         }
       end
+
     end
 
     # When using HTML form, this represents the login form information.
     #
     class HTMLForm
-
       # The name of the form being submitted.
       attr_reader :name
       # The HTTP action (URL) through which to submit the login form.
@@ -154,11 +152,11 @@ module Nexpose
       attr_reader :fields
 
       def initialize(name, action, method, encType)
-        @name = name
-        @action = action
-        @method = method
+        @name    = name
+        @action  = action
+        @method  = method
         @encType = encType
-        @fields = []
+        @fields  = []
       end
 
       def add_field(field)
@@ -175,9 +173,9 @@ module Nexpose
           method: method,
           encType: encType,
           fields: fields,
-          parentPage: action
-        }
+          parentPage: action }
       end
+
     end
 
     # When using HTML form, this represents the login form information.
@@ -194,7 +192,7 @@ module Nexpose
       attr_reader :name
       # is this enable for the site configuration
       attr_accessor :enabled
-      #service type of header
+      # service type of header
       attr_reader :service
       # id of the header
       attr_reader :id
@@ -202,13 +200,13 @@ module Nexpose
       attr_reader :form
 
       def initialize(name, baseURL, loginURL, soft403Pattern, id = -1, enabled = true)
-        @name = name
-        @baseURL = baseURL
-        @loginURL = loginURL
+        @name           = name
+        @baseURL        = baseURL
+        @loginURL       = loginURL
         @soft403Pattern = soft403Pattern
-        @service = WebAppAuthType::HTML_FORM
-        @enabled = enabled
-        @id = id
+        @service        = WebAppAuthType::HTML_FORM
+        @enabled        = enabled
+        @id             = id
       end
 
       def add_html_form(html_form)
@@ -227,8 +225,7 @@ module Nexpose
           form: form.to_h,
           baseURL: baseURL,
           loginURL: loginURL,
-          soft403Pattern: soft403Pattern
-        }
+          soft403Pattern: soft403Pattern }
       end
 
       def ==(other)
@@ -247,6 +244,7 @@ module Nexpose
       end
 
     end
-  end
-end
 
+  end
+
+end

@@ -21,7 +21,7 @@ module Nexpose
       arr
     end
 
-    alias_method :engine_pools, :list_engine_pools
+    alias engine_pools list_engine_pools
   end
 
   # A summary of an engine pool.
@@ -36,8 +36,8 @@ module Nexpose
     attr_reader :scope
 
     def initialize(id, name, scope = 'silo')
-      @id = id.to_i
-      @name = name
+      @id    = id.to_i
+      @name  = name
       @scope = scope
     end
 
@@ -74,7 +74,9 @@ module Nexpose
     attr_accessor :engines
 
     def initialize(name, scope = 'silo', id = -1)
-      @name, @scope, @id = name, scope, id.to_i
+      @name    = name
+      @scope   = scope
+      @id      = id.to_i
       @engines = []
     end
 
@@ -100,7 +102,6 @@ module Nexpose
       xml = %(<EnginePoolDetailsRequest session-id="#{connection.session_id}">)
       xml << %(<EnginePool name="#{name}" scope="#{scope}"/>)
       xml << '</EnginePoolDetailsRequest>'
-
       r = connection.execute(xml, '1.2')
       if r.success
         r.res.elements.each('EnginePoolDetailsResponse/EnginePool') do |pool|

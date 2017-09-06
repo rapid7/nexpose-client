@@ -6,7 +6,7 @@ module Nexpose
     def list_tickets
       # TODO: Should take in filters as arguments.
       xml = make_xml('TicketListingRequest')
-      r = execute(xml, '1.2')
+      r   = execute(xml, '1.2')
       tickets = []
       if r.success
         r.res.elements.each('TicketListingResponse/TicketSummary') do |summary|
@@ -16,7 +16,7 @@ module Nexpose
       tickets
     end
 
-    alias_method :tickets, :list_tickets
+    alias tickets list_tickets
 
     # Deletes a Nexpose ticket.
     #
@@ -57,8 +57,8 @@ module Nexpose
 
     # The asset the ticket is created for.
     attr_accessor :asset_id
-    alias :device_id :asset_id
-    alias :device_id= :asset_id=
+    alias device_id asset_id
+    alias device_id= asset_id=
 
     # The login name of person to whom the ticket is assigned.
     # The user must have view asset privilege on the asset specified in the asset-id attribute.
@@ -78,43 +78,43 @@ module Nexpose
     attr_accessor :state
 
     def initialize(name, id)
-      @id, @name = id, name
+      @id   = id
+      @name = name
     end
 
     def self.parse(xml)
-      ticket = new(xml.attributes['name'],
-                   xml.attributes['id'].to_i)
-      ticket.asset_id = xml.attributes['device-id'].to_i
-      ticket.assigned_to = xml.attributes['assigned-to']
-      lookup = Ticket::Priority.constants.reduce({}) { |a, e| a[Ticket::Priority.const_get(e)] = e; a }
-      ticket.priority = lookup[xml.attributes['priority']]
-      ticket.author = xml.attributes['author']
-      ticket.created_on = DateTime.parse(xml.attributes['created-on']).to_time
+      ticket              = new(xml.attributes['name'], xml.attributes['id'].to_i)
+      ticket.asset_id     = xml.attributes['device-id'].to_i
+      ticket.assigned_to  = xml.attributes['assigned-to']
+      lookup              = Ticket::Priority.constants.reduce({}) { |a, e| a[Ticket::Priority.const_get(e)] = e; a }
+      ticket.priority     = lookup[xml.attributes['priority']]
+      ticket.author       = xml.attributes['author']
+      ticket.created_on   = DateTime.parse(xml.attributes['created-on']).to_time
       ticket.created_on -= ticket.created_on.gmt_offset
-      lookup = Ticket::State.constants.reduce({}) { |a, e| a[Ticket::State.const_get(e)] = e; a }
-      ticket.state = lookup[xml.attributes['state']]
+      lookup              = Ticket::State.constants.reduce({}) { |a, e| a[Ticket::State.const_get(e)] = e; a }
+      ticket.state        = lookup[xml.attributes['state']]
       ticket
     end
 
     module State
-      OPEN = 'O'
-      ASSIGNED = 'A'
-      MODIFIED = 'M'
-      FIXED = 'X'
-      PARTIAL = 'P'
-      REJECTED_FIX = 'R'
-      PRIORITIZED = 'Z'
+      OPEN             = 'O'
+      ASSIGNED         = 'A'
+      MODIFIED         = 'M'
+      FIXED            = 'X'
+      PARTIAL          = 'P'
+      REJECTED_FIX     = 'R'
+      PRIORITIZED      = 'Z'
       NOT_REPRODUCIBLE = 'F'
-      NOT_ISSUE = 'I'
-      CLOSED = 'C'
-      UNKNOWN = 'U'
+      NOT_ISSUE        = 'I'
+      CLOSED           = 'C'
+      UNKNOWN          = 'U'
     end
 
     module Priority
-      LOW = 'low'
+      LOW      = 'low'
       MODERATE = 'moderate'
-      NORMAL = 'normal'
-      HIGH = 'high'
+      NORMAL   = 'normal'
+      HIGH     = 'high'
       CRITICAL = 'critical'
     end
   end
@@ -131,11 +131,12 @@ module Nexpose
     attr_accessor :history
 
     def initialize(name, id = nil)
-      @id, @name = id, name
-      @priority = Priority::NORMAL
+      @id              = id
+      @name            = name
+      @priority        = Priority::NORMAL
       @vulnerabilities = []
-      @comments = []
-      @history = []
+      @comments        = []
+      @history         = []
     end
 
     # Save this ticket to a Nexpose console.
@@ -213,7 +214,7 @@ module Nexpose
         ticket.history << Event.parse(entry)
       end
 
-      ticket.comments = ticket.history.select { |h| h.description == 'Added comment' }.map { |e| e.comment }
+      ticket.comments = ticket.history.select { |h| h.description == 'Added comment' }.map(&:comment)
 
       ticket
     end
@@ -232,22 +233,24 @@ module Nexpose
       attr_accessor :comment
 
       def initialize(state, author, created)
-        @state, @author, @created = state, author, created
+        @state   = state
+        @author  = author
+        @created = created
       end
 
       def self.parse(xml)
-        author = xml.attributes['author']
-        created_on = DateTime.parse(xml.attributes['created-on']).to_time
+        author        = xml.attributes['author']
+        created_on    = DateTime.parse(xml.attributes['created-on']).to_time
         created_on -= created_on.gmt_offset
 
-        event = REXML::XPath.first(xml, 'Event')
-        lookup = Ticket::State.constants.reduce({}) { |a, e| a[Ticket::State.const_get(e)] = e; a }
-        state = lookup[event.attributes['state']]
-        desc = event.text
+        event         = REXML::XPath.first(xml, 'Event')
+        lookup        = Ticket::State.constants.reduce({}) { |a, e| a[Ticket::State.const_get(e)] = e; a }
+        state         = lookup[event.attributes['state']]
+        desc          = event.text
 
-        event = new(state, author, created_on)
+        event         = new(state, author, created_on)
 
-        comment = REXML::XPath.first(xml, 'Comment')
+        comment       = REXML::XPath.first(xml, 'Comment')
         event.comment = comment.text if comment
 
         event.description = desc if desc
