@@ -8,7 +8,7 @@ module Nexpose
     # @return [Array[VulnerabilityDefinition]] Collection of vulnerability definitions.
     #
     def all_vulns
-      uri = '/api/2.0/vulnerability_definitions'
+      uri  = '/api/2.0/vulnerability_definitions'
       resp = AJAX.get(self, uri, AJAX::CONTENT_TYPE::JSON, per_page: 2_147_483_647)
       json = JSON.parse(resp, symbolize_names: true)
       json[:resources].map { |e| VulnerabilityDefinition.new.object_from_hash(self, e) }
@@ -20,7 +20,7 @@ module Nexpose
     # @return [Array[VulnerabilityDefinition]] A list of vuln definitions which check the CVE.
     #
     def find_vulns_by_cve(cve)
-      uri = '/api/2.0/vulnerability_definitions'
+      uri  = '/api/2.0/vulnerability_definitions'
       resp = AJAX.get(self, uri, AJAX::CONTENT_TYPE::JSON, cve: cve)
       json = JSON.parse(resp, symbolize_names: true)
       json[:resources].map { |e| VulnerabilityDefinition.new.object_from_hash(self, e) }
@@ -40,7 +40,7 @@ module Nexpose
     #   check the vulnerability.
     #
     def find_vulns_by_ref(source, id)
-      uri = '/api/2.0/vulnerability_definitions'
+      uri  = '/api/2.0/vulnerability_definitions'
       resp = AJAX.get(self,
                       uri,
                       AJAX::CONTENT_TYPE::JSON,
@@ -62,10 +62,10 @@ module Nexpose
     #   the provided value.
     #
     def find_vulns_by_title(title, all_words = true)
-      uri = '/api/2.0/vulnerability_definitions'
+      uri    = '/api/2.0/vulnerability_definitions'
       params = { title: title, all_words: all_words }
-      resp = AJAX.get(self, uri, AJAX::CONTENT_TYPE::JSON, params)
-      json = JSON.parse(resp, symbolize_names: true)
+      resp   = AJAX.get(self, uri, AJAX::CONTENT_TYPE::JSON, params)
+      json   = JSON.parse(resp, symbolize_names: true)
       json[:resources].map { |e| VulnerabilityDefinition.new.object_from_hash(self, e) }
     end
   end
@@ -121,7 +121,7 @@ module Nexpose
     # @return [VulnerabilityDefinition] The requested vulnerability definition, if found.
     #
     def self.load(nsc, id)
-      uri = "/api/2.0/vulnerability_definitions/#{id}"
+      uri  = "/api/2.0/vulnerability_definitions/#{id}"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
       new.object_from_hash(nsc, hash)

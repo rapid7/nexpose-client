@@ -60,11 +60,9 @@ module Nexpose
         results << ve
       end
       results.keep_if { |v| v.status == status } unless status.nil?
-      return results
+      results
     end
-
-    alias_method :vuln_exceptions, :list_vuln_exceptions
-
+    alias vuln_exceptions list_vuln_exceptions
 
     # Resubmit a vulnerability exception request with a new comment and reason
     # after an exception has been rejected.
@@ -80,10 +78,10 @@ module Nexpose
     # @return [Boolean] Whether or not the resubmission was valid.
     #
     def resubmit_vuln_exception(id, comment, reason = nil)
-      options = { 'exception-id' => id }
+      options           = { 'exception-id' => id }
       options['reason'] = reason if reason
-      xml = make_xml('VulnerabilityExceptionResubmitRequest', options)
-      comment_xml = make_xml('comment', {}, comment, false)
+      xml               = make_xml('VulnerabilityExceptionResubmitRequest', options)
+      comment_xml       = make_xml('comment', {}, comment, false)
       xml.add_element(comment_xml)
       r = execute(xml, '1.2')
       r.success
@@ -115,22 +113,21 @@ module Nexpose
       execute(xml, '1.2').success
     end
 
-
     private
 
-      def is_valid_vuln_exception_status?(status)
-        return true if status.nil?
-        valid_status = []
-        Nexpose::VulnException::Status.constants.each {|con| valid_status << Nexpose::VulnException::Status.const_get(con) }
-        valid_status << Nexpose::VulnException::Status.constants.map(&:to_s).map(&:downcase)
-        valid_status.flatten.map(&:downcase).include?(status.downcase)
-      end
+    def is_valid_vuln_exception_status?(status)
+      return true if status.nil?
+      valid_status = []
+      Nexpose::VulnException::Status.constants.each { |con| valid_status << Nexpose::VulnException::Status.const_get(con) }
+      valid_status << Nexpose::VulnException::Status.constants.map(&:to_s).map(&:downcase)
+      valid_status.flatten.map(&:downcase).include?(status.downcase)
+    end
 
-      def status_string_to_constant(status)
-        Nexpose::VulnException::Status.constants.find do |name|
-          Nexpose::VulnException::Status.const_get(name).to_s.downcase==status.downcase || status.to_sym.downcase == name.downcase
-        end
+    def status_string_to_constant(status)
+      Nexpose::VulnException::Status.constants.find do |name|
+        Nexpose::VulnException::Status.const_get(name).to_s.casecmp(status.downcase) || status.to_sym.casecmp(name)
       end
+    end
 
   end
 
@@ -138,13 +135,13 @@ module Nexpose
   #
   # Certain attributes are necessary for some exception scopes, even though
   # they are optional otherwise.
-  # • An exception for all instances of a vulnerability on all assets only
+  # - An exception for all instances of a vulnerability on all assets only
   #   requires the vuln_id attribute. The asset_id, vuln_key and port
   #   attributes are ignored for this scope type.
-  # • An exception for all instances on a specific asset requires the vuln_id
+  # - An exception for all instances on a specific asset requires the vuln_id
   #   and asset_id attributes. The vuln_key and port attributes are ignored for
   #   this scope type.
-  # • An exception for a specific instance of a vulnerability on a specific
+  # - An exception for a specific instance of a vulnerability on a specific
   #   asset requires the vuln_id, asset_id. Additionally, the port and/or the
   #   key attribute must be specified.
   #
@@ -169,8 +166,8 @@ module Nexpose
     attr_accessor :scope
     # ID of asset, if this exception applies to only one asset.
     attr_accessor :asset_id
-    alias :device_id :asset_id
-    alias :device_id= :asset_id=
+    alias device_id asset_id
+    alias device_id= asset_id=
     # Id of the site, if this exception applies to all instances on a site
     attr_accessor :site_id
     # ID of the Asset Group, if this exception applies to all instances on an asset group
@@ -193,9 +190,11 @@ module Nexpose
     # Date when Submit occurred [Time]
     attr_accessor :submit_date
 
-
     def initialize(vuln_id, scope, reason, status = nil)
-      @vuln_id, @scope, @reason, @status = vuln_id, scope, reason, status
+      @vuln_id = vuln_id
+      @scope   = scope
+      @reason  = reason
+      @status  = status
     end
 
     # Submit this exception on the security console.
@@ -413,27 +412,27 @@ module Nexpose
     #
     module Status
       UNDER_REVIEW = 'Under Review'
-      APPROVED = 'Approved'
-      REJECTED = 'Rejected'
-      DELETED = 'Deleted'
+      APPROVED     = 'Approved'
+      REJECTED     = 'Rejected'
+      DELETED      = 'Deleted'
     end
 
     # The reason for the exception status.
     #
     module Reason
-      FALSE_POSITIVE = 'False Positive'
+      FALSE_POSITIVE       = 'False Positive'
       COMPENSATING_CONTROL = 'Compensating Control'
-      ACCEPTABLE_USE = 'Acceptable Use'
-      ACCEPTABLE_RISK = 'Acceptable Risk'
-      OTHER = 'Other'
+      ACCEPTABLE_USE       = 'Acceptable Use'
+      ACCEPTABLE_RISK      = 'Acceptable Risk'
+      OTHER                = 'Other'
     end
 
     # The scope of the exception.
     #
     module Scope
-      ALL_INSTANCES = 'All Instances'
-      ALL_INSTANCES_ON_A_SPECIFIC_ASSET = 'All Instances on a Specific Asset'
-      ALL_INSTANCES_IN_A_SPECIFIC_SITE = 'All Instances in a Specific Site'
+      ALL_INSTANCES                       = 'All Instances'
+      ALL_INSTANCES_ON_A_SPECIFIC_ASSET   = 'All Instances on a Specific Asset'
+      ALL_INSTANCES_IN_A_SPECIFIC_SITE    = 'All Instances in a Specific Site'
       SPECIFIC_INSTANCE_OF_SPECIFIC_ASSET = 'Specific Instance of Specific Asset'
     end
   end
