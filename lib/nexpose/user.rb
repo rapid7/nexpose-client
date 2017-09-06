@@ -114,24 +114,24 @@ module Nexpose
 
     def to_xml
       xml = '<UserConfig'
-      xml << %Q({ id="#{@id}" })
-      xml << %Q({ authsrcid="#{@authsrcid}" })
-      xml << %Q({ name="#{replace_entities(@name)}" })
-      xml << %Q({ fullname="#{replace_entities(@full_name)}" })
-      xml << %Q({ role-name="#{replace_entities(@role_name)}" })
-      xml << %Q({ password="#{replace_entities(@password)}" }) if @password
-      xml << %Q({ token="#{replace_entities(@token)}" }) if @token
-      xml << %Q({ email="#{replace_entities(@email)}" }) if @email
-      xml << %Q({ enabled="#{@enabled}" })
+      xml << %( id="#{@id}" )
+      xml << %( authsrcid="#{@authsrcid}" )
+      xml << %( name="#{replace_entities(@name)}" )
+      xml << %( fullname="#{replace_entities(@full_name)}" )
+      xml << %( role-name="#{replace_entities(@role_name)}" )
+      xml << %( password="#{replace_entities(@password)}" ) if @password
+      xml << %( token="#{replace_entities(@token)}" ) if @token
+      xml << %( email="#{replace_entities(@email)}" ) if @email
+      xml << %( enabled="#{@enabled}" )
       # These two fields are keying off role_name to work around a defect.
-      xml << %Q({ allGroups="#{@all_groups || @role_name == 'global-admin'}" })
-      xml << %Q({ allSites="#{@all_sites || @role_name == 'global-admin'}" })
+      xml << %( allGroups="#{@all_groups || @role_name == 'global-admin'}" )
+      xml << %( allSites="#{@all_sites || @role_name == 'global-admin'}" )
       xml << '>'
       @sites.each do |site|
-        xml << %Q({ <site id="#{site}" /> })
+        xml << %( <site id="#{site}" /> )
       end
       @groups.each do |group|
-        xml << %Q({ <group id="#{group}" /> })
+        xml << %( <group id="#{group}" /> )
       end
       xml << '</UserConfig>'
     end
@@ -155,7 +155,7 @@ module Nexpose
     # Issue a UserConfigRequest to load an existing UserConfig from Nexpose.
     def self.load(connection, user_id)
       xml = '<UserConfigRequest session-id="' + connection.session_id + '"'
-      xml << %Q({ id="#{user_id}" })
+      xml << %( id="#{user_id}" )
       xml << ' />'
       r = connection.execute(xml, '1.1')
       if r.success
