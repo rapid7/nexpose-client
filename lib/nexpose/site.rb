@@ -720,7 +720,6 @@ module Nexpose
     end
 
     def include?(single_ip)
-      return false unless single_ip.respond_to? :from
       from = IPAddr.new(@from)
       to = @to.nil? ? from : IPAddr.new(@to)
       other = IPAddr.new(single_ip)
