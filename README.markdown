@@ -14,6 +14,7 @@ Since version 1.0 nexpose-client uses [Semantic Versioning](http://semver.org/).
 ## Release Notes
 
 Release notes are available on the [Releases](https://github.com/rapid7/nexpose-client/releases) page.
+The full Changelog is available as well, on the [Changelog](https://github.com/rapid7/nexpose-client/blob/master/CHANGELOG.md) page.
 
 ## Contributions
 
