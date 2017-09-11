@@ -5,14 +5,14 @@ module Nexpose
     attr_reader :ttl
 
     def initialize(console, time_to_live)
-      uri = "/data/admin/global/shared-secret?time-to-live=#{time_to_live}"
+      uri  = "/data/admin/global/shared-secret?time-to-live=#{time_to_live}"
       json = JSON.parse(AJAX.put(console, uri))
       self.from_json(json)
     end
 
     def from_json(json)
       @key_string = json['keyString']
-      @ttl = json['timeToLiveInSeconds']
+      @ttl        = json['timeToLiveInSeconds']
     end
 
     def delete(console)
@@ -22,10 +22,10 @@ module Nexpose
 
     def ==(other)
       return false unless self.class == other.class
-      return false unless key_string.upcase == other.key_string.upcase
-
+      return false unless key_string.downcase == other.key_string.downcase
       true
     end
-    alias_method :eql?, :==
+    alias eql? ==
   end
+
 end

@@ -20,15 +20,15 @@ module Nexpose
             vulns << XML::VulnerabilitySummary.parse(vuln)
           else
             vulns << XML::Vulnerability.new(vuln.attributes['id'],
-                                       vuln.attributes['title'],
-                                       vuln.attributes['severity'].to_i)
+                                            vuln.attributes['title'],
+                                            vuln.attributes['severity'].to_i)
           end
         end
       end
       vulns
     end
 
-    alias_method :vulns, :list_vulns
+    alias vulns list_vulns
 
     # Retrieve a list of the different vulnerability check categories.
     #
@@ -39,7 +39,7 @@ module Nexpose
       data.map { |c| c['Category'] }
     end
 
-    alias_method :vuln_categories, :list_vuln_categories
+    alias vuln_categories list_vuln_categories
 
     # Retrieve a list of the different vulnerability check types.
     #
@@ -49,7 +49,7 @@ module Nexpose
       data = DataTable._get_dyn_table(self, '/data/vulnerability/checktypes/dyntable.xml?tableID=VulnCheckCategorySynopsis')
       data.map { |c| c['Category'] }
     end
-    alias_method  :list_vuln_types, :vuln_types
+    alias list_vuln_types vuln_types
 
     # Retrieve details for a vulnerability.
     #
@@ -111,7 +111,9 @@ module Nexpose
       attr_reader :severity
 
       def initialize(id, title, severity)
-        @id, @title, @severity = id, title, severity.to_i
+        @id       = id
+        @title    = title
+        @severity = severity.to_i
       end
     end
 
@@ -126,10 +128,10 @@ module Nexpose
       attr_reader :check_type
 
       def initialize(json)
-        @id = json['Vuln ID']
-        @check_id = json['Vuln Check ID']
-        @title = json['Vulnerability']
-        @severity = json['Severity'].to_i
+        @id         = json['Vuln ID']
+        @check_id   = json['Vuln Check ID']
+        @title      = json['Vulnerability']
+        @severity   = json['Severity'].to_i
         @check_type = json['Check Type']
         @categories = json['Category'].split(/, */)
       end
@@ -165,15 +167,15 @@ module Nexpose
                    xml.attributes['severity'].to_i)
 
         vuln.pci_severity = xml.attributes['pciSeverity'].to_i
-        vuln.safe = xml.attributes['safe'] == 'true'  # or xml.attributes['safe'] == '1'
-        vuln.added = Date.parse(xml.attributes['added'])
-        vuln.modified = Date.parse(xml.attributes['modified'])
-        vuln.credentials = xml.attributes['requiresCredentials'] == 'true'
+        vuln.safe         = xml.attributes['safe'] == 'true' # or xml.attributes['safe'] == '1'
+        vuln.added        = Date.parse(xml.attributes['added'])
+        vuln.modified     = Date.parse(xml.attributes['modified'])
+        vuln.credentials  = xml.attributes['requiresCredentials'] == 'true'
 
         # These three fields are optional in the XSD.
-        vuln.published = Date.parse(xml.attributes['published']) if xml.attributes['published']
-        vuln.cvss_vector = xml.attributes['cvssVector'] if xml.attributes['cvssVector']
-        vuln.cvss_score = xml.attributes['cvssScore'].to_f if xml.attributes['cvssScore']
+        vuln.published    = Date.parse(xml.attributes['published']) if xml.attributes['published']
+        vuln.cvss_vector  = xml.attributes['cvssVector'] if xml.attributes['cvssVector']
+        vuln.cvss_score   = xml.attributes['cvssScore'].to_f if xml.attributes['cvssScore']
         vuln
       end
 
@@ -194,16 +196,16 @@ module Nexpose
       attr_accessor :solution
 
       def initialize(id, title, severity)
-        @id, @title, @severity = id, title, severity
+        @id         = id
+        @title      = title
+        @severity   = severity
         @references = []
       end
 
       def self.parse(xml)
-        vuln = parse_attributes(xml)
-
+        vuln             = parse_attributes(xml)
         vuln.description = REXML::XPath.first(xml, 'description').text
-        vuln.solution = REXML::XPath.first(xml, 'solution').text
-
+        vuln.solution    = REXML::XPath.first(xml, 'solution').text
         xml.elements.each('references/reference') do |ref|
           vuln.references << Reference.new(ref.attributes['source'], ref.text)
         end
@@ -218,7 +220,7 @@ module Nexpose
       attr_reader :reference
 
       def initialize(source, reference)
-        @source = source
+        @source    = source
         @reference = reference
       end
     end
@@ -251,18 +253,18 @@ module Nexpose
     attr_reader :verified
 
     def initialize(json)
-      @id = json['nexVulnID']
-      @console_id = json['vulnID']
-      @title = json['title']
+      @id          = json['nexVulnID']
+      @console_id  = json['vulnID']
+      @title       = json['title']
       @cvss_vector = json['cvssBase']
-      @cvss_score = json['cvssScore']
-      @risk = json['riskScore']
-      @published = Time.at(json['publishedDate'] / 1000)
-      @severity = json['severity']
-      @instances = json['vulnInstanceCount']
-      @exploit = json['mainExploit']
-      @malware = json['malwareCount']
-      @verified = DateTime.iso8601(json['verifiedDate'].slice(0, 15)).to_time if json['verifiedDate']
+      @cvss_score  = json['cvssScore']
+      @risk        = json['riskScore']
+      @published   = Time.at(json['publishedDate'] / 1000)
+      @severity    = json['severity']
+      @instances   = json['vulnInstanceCount']
+      @exploit     = json['mainExploit']
+      @malware     = json['malwareCount']
+      @verified    = DateTime.iso8601(json['verifiedDate'].slice(0, 15)).to_time if json['verifiedDate']
     end
   end
 
@@ -272,16 +274,16 @@ module Nexpose
   #
   class VulnSynopsis < VulnFinding
     def initialize(hash)
-      @id = hash['Vuln ID'].to_i
-      @title = hash['Vulnerability']
+      @id          = hash['Vuln ID'].to_i
+      @title       = hash['Vulnerability']
       @cvss_vector = hash['CVSS Base Vector']
-      @cvss_score = hash['CVSS Score'].to_f
-      @risk = hash['Risk'].to_f
-      @published = Time.at(hash['Published On'].to_i / 1000)
-      @severity = hash['Severity'].to_i
-      @instances = hash['Instances'].to_i
-      @exploit = hash['ExploitSource']
-      @malware = hash['MalwareSource'] == 'true'
+      @cvss_score  = hash['CVSS Score'].to_f
+      @risk        = hash['Risk'].to_f
+      @published   = Time.at(hash['Published On'].to_i / 1000)
+      @severity    = hash['Severity'].to_i
+      @instances   = hash['Instances'].to_i
+      @exploit     = hash['ExploitSource']
+      @malware     = hash['MalwareSource'] == 'true'
     end
   end
 

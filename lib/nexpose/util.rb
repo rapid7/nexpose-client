@@ -30,7 +30,7 @@ module Nexpose
     # '1' if the call succeeded.
     #
     def self.success?(xml_string)
-      xml = ::REXML::Document.new(xml_string.to_s)
+      xml     = ::REXML::Document.new(xml_string.to_s)
       success = ::REXML::XPath.first(xml, '//@success')
       !success.nil? && success.value.to_i == 1
     end

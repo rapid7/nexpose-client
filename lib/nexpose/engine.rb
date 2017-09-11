@@ -10,8 +10,7 @@ module Nexpose
     # @return [Boolean] true if engine successfully deleted.
     #
     def delete_engine(engine_id, scope = 'silo')
-      xml = make_xml('EngineDeleteRequest',
-                     {'engine-id' => engine_id, 'scope' => scope})
+      xml = make_xml('EngineDeleteRequest', { 'engine-id' => engine_id, 'scope' => scope })
       response = execute(xml, '1.2')
       response.success
     end
@@ -27,9 +26,9 @@ module Nexpose
     # @return [Boolean] true if the connection is successfully reversed.
     #
     def reverse_engine_connection(engine_id)
-      uri = "/api/2.1/engine/#{engine_id}/reverseConnection"
+      uri      = "/api/2.1/engine/#{engine_id}/reverseConnection"
       response = AJAX.put(self, uri)
-      response.eql?("true")
+      response.eql?('true')
     end
 
     # Kicks off an update on a single engine.
@@ -54,8 +53,8 @@ module Nexpose
     #   each active scan on the engine.
     #
     def engine_activity(engine_id)
-      xml = make_xml('EngineActivityRequest', {'engine-id' => engine_id})
-      r = execute(xml)
+      xml = make_xml('EngineActivityRequest', { 'engine-id' => engine_id })
+      r   = execute(xml)
       arr = []
       if r.success
         r.res.elements.each('//ScanSummary') do |scan_event|
@@ -72,7 +71,7 @@ module Nexpose
     #
     def list_engines
       response = execute(make_xml('EngineListingRequest'))
-      arr = []
+      arr      = []
       if response.success
         response.res.elements.each('//EngineSummary') do |engine|
           arr << EngineSummary.new(engine.attributes['id'].to_i,
@@ -86,7 +85,7 @@ module Nexpose
       arr
     end
 
-    alias_method :engines, :list_engines
+    alias engines list_engines
   end
 
   # Object representing the current details of a scan engine attached to the
@@ -110,12 +109,12 @@ module Nexpose
     attr_reader :scope
 
     def initialize(id, name, address, port, status, scope = 'silo')
-      @id = id
-      @name = name
+      @id      = id
+      @name    = name
       @address = address
-      @port = port
-      @status = status
-      @scope = scope
+      @port    = port
+      @status  = status
+      @scope   = scope
     end
   end
 
@@ -143,13 +142,13 @@ module Nexpose
     attr_accessor :sites
 
     def initialize(address, name = nil, port = 40814)
-      @id = -1
+      @id      = -1
       @address = address
-      @name = name
-      @name ||= address
-      @port = port
-      @scope = 'silo'
-      @sites = []
+      @name    = name
+      @name  ||= address
+      @port    = port
+      @scope   = 'silo'
+      @sites   = []
     end
 
     def self.load(connection, id)
@@ -163,12 +162,14 @@ module Nexpose
           engine = Engine.new(config.attributes['address'],
                               config.attributes['name'],
                               config.attributes['port'])
-          engine.id = config.attributes['id']
-          engine.scope = config.attributes['scope'] if config.attributes['scope']
+          engine.id       = config.attributes['id']
+          engine.scope    = config.attributes['scope'] if config.attributes['scope']
           engine.priority = config.attributes['priority'] if config.attributes['priority']
+
           config.elements.each('Site') do |site|
             engine.sites << SiteSummary.new(site.attributes['id'], site.attributes['name'])
           end
+
           return engine
         end
       end

@@ -10,11 +10,11 @@ module Nexpose
     # @return [Boolean] Whether group deletion succeeded.
     #
     def delete_asset_group(id)
-      r = execute(make_xml('AssetGroupDeleteRequest', {'group-id' => id}))
+      r = execute(make_xml('AssetGroupDeleteRequest', { 'group-id' => id }))
       r.success
     end
 
-    alias_method :delete_group, :delete_asset_group
+    alias delete_group delete_asset_group
 
     # Retrieve an array of all asset groups the user is authorized to view or
     # manage.
@@ -23,7 +23,6 @@ module Nexpose
     #
     def list_asset_groups
       r = execute(make_xml('AssetGroupListingRequest'))
-
       groups = []
       if r.success
         r.res.elements.each('AssetGroupListingResponse/AssetGroupSummary') do |group|
@@ -37,8 +36,8 @@ module Nexpose
       groups
     end
 
-    alias_method :groups, :list_asset_groups
-    alias_method :asset_groups, :list_asset_groups
+    alias groups list_asset_groups
+    alias asset_groups list_asset_groups
   end
 
   # Summary value object for asset group information.
@@ -47,7 +46,11 @@ module Nexpose
     attr_reader :id, :name, :description, :risk_score, :dynamic
 
     def initialize(id, name, desc, risk, dynamic)
-      @id, @name, @description, @risk_score, @dynamic = id, name, desc, risk, dynamic
+      @id          = id
+      @name        = name
+      @description = desc
+      @risk_score  = risk
+      @dynamic     = dynamic
     end
 
     def dynamic?
@@ -68,17 +71,20 @@ module Nexpose
   class AssetGroup < AssetGroupSummary
     include Sanitize
 
-    attr_accessor :name, :description, :id , :tags
+    attr_accessor :name, :description, :id, :tags
 
     # Array[Device] of devices associated with this asset group.
     attr_accessor :assets
-    alias :devices :assets
-    alias :devices= :assets=
+    alias devices assets
+    alias devices= assets=
 
     def initialize(name, desc, id = -1, risk = 0.0)
-      @name, @description, @id, @risk_score = name, desc, id, risk
-      @assets = []
-      @tags = []
+      @name        = name
+      @description = desc
+      @id          = id
+      @risk_score  = risk
+      @assets      = []
+      @tags        = []
     end
 
     def save(connection)
@@ -86,7 +92,7 @@ module Nexpose
       xml << to_xml
       xml << '</AssetGroupSaveRequest>'
       res = connection.execute(xml)
-      @id = res.attributes['group-id'].to_i if res.success and @id < 1
+      @id = res.attributes['group-id'].to_i if res.success && @id < 1
     end
 
     # Generate an XML representation of this group configuration
@@ -95,8 +101,8 @@ module Nexpose
     #
     def as_xml
       xml = REXML::Element.new('AssetGroup')
-      xml.attributes['id'] = @id
-      xml.attributes['name'] = @name
+      xml.attributes['id']          = @id
+      xml.attributes['name']        = @name
       xml.attributes['description'] = @description
 
       if @description && !@description.empty?
@@ -106,7 +112,7 @@ module Nexpose
       end
 
       elem = REXML::Element.new('Devices')
-      @assets.each { |a| elem.add_element('device', {'id' => a.id}) }
+      @assets.each { |a| elem.add_element('device', { 'id' => a.id }) }
       xml.add_element(elem)
 
       unless tags.empty?
@@ -134,8 +140,8 @@ module Nexpose
     # @return [Hash] Hash of site ID to Scan launch information for each scan.
     #
     def rescan_assets(connection)
-      sites_ids = @assets.map { |d| d.site_id }.uniq
-      scans = {}
+      scans     = {}
+      sites_ids = @assets.map(&:site_id).uniq
       sites_ids.each do |site_id|
         to_scan = @assets.select { |d| d.site_id == site_id }
         scans[site_id] = connection.scan_devices(to_scan)
@@ -153,7 +159,7 @@ module Nexpose
     #
     def self.load(connection, id)
       xml = %(<AssetGroupConfigRequest session-id="#{connection.session_id}" group-id="#{id}"/>)
-      r = APIRequest.execute(connection.url, xml)
+      r   = APIRequest.execute(connection.url, xml)
       parse(r.res)
     end
 

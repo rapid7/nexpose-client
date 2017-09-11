@@ -22,7 +22,7 @@ module Nexpose
       arr
     end
 
-    alias_method :sites, :list_sites
+    alias sites list_sites
 
     # Delete the specified site and all associated scan data.
     #
@@ -69,7 +69,7 @@ module Nexpose
     #
     def completed_scans(site_id)
       table = { 'table-id' => 'site-completed-scans' }
-      data = DataTable._get_json_table(self, "/data/scan/site/#{site_id}", table)
+      data  = DataTable._get_json_table(self, "/data/scan/site/#{site_id}", table)
       data.map(&CompletedScan.method(:parse_json))
     end
   end
@@ -158,21 +158,21 @@ module Nexpose
     # @param [String] name Unique name of the site.
     # @param [String] scan_template_id ID of the scan template to use.
     def initialize(name = nil, scan_template_id = 'full-audit-without-web-spider')
-      @name = name
-      @scan_template_id = scan_template_id
-      @id = -1
-      @risk_factor = 1.0
-      @config_version = 3
-      @schedules = []
-      @blackouts = []
+      @name                  = name
+      @scan_template_id      = scan_template_id
+      @id                    = -1
+      @risk_factor           = 1.0
+      @config_version        = 3
+      @schedules             = []
+      @blackouts             = []
       @included_scan_targets = { addresses: [], asset_groups: [] }
       @excluded_scan_targets = { addresses: [], asset_groups: [] }
-      @site_credentials = []
-      @shared_credentials = []
-      @web_credentials = []
-      @alerts = []
-      @users = []
-      @tags = []
+      @site_credentials      = []
+      @shared_credentials    = []
+      @web_credentials       = []
+      @alerts                = []
+      @users                 = []
+      @tags                  = []
     end
 
     # Returns the array of included scan target addresses.
@@ -231,23 +231,20 @@ module Nexpose
     def is_dynamic?
       !@discovery_config.nil?
     end
+    alias dynamic? is_dynamic?
 
     # Adds assets to this site by IP address range.
     #
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def include_ip_range(from, to)
-      begin
-        from_ip = IPAddr.new(from)
-        to_ip = IPAddr.new(to)
-        (from_ip..to_ip)
-        if (from_ip..to_ip).to_a.size == 0
-          raise 'Invalid IP range specified'
-        end
-        @included_scan_targets[:addresses] << IPRange.new(from, to)
-      rescue ArgumentError => e
-        raise "#{e.message} in given IP range"
-      end
+      from_ip = IPAddr.new(from)
+      to_ip   = IPAddr.new(to)
+      (from_ip..to_ip)
+      raise 'Invalid IP range specified' if (from_ip..to_ip).to_a.size.zero?
+      @included_scan_targets[:addresses] << IPRange.new(from, to)
+    rescue ArgumentError => e
+      raise "#{e.message} in given IP range"
     end
 
     # Remove assets to this site by IP address range.
@@ -255,17 +252,13 @@ module Nexpose
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def remove_included_ip_range(from, to)
-      begin
-        from_ip = IPAddr.new(from)
-        to_ip = IPAddr.new(to)
-        (from_ip..to_ip)
-        if (from_ip..to_ip).to_a.size == 0
-          raise 'Invalid IP range specified'
-        end
-        @included_scan_targets[:addresses].reject! { |t| t.eql? IPRange.new(from, to) }
-      rescue ArgumentError => e
-        raise "#{e.message} in given IP range"
-      end
+      from_ip = IPAddr.new(from)
+      to_ip   = IPAddr.new(to)
+      (from_ip..to_ip)
+      raise 'Invalid IP range specified' if (from_ip..to_ip).to_a.size.zero?
+      @included_scan_targets[:addresses].reject! { |t| t.eql? IPRange.new(from, to) }
+    rescue ArgumentError => e
+      raise "#{e.message} in given IP range"
     end
 
     # Adds an asset to this site included scan targets, resolving whether an IP or hostname is
@@ -291,17 +284,13 @@ module Nexpose
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def exclude_ip_range(from, to)
-      begin
-        from_ip = IPAddr.new(from)
-        to_ip = IPAddr.new(to)
-        (from_ip..to_ip)
-        if (from_ip..to_ip).to_a.size == 0
-          raise 'Invalid IP range specified'
-        end
-        @excluded_scan_targets[:addresses] << IPRange.new(from, to)
-      rescue ArgumentError => e
-        raise "#{e.message} in given IP range"
-      end
+      from_ip = IPAddr.new(from)
+      to_ip   = IPAddr.new(to)
+      (from_ip..to_ip)
+      raise 'Invalid IP range specified' if (from_ip..to_ip).to_a.size.zero?
+      @excluded_scan_targets[:addresses] << IPRange.new(from, to)
+    rescue ArgumentError => e
+      raise "#{e.message} in given IP range"
     end
 
     # Remove assets from this site excluded scan targets by IP address range.
@@ -309,17 +298,13 @@ module Nexpose
     # @param [String] from Beginning IP address of a range.
     # @param [String] to Ending IP address of a range.
     def remove_excluded_ip_range(from, to)
-      begin
-        from_ip = IPAddr.new(from)
-        to_ip = IPAddr.new(to)
-        (from_ip..to_ip)
-        if (from_ip..to_ip).to_a.size == 0
-          raise 'Invalid IP range specified'
-        end
-        @excluded_scan_targets[:addresses].reject! { |t| t.eql? IPRange.new(from, to) }
-      rescue ArgumentError => e
-        raise "#{e.message} in given IP range"
-      end
+      from_ip = IPAddr.new(from)
+      to_ip   = IPAddr.new(to)
+      (from_ip..to_ip)
+      raise 'Invalid IP range specified' if (from_ip..to_ip).to_a.size.zero?
+      @excluded_scan_targets[:addresses].reject! { |t| t.eql? IPRange.new(from, to) }
+    rescue ArgumentError => e
+      raise "#{e.message} in given IP range"
     end
 
     # Adds an asset to this site excluded scan targets, resolving whether an IP or hostname is
@@ -391,7 +376,7 @@ module Nexpose
         raise 'Invalid user id. A user id must be a positive number and refer to an existing system user.'
       end
 
-      @users << { id: user_id}
+      @users << { id: user_id }
     end
 
     def remove_user(user_id)
@@ -427,36 +412,29 @@ module Nexpose
     end
 
     def to_h
-      included_scan_targets = {
-          addresses: @included_scan_targets[:addresses].compact,
-          asset_groups: @included_scan_targets[:asset_groups].compact
-      }
-      excluded_scan_targets = {
-          addresses: @excluded_scan_targets[:addresses].compact,
-          asset_groups: @excluded_scan_targets[:asset_groups].compact
-      }
-
-      hash = {
-          id: @id,
-          name: @name,
-          description: @description,
-          auto_engine_selection_enabled: @auto_engine_selection_enabled,
-          included_scan_targets: included_scan_targets,
-          excluded_scan_targets: excluded_scan_targets,
-          engine_id: @engine_id,
-          scan_template_id: @scan_template_id,
-          risk_factor: @risk_factor,
-          schedules: (@schedules || []).map {|schedule| schedule.to_h},
-          shared_credentials: (@shared_credentials || []).map {|cred| cred.to_h},
-          site_credentials: (@site_credentials || []).map {|cred| cred.to_h},
-          web_credentials: (@web_credentials || []).map {|webCred| webCred.to_h},
-          discovery_config: @discovery_config.to_h,
-          search_criteria: @search_criteria.to_h,
-          tags: (@tags || []).map{|tag| tag.to_h},
-          alerts: (@alerts || []).map {|alert| alert.to_h },
-          organization: @organization.to_h,
-          users: users
-      }
+      included_scan_targets = { addresses: @included_scan_targets[:addresses].compact,
+                                asset_groups: @included_scan_targets[:asset_groups].compact }
+      excluded_scan_targets = { addresses: @excluded_scan_targets[:addresses].compact,
+                                asset_groups: @excluded_scan_targets[:asset_groups].compact }
+      hash = { id: @id,
+               name: @name,
+               description: @description,
+               auto_engine_selection_enabled: @auto_engine_selection_enabled,
+               included_scan_targets: included_scan_targets,
+               excluded_scan_targets: excluded_scan_targets,
+               engine_id: @engine_id,
+               scan_template_id: @scan_template_id,
+               risk_factor: @risk_factor,
+               schedules: (@schedules || []).map(&:to_h),
+               shared_credentials: (@shared_credentials || []).map(&:to_h),
+               site_credentials: (@site_credentials || []).map(&:to_h),
+               web_credentials: (@web_credentials || []).map(&:to_h),
+               discovery_config: @discovery_config.to_h,
+               search_criteria: @search_criteria.to_h,
+               tags: (@tags || []).map(&:to_h),
+               alerts: (@alerts || []).map(&:to_h),
+               organization: @organization.to_h,
+               users: users }
       # @TODO: Revisit this for 2.0.0 update
       # Only pass in blackouts if they were actually specified (for backwards compatibility)
       hash[:blackouts] = @blackouts.map(&:to_h) if @blackouts && @blackouts.any?
@@ -472,7 +450,7 @@ module Nexpose
     # @return [Site] The requested site, if found.
     #
     def self.load(nsc, id)
-      uri = "/api/2.1/site_configurations/#{id}"
+      uri  = "/api/2.1/site_configurations/#{id}"
       resp = AJAX.get(nsc, uri, AJAX::CONTENT_TYPE::JSON)
       hash = JSON.parse(resp, symbolize_names: true)
       site = self.json_initializer(hash).deserialize(hash)
@@ -486,19 +464,19 @@ module Nexpose
       site.excluded_scan_targets[:addresses] = []
       excluded_addresses.each { |asset| site.exclude_asset(asset) }
 
-      site.organization = Organization.create(site.organization)
-      site.schedules = (hash[:schedules] || []).map {|schedule| Nexpose::Schedule.from_hash(schedule) }
-      site.blackouts = (hash[:blackouts] || []).map {|blackout| Nexpose::Blackout.from_hash(blackout) }
-      site.site_credentials = hash[:site_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      site.shared_credentials = hash[:shared_credentials].map {|cred| Nexpose::SiteCredentials.new.object_from_hash(nsc,cred)}
-      site.discovery_config = Nexpose::DiscoveryConnection.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
-      site.search_criteria = Nexpose::DiscoveryConnection::Criteria.parseHash(hash[:search_criteria]) unless hash[:search_criteria].nil?
-      site.alerts = Alert.load_alerts(hash[:alerts])
-      site.tags = Tag.load_tags(hash[:tags])
-      site.web_credentials = hash[:web_credentials].map {|webCred| (
-      webCred[:service] == Nexpose::WebCredentials::WebAppAuthType::HTTP_HEADER ?
-          Nexpose::WebCredentials::Headers.new(webCred[:name], webCred[:baseURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred) :
-          Nexpose::WebCredentials::HTMLForms.new(webCred[:name], webCred[:baseURL], webCred[:loginURL], webCred[:soft403Pattern], webCred[:id]).object_from_hash(nsc,webCred))}
+      site.organization       = Organization.create(site.organization)
+      site.schedules          = (hash[:schedules] || []).map { |schedule| Nexpose::Schedule.from_hash(schedule) }
+      site.blackouts          = (hash[:blackouts] || []).map { |blackout| Nexpose::Blackout.from_hash(blackout) }
+      site.site_credentials   = hash[:site_credentials].map { |cred| Nexpose::SiteCredentials.new.object_from_hash(nsc, cred) }
+      site.shared_credentials = hash[:shared_credentials].map { |cred| Nexpose::SiteCredentials.new.object_from_hash(nsc, cred) }
+      site.discovery_config   = Nexpose::DiscoveryConnection.new.object_from_hash(nsc, hash[:discovery_config]) unless hash[:discovery_config].nil?
+      site.search_criteria    = Nexpose::DiscoveryConnection::Criteria.parseHash(hash[:search_criteria]) unless hash[:search_criteria].nil?
+      site.alerts             = Alert.load_alerts(hash[:alerts])
+      site.tags               = Tag.load_tags(hash[:tags])
+      site.web_credentials = hash[:web_credentials].map { |web_cred| (
+      web_cred[:service] == Nexpose::WebCredentials::WebAppAuthType::HTTP_HEADER ?
+          Nexpose::WebCredentials::Headers.new(web_cred[:name], web_cred[:baseURL], web_cred[:soft403Pattern], web_cred[:id]).object_from_hash(nsc, web_cred) :
+          Nexpose::WebCredentials::HTMLForms.new(web_cred[:name], web_cred[:baseURL], web_cred[:loginURL], web_cred[:soft403Pattern], web_cred[:id]).object_from_hash(nsc, web_cred)) }
 
       site
     end
@@ -516,8 +494,8 @@ module Nexpose
     # @return [Site] Site configuration loaded from a Nexpose console.
     #
     def self.copy(connection, id)
-      site = self.load(connection, id)
-      site.id = -1
+      site      = self.load(connection, id)
+      site.id   = -1
       site.name = "#{site.name} Copy"
       site
     end
@@ -536,14 +514,14 @@ module Nexpose
         resp = AJAX.post(connection, '/api/2.1/site_configurations/', to_json, AJAX::CONTENT_TYPE::JSON)
         @id = resp.to_i
       else
-        resp = AJAX.put(connection, "/api/2.1/site_configurations/#{@id}", to_json, AJAX::CONTENT_TYPE::JSON)
+        AJAX.put(connection, "/api/2.1/site_configurations/#{@id}", to_json, AJAX::CONTENT_TYPE::JSON)
       end
 
       # Retrieve the scan engine and shared credentials and add them to the site configuration
-      site_config = Site.load(connection, @id)
-      @engine_id = site_config.engine_id
+      site_config         = Site.load(connection, @id)
+      @engine_id          = site_config.engine_id
       @shared_credentials = site_config.shared_credentials
-      @alerts = site_config.alerts
+      @alerts             = site_config.alerts
 
       @id
     end
@@ -592,11 +570,11 @@ module Nexpose
     # Constructor
     # SiteSummary(id, name, description, riskfactor = 1)
     def initialize(id, name, description = nil, risk_factor = 1.0, risk_score = 0.0)
-      @id = id
-      @name = name
+      @id          = id
+      @name        = name
       @description = description
       @risk_factor = risk_factor
-      @risk_score = risk_score
+      @risk_score  = risk_score
     end
   end
 
@@ -629,7 +607,7 @@ module Nexpose
       xml.text = @host
       xml
     end
-    alias_method :to_xml_elem, :as_xml
+    alias to_xml_elem as_xml
 
     def to_xml
       to_xml_elem.to_s
@@ -670,14 +648,14 @@ module Nexpose
     # @return [IPRange] an IP address range of one or more addresses.
     def initialize(from, to = nil)
       @from = from
-      @to = to unless from == to
+      @to   = to unless from == to
 
       return unless @to.nil?
 
       range = IPAddr.new(@from.to_s).to_range
       unless range.one?
         @from = range.first.to_s
-        @to = range.last.to_s
+        @to   = range.last.to_s
       end
     end
 
@@ -689,7 +667,7 @@ module Nexpose
     def size
       return 1 if @to.nil?
       from = IPAddr.new(@from)
-      to = IPAddr.new(@to)
+      to   = IPAddr.new(@to)
       (from..to).to_a.size
     end
 
@@ -697,10 +675,10 @@ module Nexpose
 
     def <=>(other)
       return 1 unless other.respond_to? :from
-      from = IPAddr.new(@from)
-      to = @to.nil? ? from : IPAddr.new(@to)
+      from    = IPAddr.new(@from)
+      to      = @to.nil? ? from : IPAddr.new(@to)
       cf_from = IPAddr.new(other.from)
-      cf_to = IPAddr.new(other.to.nil? ? other.from : other.to)
+      cf_to   = IPAddr.new(other.to.nil? ? other.from : other.to)
       if cf_to < from
         1
       elsif to < cf_from
@@ -721,8 +699,8 @@ module Nexpose
 
     def include?(single_ip)
       return false unless single_ip.respond_to? :from
-      from = IPAddr.new(@from)
-      to = @to.nil? ? from : IPAddr.new(@to)
+      from  = IPAddr.new(@from)
+      to    = @to.nil? ? from : IPAddr.new(@to)
       other = IPAddr.new(single_ip)
 
       if other < from
@@ -743,7 +721,7 @@ module Nexpose
       xml.add_attributes({ 'from' => @from, 'to' => @to })
       xml
     end
-    alias_method :to_xml_elem, :as_xml
+    alias to_xml_elem as_xml
 
     def to_xml
       as_xml.to_s

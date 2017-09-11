@@ -27,10 +27,10 @@ module Nexpose
     # @return [Array[ImportResult]] collection of import results.
     #
     def import_assets_from_json(site_id, json)
-      uri = "/api/2.1/sites/#{site_id}/assets"
+      uri  = "/api/2.1/sites/#{site_id}/assets"
       # Wait up to 5 minutes for a response.
       resp = AJAX.post(self, uri, json, AJAX::CONTENT_TYPE::JSON, 300)
-      arr = JSON.parse(resp, symbolize_names: true)
+      arr  = JSON.parse(resp, symbolize_names: true)
       arr.map { |e| External::ImportResult.new.object_from_hash(self, e) }
     end
   end
@@ -87,15 +87,15 @@ module Nexpose
       attr_accessor :vulnerabilities
 
       def initialize
-        @aliases = []
-        @software = []
-        @services = []
-        @attributes = []
-        @users = []
-        @groups = []
-        @files = []
+        @aliases            = []
+        @software           = []
+        @services           = []
+        @attributes         = []
+        @users              = []
+        @groups             = []
+        @files              = []
         @unique_identifiers = []
-        @vulnerabilities = []
+        @vulnerabilities    = []
       end
 
       def to_json
@@ -123,10 +123,10 @@ module Nexpose
 
       # Valid host types for an asset.
       module HostType
-        GUEST = 'GUEST'
+        GUEST      = 'GUEST'
         HYPERVISOR = 'HYPERVISOR'
-        PHYSICAL = 'PHYSICAL'
-        MOBILE = 'MOBILE'
+        PHYSICAL   = 'PHYSICAL'
+        MOBILE     = 'MOBILE'
       end
     end
 
@@ -143,7 +143,9 @@ module Nexpose
       attr_accessor :vulnerabilities
 
       def initialize(port, protocol = Protocol::RAW, name = nil)
-        @port, @protocol, @name = port, protocol, name
+        @port            = port
+        @protocol        = protocol
+        @name            = name
         @vulnerabilities = []
       end
 
@@ -169,7 +171,10 @@ module Nexpose
       attr_accessor :proof
 
       def initialize(vuln_id, status = Status::EXPLOITED, proof = nil, key = nil)
-        @vuln_id, @status, @proof, @key = vuln_id, status, proof, key
+        @vuln_id = vuln_id
+        @status  = status
+        @proof   = proof
+        @key     = key
       end
 
       def to_h
@@ -185,7 +190,7 @@ module Nexpose
         EXPLOITED = 'vulnerable-exploited'
         # Vulnerable because the service or software version is associated with
         # a known vulnerability.
-        VERSION = 'vulnerable-version'
+        VERSION   = 'vulnerable-version'
         # A potential vulnerability.
         POTENTIAL = 'potential'
       end

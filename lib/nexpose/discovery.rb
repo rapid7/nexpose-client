@@ -6,22 +6,22 @@ module Nexpose
     # discovery of assets, including whether or not connections are active.
     #
     def list_discovery_connections
-      xml = make_xml('DiscoveryConnectionListingRequest')
-      response = execute(xml, '1.2')
+      xml         = make_xml('DiscoveryConnectionListingRequest')
+      response    = execute(xml, '1.2')
       connections = []
       response.res.elements.each('DiscoveryConnectionListingResponse/DiscoveryConnectionSummary') do |conn|
         connections << DiscoveryConnection.parse(conn)
       end
       connections
     end
-    alias_method :discovery_connections, :list_discovery_connections
+    alias discovery_connections list_discovery_connections
 
     # Delete an existing connection to a target used for dynamic discovery of assets.
     #
     # @param [Fixnum] id ID of an existing discovery connection.
     #
     def delete_discovery_connection(id)
-      xml = make_xml('DiscoveryConnectionDeleteRequest', { 'id' => id })
+      xml      = make_xml('DiscoveryConnectionDeleteRequest', { 'id' => id })
       response = execute(xml, '1.2')
       response.success
     end
@@ -32,22 +32,22 @@ module Nexpose
 
     module CollectionMethod
       DIRECTORY_WATCHER = 'DIRECTORY_WATCHER'
-      SYSLOG = 'SYSLOG'
+      SYSLOG            = 'SYSLOG'
     end
 
     module EventSource
       INFOBLOX_TRINZIC = 'INFOBLOX_TRINZIC'
-      MICROSOFT_DHCP = 'MICROSOFT_DHCP'
+      MICROSOFT_DHCP   = 'MICROSOFT_DHCP'
     end
 
     module Protocol
-      HTTP  = 'HTTP'
-      HTTPS = 'HTTPS'
-      LDAP  = 'LDAP'
-      LDAPS = 'LDAPS'
+      HTTP          = 'HTTP'
+      HTTPS         = 'HTTPS'
+      LDAP          = 'LDAP'
+      LDAPS         = 'LDAPS'
       SERVICE_PROXY = 'SERVICE_PROXY'
-      TCP = 'TCP'
-      UDP = 'UDP'
+      TCP           = 'TCP'
+      UDP           = 'UDP'
     end
 
     module Type
@@ -56,51 +56,37 @@ module Nexpose
       ACTIVESYNC            = 'ACTIVESYNC'
       ACTIVESYNC_POWERSHELL = 'ACTIVESYNC_POWERSHELL'
       ACTIVESYNC_OFFICE365  = 'ACTIVESYNC_OFFICE365'
-      DHCP_SERVICE = 'DHCP_SERVICE'
+      DHCP_SERVICE          = 'DHCP_SERVICE'
     end
 
     # A unique identifier for this connection.
     attr_accessor :id
-
     # A unique name for this connection.
     attr_accessor :name
-
     # Type of discovery connection
     attr_accessor :type
-
     # The IP address or fully qualified domain name of the server.
     attr_accessor :address
-
     # The engine ID to use for this connection.
     attr_accessor :engine_id
-
     # A user name that can be used to log into the server.
     attr_accessor :user
-
     # The password to use when connecting with the defined user.
     attr_accessor :password
-
     # The protocol used for connecting to the server. One of DiscoveryConnection::Protocol
     attr_accessor :protocol
-
     # The port used for connecting to the server. A valid port from 1 to 65535.
     attr_accessor :port
-
     # The hostname of the exchange server to connect for exchange powershell connections
     attr_accessor :exchange_hostname
-
     # The exchange username to connect for exchange powershell connections
     attr_accessor :exchange_username
-
     # The exchange password to connect for exchange powershell connections
     attr_accessor :exchange_password
-
     # The collection method (e.g. for DHCP discovery connections)
     attr_accessor :collection_method
-
     # The event source (e.g. for DHCP discovery connections)
     attr_accessor :event_source
-
     # Whether or not the connection is active.
     # Discovery is only possible when the connection is active.
     attr_accessor :status
@@ -114,10 +100,13 @@ module Nexpose
     # @param [String] password Password for credentials on this connection.
     #
     def initialize(name = nil, address = nil, user = nil, password = nil)
-      @name, @address, @user, @password = name, address, user, password
-      @type = nil  # for backwards compatibilitly, at some point should set this to Type::VSPHERE
-      @id = -1
-      @port = 443
+      @name     = name
+      @address  = address
+      @user     = user
+      @password = password
+      @type     = nil # For backwards compatibilitly, at some point should set this to Type::VSPHERE
+      @id       = -1
+      @port     = 443
       @protocol = Protocol::HTTPS
     end
 
@@ -155,7 +144,6 @@ module Nexpose
     #
     def save(nsc)
       @id == -1 ? create(nsc) : update(nsc)
-
       @id
     end
 
@@ -181,7 +169,7 @@ module Nexpose
     # @param [Connection] nsc Connection to a console.
     #
     def connect(nsc)
-      xml = nsc.make_xml('DiscoveryConnectionConnectRequest', { 'id' => id })
+      xml      = nsc.make_xml('DiscoveryConnectionConnectRequest', { 'id' => id })
       response = nsc.execute(xml, '1.2')
       response.success
     end
@@ -221,10 +209,10 @@ module Nexpose
       conn = new(xml.attributes['name'],
                  xml.attributes['address'],
                  xml.attributes['user-name'])
-      conn.id = xml.attributes['id'].to_i
-      conn.protocol = xml.attributes['protocol']
-      conn.port = xml.attributes['port'].to_i
-      conn.status = xml.attributes['connection-status']
+      conn.id        = xml.attributes['id'].to_i
+      conn.protocol  = xml.attributes['protocol']
+      conn.port      = xml.attributes['port'].to_i
+      conn.status    = xml.attributes['connection-status']
       conn.engine_id = xml.attributes['engine-id'].to_i
       conn
     end
@@ -234,10 +222,11 @@ module Nexpose
     end
 
     def to_h
-      { id: id,
+      {
+        id: id,
         name: name,
         type: type
-        # TODO Add remaining instance fields, once it is introduced in resource object
+        # TODO: Add remaining instance fields, once it is introduced in resource object
       }
     end
 
@@ -246,10 +235,8 @@ module Nexpose
     end
 
     def eql?(other)
-      id.eql?(other.id) &&
-      name.eql?(other.name) &&
-      type.eql?(other.type)
-      # TODO Add remaining instance fields, once it is introduced in resource object
+      id.eql?(other.id) && name.eql?(other.name) && type.eql?(other.type)
+      # TODO: Add remaining instance fields, once it is introduced in resource object
     end
 
     # Override of filter criterion to account for proper JSON naming.
@@ -306,7 +293,7 @@ module Nexpose
     attr_accessor :status
 
     def initialize(&block)
-      instance_eval &block if block_given?
+      instance_eval(&block) if block_given?
     end
 
     def on?
@@ -315,14 +302,14 @@ module Nexpose
 
     def self.parse(json)
       new do |asset|
-        asset.ip = json['IPAddress']
-        asset.os = json['OSName']
-        asset.name = json['assetDiscoveryName']
-        asset.cluster = json['cluster']
+        asset.ip         = json['IPAddress']
+        asset.os         = json['OSName']
+        asset.name       = json['assetDiscoveryName']
+        asset.cluster    = json['cluster']
         asset.datacenter = json['datacenter']
-        asset.host = json['host']
-        asset.status = json['powerStatus']
-        asset.pool = json['resourcePool']
+        asset.host       = json['host']
+        asset.status     = json['powerStatus']
+        asset.pool       = json['resourcePool']
       end
     end
   end
@@ -338,13 +325,17 @@ module Nexpose
     # @param [String] password Password for credentials on this connection.
     #
     def initialize(name, protocol, address, user, password = nil)
-      @name, @protocol, @address, @user, @password = name, protocol, address, user, password
-      @type = Type::ACTIVESYNC
-      @id = -1
-      @port = 443 # port not used for mobile connection
+      @name     = name
+      @protocol = protocol
+      @address  = address
+      @user     = user
+      @password = password
+      @type     = Type::ACTIVESYNC
+      @id       = -1
+      @port     = 443 # port not used for mobile connection
     end
   end
-  
+
   class MobilePowershellDiscoveryConnection < DiscoveryConnection
     # Create a new Mobile Powershell discovery connection.
     #
@@ -358,12 +349,17 @@ module Nexpose
     # @param [String] exchange_password Exchange password for exchange credentials on this connection.
     #
     def initialize(name, address, user, password, exchange_hostname, exchange_username, exchange_password)
-      @name, @address, @user, @password = name, address, user, password
-      @protocol = Protocol::HTTPS
-      @exchange_hostname, @exchange_username, @exchange_password = exchange_hostname, exchange_username, exchange_password
-      @type = Type::ACTIVESYNC_POWERSHELL
-      @id = -1
-      @port = 443 # port not used for mobile connection
+      @name              = name
+      @address           = address
+      @user              = user
+      @password          = password
+      @protocol          = Protocol::HTTPS
+      @exchange_hostname = exchange_hostname
+      @exchange_username = exchange_username
+      @exchange_password = exchange_password
+      @type              = Type::ACTIVESYNC_POWERSHELL
+      @id                = -1
+      @port              = 443 # Port not used for mobile connection
     end
   end
 
@@ -379,13 +375,17 @@ module Nexpose
     # @param [String] exchange_password Exchange password for exchange credentials on this connection.
     #
     def initialize(name, address, user, password, exchange_username, exchange_password)
-      @name, @address, @user, @password = name, address, user, password
-      @protocol = Protocol::HTTPS
-      @exchange_hostname = '' # nexpose will set to office365 server
-      @exchange_username, @exchange_password = exchange_username, exchange_password
-      @type = Type::ACTIVESYNC_OFFICE365
-      @id = -1
-      @port = 443 # port not used for mobile connection
+      @name              = name
+      @address           = address
+      @user              = user
+      @password          = password
+      @protocol          = Protocol::HTTPS
+      @exchange_hostname = '' # Nexpose will set to office365 server
+      @exchange_username = exchange_username
+      @exchange_password = exchange_password
+      @type              = Type::ACTIVESYNC_OFFICE365
+      @id                = -1
+      @port              = 443 # Port not used for mobile connection
     end
   end
 end
