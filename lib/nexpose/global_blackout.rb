@@ -18,7 +18,7 @@ module Nexpose
 
     def to_h
       {
-        blackouts: (@blackout || []).map { |blackout| blackout.to_h }
+        blackouts: (@blackout || []).map(&:to_h)
       }
     end
 
