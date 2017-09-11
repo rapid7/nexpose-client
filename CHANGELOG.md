@@ -1,5 +1,14 @@
 # Change Log
 
+## [v7.0.1](https://github.com/rapid7/nexpose-client/tree/v7.0.1) (2017-09-11)
+[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.0.0...v7.0.1)
+
+**Merged pull requests:**
+
+- Only Cleanup!! v3 [\#295](https://github.com/rapid7/nexpose-client/pull/295) ([sgreen-r7](https://github.com/sgreen-r7))
+- Revert "Only Cleanup!" [\#293](https://github.com/rapid7/nexpose-client/pull/293) ([sgreen-r7](https://github.com/sgreen-r7))
+- Only Cleanup! [\#292](https://github.com/rapid7/nexpose-client/pull/292) ([sgreen-r7](https://github.com/sgreen-r7))
+
 ## [v7.0.0](https://github.com/rapid7/nexpose-client/tree/v7.0.0) (2017-08-31)
 [Full Changelog](https://github.com/rapid7/nexpose-client/compare/v6.1.1...v7.0.0)
 
