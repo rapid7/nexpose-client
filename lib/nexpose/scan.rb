@@ -196,10 +196,12 @@ module Nexpose
     # Initiate a site scan.
     #
     # @param [Fixnum] site_id Site ID to scan.
+    # @param [Boolean] blackout_override Optional. Given suffencent permissions, force bypass blackout and start scan.
     # @return [Scan] Scan launch information.
     #
-    def scan_site(site_id)
-      xml      = make_xml('SiteScanRequest', 'site-id' => site_id)
+    def scan_site(site_id, blackout_override = false)
+      xml = make_xml('SiteScanRequest', 'site-id' => site_id)
+      xml.add_attributes({ 'force' => true }) if blackout_override
       response = execute(xml)
       Scan.parse(response.res) if response.success
     end
