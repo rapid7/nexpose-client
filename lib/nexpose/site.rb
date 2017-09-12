@@ -540,14 +540,16 @@ module Nexpose
     #
     # @param [Connection] connection Connection to console where scan will be launched.
     # @param [String] sync_id Optional synchronization token.
+    # @param [Boolean] blackout_override Optional. Given suffencent permissions, force bypass blackout and start scan.
     # @return [Scan] Scan launch information.
     #
-    def scan(connection, sync_id = nil)
+    def scan(connection, sync_id = nil, blackout_override = false)
       xml = REXML::Element.new('SiteScanRequest')
       xml.add_attributes({ 'session-id' => connection.session_id,
                            'site-id' => @id,
                            'sync-id' => sync_id })
 
+      xml.add_attributes({ 'force' => true }) if blackout_override
       response = connection.execute(xml, '1.1', timeout: 60)
       Scan.parse(response.res) if response.success
     end
