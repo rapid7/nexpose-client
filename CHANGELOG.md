@@ -1,5 +1,26 @@
 # Change Log
 
+## [Unreleased](https://github.com/rapid7/nexpose-client/tree/HEAD)
+
+[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.0.1...HEAD)
+
+**Fixed bugs:**
+
+- nsc.list\_vuln\_exceptions does not return site\_id as documented [\#250](https://github.com/rapid7/nexpose-client/issues/250)
+
+**Closed issues:**
+
+- support for encryption for recovery [\#290](https://github.com/rapid7/nexpose-client/issues/290)
+- Connection Timeout When Creating DynamicAssetGroup with large number of criteria [\#274](https://github.com/rapid7/nexpose-client/issues/274)
+- Vulnerability Exception 'approve' function applies vulnerability exception but throws a ruby exception [\#271](https://github.com/rapid7/nexpose-client/issues/271)
+- Add a global timeout parameter to Connection [\#269](https://github.com/rapid7/nexpose-client/issues/269)
+- Update Example Scripts [\#244](https://github.com/rapid7/nexpose-client/issues/244)
+
+**Merged pull requests:**
+
+- adding the ability to include a password when restoring a backup [\#298](https://github.com/rapid7/nexpose-client/pull/298) ([sgreen-r7](https://github.com/sgreen-r7))
+- Allow for Starting Scan during Blackout [\#297](https://github.com/rapid7/nexpose-client/pull/297) ([sgreen-r7](https://github.com/sgreen-r7))
+
 ## [v7.0.1](https://github.com/rapid7/nexpose-client/tree/v7.0.1) (2017-09-11)
 [Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.0.0...v7.0.1)
 
