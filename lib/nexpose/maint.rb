@@ -100,7 +100,7 @@ module Nexpose
     # @return [Boolean] Whether the request was received.
     #
     def restore(nsc, password = nil)
-      raise "Supplied Password is incorrect for restoring this Backup." if invalid_backup_password?(nsc, password)
+      raise 'Supplied Password is incorrect for restoring this Backup.' if invalid_backup_password?(nsc, password)
       parameters = { 'backupid' => @name,
                      'cmd' => 'restore',
                      'targetTask' => 'backupRestore',
