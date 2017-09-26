@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/rapid7/nexpose-client/tree/HEAD)
-
-[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.0.1...HEAD)
+## [v7.1.0](https://github.com/rapid7/nexpose-client/tree/v7.1.0) (2017-09-26)
+[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.0.1...v7.1.0)
 
 **Fixed bugs:**
 
@@ -10,11 +9,11 @@
 
 **Closed issues:**
 
-- support for encryption for recovery [\#290](https://github.com/rapid7/nexpose-client/issues/290)
 - Connection Timeout When Creating DynamicAssetGroup with large number of criteria [\#274](https://github.com/rapid7/nexpose-client/issues/274)
 - Vulnerability Exception 'approve' function applies vulnerability exception but throws a ruby exception [\#271](https://github.com/rapid7/nexpose-client/issues/271)
 - Add a global timeout parameter to Connection [\#269](https://github.com/rapid7/nexpose-client/issues/269)
 - Update Example Scripts [\#244](https://github.com/rapid7/nexpose-client/issues/244)
+- support for encryption for recovery [\#290](https://github.com/rapid7/nexpose-client/issues/290)
 
 **Merged pull requests:**
 
