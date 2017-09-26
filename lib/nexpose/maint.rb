@@ -145,7 +145,7 @@ module Nexpose
     end
 
     def correct_backup_password?(nsc, password)
-      raise 'This Backup files requires a Password. Please include a password during the restore command.' if password.nil?
+      raise 'This Backup file requires a Password. Please include a password during the restore command.' if password.nil?
       resp = Nexpose::AJAX.post(nsc, "/data/admin/backups/password?backupID=#{name}&password=#{password}", nil, Nexpose::AJAX::CONTENT_TYPE::JSON)
       resp == 'true'
     end
