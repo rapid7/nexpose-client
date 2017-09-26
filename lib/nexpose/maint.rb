@@ -96,12 +96,15 @@ module Nexpose
     # It will restart the console after acknowledging receiving the request.
     #
     # @param [Connection] nsc An active connection to a Nexpose console.
+    # @param [String] (Optional) The password to use when restoring the backup.
     # @return [Boolean] Whether the request was received.
     #
-    def restore(nsc)
+    def restore(nsc, password = nil)
+      raise 'Supplied Password is incorrect for restoring this Backup.' if invalid_backup_password?(nsc, password)
       parameters = { 'backupid' => @name,
                      'cmd' => 'restore',
-                     'targetTask' => 'backupRestore' }
+                     'targetTask' => 'backupRestore',
+                     'password' => password }
       xml = AJAX.form_post(nsc, '/admin/global/maintenance/maintCmd.txml', parameters)
       if !!(xml =~ /succeded="true"/)
         nsc._maintenance_restart
@@ -129,5 +132,23 @@ module Nexpose
           hash['Platform-Independent'],
           hash['Size'])
     end
+
+    private
+
+    def invalid_backup_password?(nsc, password)
+      !correct_backup_password?(nsc, password) if backup_need_password?(nsc)
+    end
+
+    def backup_need_password?(nsc)
+      resp = Nexpose::AJAX.get(nsc, '/data/admin/backups/password', Nexpose::AJAX::CONTENT_TYPE::JSON, 'backupID' => name)
+      resp == 'true'
+    end
+
+    def correct_backup_password?(nsc, password)
+      raise 'This Backup file requires a Password. Please include a password during the restore command.' if password.nil?
+      resp = Nexpose::AJAX.post(nsc, "/data/admin/backups/password?backupID=#{name}&password=#{password}", nil, Nexpose::AJAX::CONTENT_TYPE::JSON)
+      resp == 'true'
+    end
+
   end
 end
