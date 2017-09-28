@@ -157,7 +157,7 @@ module Nexpose
     def self.load(nsc, name, scope = Scope::SILO)
       xml = nsc.make_xml('RoleDetailsRequest')
       xml.add_element('Role', { 'name' => name, 'scope' => scope })
-      response = APIRequest.execute(nsc.url, xml, '1.2')
+      response = APIRequest.execute(nsc.url, xml, '1.2', { timeout: nsc.timeout, open_timeout: nsc.open_timeout })
 
       if response.success
         elem = REXML::XPath.first(response.res, 'RoleDetailsResponse/Role/')
@@ -179,7 +179,7 @@ module Nexpose
       end
       xml.add_element(as_xml)
 
-      response  = APIRequest.execute(nsc.url, xml, '1.2')
+      response  = APIRequest.execute(nsc.url, xml, '1.2', { timeout: nsc.timeout, open_timeout: nsc.open_timeout })
       xml       = REXML::XPath.first(response.res, 'RoleCreateResponse')
       @id       = xml.attributes['id'].to_i unless @existing
       @existing = true
