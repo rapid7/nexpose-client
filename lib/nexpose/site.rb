@@ -550,7 +550,7 @@ module Nexpose
                            'sync-id' => sync_id })
 
       xml.add_attributes({ 'force' => true }) if blackout_override
-      response = connection.execute(xml, '1.1', timeout: 60)
+      response = connection.execute(xml, '1.1', timeout: connection.timeout)
       Scan.parse(response.res) if response.success
     end
   end

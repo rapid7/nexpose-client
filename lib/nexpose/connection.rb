@@ -57,11 +57,11 @@ module Nexpose
     attr_reader :response_xml
     # The trust store to validate connections against if any
     attr_reader :trust_store
-    # The main HTTP read_timeout value
+    # The main HTTP read_timeout value, in seconds
     # For more information visit the link below:
     # https://ruby-doc.org/stdlib/libdoc/net/http/rdoc/Net/HTTP.html#read_timeout-attribute-method
     attr_accessor :timeout
-    # The optional HTTP open_timeout value
+    # The optional HTTP open_timeout value, in seconds
     # For more information visit the link below:
     # http://ruby-doc.org/stdlib/libdoc/net/http/rdoc/Net/HTTP.html#open_timeout-attribute-method
     attr_accessor :open_timeout
