@@ -1,5 +1,12 @@
 # Change Log
 
+## [v7.1.1](https://github.com/rapid7/nexpose-client/tree/v7.1.1) (2017-09-28)
+[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.1.0...v7.1.1)
+
+**Merged pull requests:**
+
+- Some methods were not honoring custom Connection Timeouts [\#300](https://github.com/rapid7/nexpose-client/pull/300) ([sgreen-r7](https://github.com/sgreen-r7))
+
 ## [v7.1.0](https://github.com/rapid7/nexpose-client/tree/v7.1.0) (2017-09-26)
 [Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.0.1...v7.1.0)
 
