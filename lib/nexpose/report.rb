@@ -207,6 +207,16 @@ module Nexpose
       filters << Filter.new(type, id)
     end
 
+    # Add the common vulnerability status filters as used by the UI for export
+    # and jasper report templates (the default filters). Recommended for reports
+    # that do not require 'not vulnerable' results to be included. The following
+    # statuses are added: vulnerable-exploted, vulnerable-version, and potential.
+    def add_common_vuln_status_filters
+      ['vulnerable-exploited', 'vulnerable-version', 'potential'].each do |vuln_status|
+        filters << Filter.new('vuln-status', vuln_status)
+      end
+    end
+
     def to_xml
       xml = %(<AdhocReportConfig format="#{@format}" template-id="#{@template_id}")
       xml << %( owner="#{@owner}") if @owner
