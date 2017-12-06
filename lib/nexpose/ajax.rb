@@ -149,6 +149,7 @@ module Nexpose
     def headers(nsc, request)
       request.add_field('nexposeCCSessionID', nsc.session_id)
       request.add_field('Cookie', "nexposeCCSessionID=#{nsc.session_id}")
+      request.add_field('X-Requested-With', 'XMLHttpRequest')
     end
 
     def request(nsc, request, timeout = nil)

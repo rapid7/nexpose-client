@@ -58,6 +58,7 @@ module Eso
     def add_nexpose_session(request:)
       request.add_field('nexposeCCSessionID', @nexpose_console.session_id)
       request.add_field('Cookie', "nexposeCCSessionID=#{@nexpose_console.session_id}")
+      request.add_field('X-Requested-With', 'XMLHttpRequest')
     end
 
     def request(request:, timeout: nil)
