@@ -97,7 +97,12 @@ module Eso
     def self.load(array)
       property = array.first
       value_class = array.last['valueClass']
-      value = array.last['value']
+      value =
+          if value_class == 'Array'
+            array.last['items'].map{|item| item['value']}
+          else
+            array.last['value']
+          end
       self.new(property, value_class, value)
     end
   end
