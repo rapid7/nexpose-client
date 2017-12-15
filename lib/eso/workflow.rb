@@ -15,19 +15,18 @@ module Eso
     # The time the workflow was created in milliseconds since epoch
     attr_accessor :timeCreated
 
-
     # Constructor for the workflow
     #
     # @param [String] id ID of the workflow.
     # @param [String] name Name of the workflow.
     # @param [Array] steps Array of the steps that this workflow takes.
-    # @param [Fixnum] timeCreated The time the workflow was created in millis since epoch
+    # @param [Fixnum] time_created The time the workflow was created in millis since epoch
     #
-    def initialize(id: nil, name:, steps: [], timeCreated: (Time.now.strftime('%s').to_i * 1000) )
+    def initialize(id: nil, name:, steps: [], time_created: (Time.now.strftime('%s').to_i * 1000))
       @id = id
       @name = name
       @steps = steps
-      @timeCreated = timeCreated
+      @timeCreated = time_created
     end
 
     # Load an existing workflow from the API.
@@ -84,10 +83,10 @@ module Eso
     #
     def to_json
       hash = self.to_hash
-      steps = hash["steps"]
+      steps = hash['steps']
       hashified_steps = []
-      steps.each {|step| hashified_steps << step.to_hash}
-      hash["steps"] = hashified_steps
+      steps.each { |step| hashified_steps << step.to_hash }
+      hash['steps'] = hashified_steps
       hash.to_json
     end
 
@@ -97,12 +96,12 @@ module Eso
     # @return [Hash{}] Hash interpretation of this workflow.
     def to_hash
       hash = {}
-      instance_variables.each {|var| hash[var.to_s.delete("@")] = instance_variable_get(var)}
+      instance_variables.each { |var| hash[var.to_s.delete('@')] = instance_variable_get(var) }
       hash
     end
 
     # Representation of state of a workflow or integration option. Taken from service-orchestration State.java
-    class State
+    module State
       # Workflow or an integration option is configured and ready to accept events
       READY = 'ready'
 
@@ -119,8 +118,7 @@ module Eso
       ERROR = 'error'
     end
 
-    class StateHistory < Struct.new(:message, :state, :startTime)
-    end
+    StateHistory = Struct.new(:message, :state, :startTime)
 
     class History < Workflow
       # The current state of the workflow
@@ -137,11 +135,11 @@ module Eso
       # @param [String] id ID of the workflow.
       # @param [String] name Name of the workflow.
       # @param [Array] steps Array of the steps that this workflow takes.
-      # @param [Fixnum] timeCreated The time the workflow was created in millis since epoch
+      # @param [Fixnum] time_created The time the workflow was created in millis since epoch
       # @param [Eso::Workflow::State] state The current state of the workflow
       # @param [String] message The most recent message
-      def initialize (id:, name:, timeCreated:, steps:, state:, message:, history:)
-        super(id: id, name: name, timeCreated: timeCreated, steps: steps)
+      def initialize(id:, name:, time_created:, steps:, state:, message:, history:)
+        super(id: id, name: name, timeCreated: time_created, steps: steps)
         @state = state
         @message = message
         @state_histories = history
