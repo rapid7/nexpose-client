@@ -16,7 +16,6 @@ require 'eso/nexpose'
 require 'eso/service'
 require 'eso/step'
 require 'eso/step_configuration'
-require 'eso/version'
 require 'eso/workflow'
 
 module Eso
