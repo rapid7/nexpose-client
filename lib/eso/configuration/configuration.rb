@@ -36,7 +36,8 @@ module Eso
     # @param [String] name The name of the property to retrieve
     # @return [String] The value of the property
     def property(name)
-      properties.find{|attr| attr.property == name}.value
+      prop = properties.find{|attr| attr.property == name}
+      prop.value unless prop.nil?
     end
 
     # Update a Configuration attribute property value given the name of the property
