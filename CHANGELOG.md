@@ -1,5 +1,21 @@
 # Change Log
 
+## [v7.2.0](https://github.com/rapid7/nexpose-client/tree/v7.2.0) (2018-01-17)
+[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.1.1...v7.2.0)
+
+**Closed issues:**
+
+- list\_vuln\_exceptions returns API error [\#312](https://github.com/rapid7/nexpose-client/issues/312)
+- Credentials failure after using Site.copy  [\#307](https://github.com/rapid7/nexpose-client/issues/307)
+- XML serialization for VulnException incorrect due to extra whitespace  [\#304](https://github.com/rapid7/nexpose-client/issues/304)
+- Nexpose timeout does not seem to work [\#299](https://github.com/rapid7/nexpose-client/issues/299)
+
+**Merged pull requests:**
+
+- Update vuln exceptions to use generally available API version [\#313](https://github.com/rapid7/nexpose-client/pull/313) ([mhuffman-r7](https://github.com/mhuffman-r7))
+- Add a method to add common vuln status filters to report configs [\#303](https://github.com/rapid7/nexpose-client/pull/303) ([gschneider-r7](https://github.com/gschneider-r7))
+- Updated for Ruby 2.4 Support [\#301](https://github.com/rapid7/nexpose-client/pull/301) ([twosevenzero](https://github.com/twosevenzero))
+
 ## [v7.1.1](https://github.com/rapid7/nexpose-client/tree/v7.1.1) (2017-09-28)
 [Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.1.0...v7.1.1)
 
