@@ -24,14 +24,14 @@ module Nexpose
 
       req = Nexpose::AJAX.get(self, "/api/3/vulnerability_exceptions?size=#{url_size}&page=#{url_page}")
       data = JSON.parse(req, object_class: OpenStruct)
-      ajax_data << data._resources
+      ajax_data << data.resources
 
       if data.links.count > 1
         loop do
           url_page += 1
           req = Nexpose::AJAX.get(self, "/api/3/vulnerability_exceptions?size=#{url_size}&page=#{url_page}")
           data = JSON.parse(req, object_class: OpenStruct)
-          ajax_data << data._resources
+          ajax_data << data.resources
           links = data.links.select { |ll| ['self', 'last'].include?(ll.rel) }
           break if links[0].href == links[1].href
         end
