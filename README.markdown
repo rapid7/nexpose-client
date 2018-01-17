@@ -11,6 +11,8 @@ This gem is heavily used for internal, automated testing of the Nexpose product.
 
 Since version 1.0 nexpose-client uses [Semantic Versioning](http://semver.org/). This allows for confident use of the [pessimistic operator](https://robots.thoughtbot.com/rubys-pessimistic-operator) in scripts or larger ruby projects.
 
+Install the gem with Rubygems: `gem install nexpose`
+
 ## Release Notes
 
 Release notes are available on the [Releases](https://github.com/rapid7/nexpose-client/releases) page.
