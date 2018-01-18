@@ -125,6 +125,11 @@ module Eso
 
   module ConfigManagerMessages
     module TestConfig
+      AUTH_FAILED_AWS = 'Could not authenticate to Amazon Web Services.'
+
+      # Actual message will list out the bad ARNs
+      AUTH_FAILED_AWS_ARN = /Could not authenticate to Amazon Web Services with the following ARNs/
+
       CONNECTION_SUCCESSFUL = 'The connection to the external service was successful.'
 
       # Applies to invalid user, password, wrong protocol, can't reach server, bad base or search query
