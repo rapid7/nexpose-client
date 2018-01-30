@@ -125,17 +125,21 @@ module Eso
 
   module ConfigManagerMessages
     module TestConfig
-      AUTH_FAILED_AWS = 'Could not authenticate to Amazon Web Services.'
-
+      AUTH_FAILED_AWS       = 'Could not authenticate to Amazon Web Services.'
       # Actual message will list out the bad ARNs
-      AUTH_FAILED_AWS_ARN = /Could not authenticate to Amazon Web Services with the following ARNs/
+      AUTH_FAILED_AWS_ARN   = /Could not authenticate to Amazon Web Services with the following ARNs/
 
       CONNECTION_SUCCESSFUL = 'The connection to the external service was successful.'
-
       # Applies to invalid user, password, wrong protocol, can't reach server, bad base or search query
-      CONNECTION_FAILED = 'The connection to the external service failed.'
+      CONNECTION_FAILED     = 'The connection to the external service failed.'
 
-      INVALID_FIELDS = 'The configuration had invalid fields.'
+      INVALID_FIELDS        = 'The configuration had invalid fields.'
+
+      RETRY_AD              = 'Failed to reach out to the Active Directory service, will try again.'
+      RETRY_AWS             = 'Failed to reach out to Amazon Web Services, will try again.'
+      RETRY_AZURE           = 'Failed to reach out to the Azure service, will try again.'
+      RETRY_DXL             = 'The DXL connection is currently down and the connection is in retry status.'
+      RETRY_EPO             = 'Failed to reach out to the ePO service, will try again.'
     end
   end
 end
