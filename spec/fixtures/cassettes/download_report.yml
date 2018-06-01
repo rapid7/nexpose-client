@@ -1,0 +1,95 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://nexpose.local:3780/api/1.1/xml
+    body:
+      encoding: UTF-8
+      string: "<LoginRequest password='johndoe' sync-id='0' user-id='johndoe'></LoginRequest>"
+    headers:
+      Content-Type:
+      - text/xml
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Ua-Compatible:
+      - IE=edge,chrome=1
+      Set-Cookie:
+      - JSESSIONID=6D064F67374C1663E32D088987E90ED5; Path=/; Secure; HttpOnly
+      Date:
+      - Fri, 27 Mar 2015 19:44:40 GMT
+      Server:
+      - NSC/0.6.4 (JVM)
+      Cache-Control:
+      - no-cache; max-age=0
+      Pragma:
+      - no-cache
+      Content-Type:
+      - application/xml;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        <LoginResponse success="1" session-id="8CD4D7B7E0A7FABFA85C45D37AC952640CE471B3"/>
+    http_version:
+  recorded_at: Fri, 27 Mar 2015 19:44:40 GMT
+- request:
+    method: get
+    uri: https://nexpose.local:3780/reports/00000001/00000002/report.xml
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Cookie:
+      - nexposeCCSessionID=XXX
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Ua-Compatible:
+      - IE=edge,chrome=1
+      X-Content-Type-Options:
+      - nosniff
+      X-Xss-Protection:
+      - 1; mode=block
+      Cache-Control:
+      - no-store, must-revalidate
+      Content-Disposition:
+      - filename=report.xml
+      Content-Type:
+      - application/xml;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      Date:
+      - Thu, 25 Aug 2016 15:37:38 GMT
+      Server:
+      - Security Console
+    body:
+      encoding: ASCII-8BIT
+      string: "<NexposeReport version=\"2.0\"></NexposeReport>"
+    http_version:
+  recorded_at: Thu, 25 Aug 2016 15:37:39 GMT
