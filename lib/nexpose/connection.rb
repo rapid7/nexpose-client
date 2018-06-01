@@ -143,11 +143,15 @@ module Nexpose
         http.cert_store = @trust_store
       end
       headers = { 'Cookie' => "nexposeCCSessionID=#{@session_id}" }
-      resp    = http.get(uri.to_s, headers)
 
       if file_name
-        ::File.open(file_name, 'wb') { |file| file.write(resp.body) }
+        http.request_get(uri.to_s, headers) do |resp|
+          ::File.open(file_name, 'wb') do |file|
+            resp.read_body { |chunk| file.write(chunk) }
+          end
+        end
       else
+        resp = http.get(uri.to_s, headers)
         resp.body
       end
     end
