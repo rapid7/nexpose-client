@@ -14,7 +14,7 @@ describe Nexpose::Connection, :with_api_login do
     end
 
     it 'downloads report with file name' do
-      tf = Tempfile.new
+      tf = Tempfile.new('download_spec')
       path = tf.path
       tf.close
       tf.unlink
@@ -31,7 +31,7 @@ describe Nexpose::Connection, :with_api_login do
     end
 
     it 'downloads report with file object' do
-      tf = Tempfile.new
+      tf = Tempfile.new('download_spec')
 
       begin
         VCR.use_cassette('download_report') do
