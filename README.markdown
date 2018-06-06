@@ -1,5 +1,10 @@
+# DEPRECATED
+The [RESTful API for the Nexpose/InsightVM Security Console](https://help.rapid7.com/insightvm/en-us/api/index.html) has rendered this library obsolete. If you require a Ruby library for that API you can use a [generated client](https://github.com/rapid7/vm-console-client-ruby). Clients for other languages can be generated from the Swagger specification. Note that generated clients are not officially supported or maintained by Rapid7.
+
+While this project is no longer under active development, it is still maintained by Rapid7 for internal testing needs. Pull requests will continue to be reviewed and accepted, and new versions published as requested.
+
 # Nexpose-Client
-[![Gem Version](https://badge.fury.io/rb/nexpose.svg)](http://badge.fury.io/rb/nexpose) [![Build Status](https://travis-ci.org/rapid7/nexpose-client.svg?branch=master)](https://travis-ci.org/rapid7/nexpose-client) [![Test Coverage](https://codeclimate.com/github/rapid7/nexpose-client/badges/coverage.svg)](https://codeclimate.com/github/rapid7/nexpose-client) [![Inline docs](http://inch-ci.org/github/rapid7/nexpose-client.svg?branch=master)](http://inch-ci.org/github/rapid7/nexpose-client) [![Code Climate](https://codeclimate.com/github/rapid7/nexpose-client/badges/gpa.svg)](https://codeclimate.com/github/rapid7/nexpose-client)
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/) [![Gem Version](https://badge.fury.io/rb/nexpose.svg)](http://badge.fury.io/rb/nexpose) [![Build Status](https://travis-ci.org/rapid7/nexpose-client.svg?branch=master)](https://travis-ci.org/rapid7/nexpose-client) [![Test Coverage](https://codeclimate.com/github/rapid7/nexpose-client/badges/coverage.svg)](https://codeclimate.com/github/rapid7/nexpose-client) [![Inline docs](http://inch-ci.org/github/rapid7/nexpose-client.svg?branch=master)](http://inch-ci.org/github/rapid7/nexpose-client) [![Code Climate](https://codeclimate.com/github/rapid7/nexpose-client/badges/gpa.svg)](https://codeclimate.com/github/rapid7/nexpose-client)
 
 This is the official gem package for the Ruby Nexpose API client library.
 
