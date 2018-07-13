@@ -25,7 +25,7 @@ module Eso
       hash = {:configId => @config_id,
               :serviceName => @service_name,
               :configName => @config_name,
-              :configurationAttributes => {:valueClass => 'Object',
+              :configurationAttributes => {:valueClass => Eso::Values::OBJECT,
                                            :objectType => 'service_configuration',
                                            :properties => []}}
       properties.each {|prop| hash[:configurationAttributes][:properties] << prop.to_hash}
@@ -88,7 +88,14 @@ module Eso
       prop = @property.to_sym
       hash = {prop => {}}
       hash[prop]['valueClass'] = @value_class
-      hash[prop]['value'] = @value
+      if @value_class == Eso::Values::ARRAY
+        items = []
+        @value.each{|v| items<< {'value' => v, 'valueClass' => Eso::Values::STRING}}
+        hash[prop]['items'] = items
+      else
+        hash[prop]['value'] = @value
+      end
+      hash
     end
 
     # Load a ConfigurationAttribute object from an Array
@@ -99,7 +106,7 @@ module Eso
       property = array.first
       value_class = array.last['valueClass']
       value =
-          if value_class == 'Array'
+          if value_class == Eso::Values::ARRAY
             array.last['items'].map{|item| item['value']}
           else
             array.last['value']
