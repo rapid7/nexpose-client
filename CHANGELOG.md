@@ -1,5 +1,18 @@
 # Change Log
 
+## [v7.2.1](https://github.com/rapid7/nexpose-client/tree/v7.2.1) (2018-06-01)
+[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.2.0...v7.2.1)
+
+**Closed issues:**
+
+- api/3/assets/{id}/software returns HTTP.500 error [\#319](https://github.com/rapid7/nexpose-client/issues/319)
+- Unknown SSH Handshake error [\#308](https://github.com/rapid7/nexpose-client/issues/308)
+- Use rex-mime gem instead of bundled "rexlite/mime" dependency [\#253](https://github.com/rapid7/nexpose-client/issues/253)
+
+**Merged pull requests:**
+
+- When passed a filename, download a report in chunks [\#321](https://github.com/rapid7/nexpose-client/pull/321) ([toofishes](https://github.com/toofishes))
+
 ## [v7.2.0](https://github.com/rapid7/nexpose-client/tree/v7.2.0) (2018-01-17)
 [Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.1.1...v7.2.0)
 
