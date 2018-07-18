@@ -49,6 +49,13 @@ module Eso
       properties.find{|attr| attr.property == name}.value = value
     end
 
+    # Delete a Configuration attribute property value given the name of the property
+    #
+    # @param [String] name The name of the property to update
+    def delete_property(name)
+      properties.delete_if{|attr| attr.property == name}
+    end
+
     # Load a Configuration object from a Hash
     #
     # @param [Hash] hash The Hash containing the Configuration object
