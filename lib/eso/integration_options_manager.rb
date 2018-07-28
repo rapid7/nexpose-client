@@ -114,6 +114,19 @@ module Eso
       IntegrationOption.new(name: name, steps: [step1, step2])
     end
 
+    def self.build_sync_aws_assets_with_tags_option(name:, discovery_conn_id:, site_id: nil, tags: '')
+      step1 = Step.new(service_name: ServiceNames::AWS, type_name: StepNames::DISCOVER_AWS_ASSETS)
+                  .add_property(StepConfiguration::ConfigParamProperties::DISCOVERY_CONFIG_ID, discovery_conn_id)
+                  .add_property(StepConfiguration::ConfigParamProperties::IMPORT_TAGS, true)
+                  .add_property(StepConfiguration::ConfigParamProperties::EXCLUDE_ASSETS_WITH_TAGS, "")
+                  .add_property(StepConfiguration::ConfigParamProperties::ONLY_IMPORT_THESE_TAGS, tags)
+      step2 = Step.new(service_name: ServiceNames::NEXPOSE, type_name: StepNames::SYNC_EXTERNAL, previous_type_name: step1.type_name)
+
+      #This isn't always known immediately, which is why we have IntegrationOption.site_id=
+      step2.add_property(StepConfiguration::ConfigParamProperties::SITE_ID, site_id) if site_id
+      IntegrationOption.new(name: name, steps: [step1, step2])
+    end
+
     def self.build_sync_azure_assets_with_tags_option(name:, discovery_conn_id:, site_id: nil, tags: '')
       step1 = Step.new(service_name: ServiceNames::AZURE, type_name: StepNames::DISCOVER_AZURE_ASSETS)
                   .add_property(StepConfiguration::ConfigParamProperties::DISCOVERY_CONFIG_ID, discovery_conn_id)
