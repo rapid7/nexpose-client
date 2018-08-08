@@ -104,6 +104,16 @@ module Eso
       IntegrationOption.new(name: name, steps: [step1, step2])
     end
 
+    def self.build_verify_aws_targets_option(name:, discovery_conn_id:)
+      step1 = Step.new(service_name: ServiceNames::AWS, type_name: StepNames::VERIFY_AWS_ASSETS)
+                  .add_property(StepConfiguration::ConfigParamProperties::DISCOVERY_CONFIG_ID, discovery_conn_id)
+      step2 = Step.new(service_name: ServiceNames::NEXPOSE, type_name: StepNames::VERIFY_EXTERNAL_TARGETS, previous_type_name: step1.type_name)
+      step3 = Step.new(service_name: ServiceNames::AWS, type_name: StepNames::VERIFY_AWS_ASSETS)
+                  .add_property(StepConfiguration::ConfigParamProperties::DISCOVERY_CONFIG_ID, discovery_conn_id)
+
+      IntegrationOption.new(name: name, steps: [step1, step2, step3])
+    end
+
     def self.build_sync_azure_assets_option(name:, discovery_conn_id:, site_id: nil)
       step1 = Step.new(service_name: ServiceNames::AZURE, type_name: StepNames::DISCOVER_AZURE_ASSETS)
                   .add_property(StepConfiguration::ConfigParamProperties::DISCOVERY_CONFIG_ID, discovery_conn_id)
@@ -127,12 +137,12 @@ module Eso
       IntegrationOption.new(name: name, steps: [step1, step2])
     end
 
-    def self.build_sync_azure_assets_with_tags_option(name:, discovery_conn_id:, site_id: nil, tags: '')
+    def self.build_sync_azure_assets_with_tags_option(name:, discovery_conn_id:, site_id: nil, only_tags: '', exclude_tags: '')
       step1 = Step.new(service_name: ServiceNames::AZURE, type_name: StepNames::DISCOVER_AZURE_ASSETS)
                   .add_property(StepConfiguration::ConfigParamProperties::DISCOVERY_CONFIG_ID, discovery_conn_id)
                   .add_property(StepConfiguration::ConfigParamProperties::IMPORT_TAGS, true)
-                  .add_property(StepConfiguration::ConfigParamProperties::EXCLUDE_ASSETS_WITH_TAGS, "")
-                  .add_property(StepConfiguration::ConfigParamProperties::ONLY_IMPORT_THESE_TAGS, tags)
+                  .add_property(StepConfiguration::ConfigParamProperties::EXCLUDE_ASSETS_WITH_TAGS, exclude_tags)
+                  .add_property(StepConfiguration::ConfigParamProperties::ONLY_IMPORT_THESE_TAGS, only_tags)
       step2 = Step.new(service_name: ServiceNames::NEXPOSE, type_name: StepNames::SYNC_EXTERNAL, previous_type_name: step1.type_name)
 
       #This isn't always known immediately, which is why we have IntegrationOption.site_id=

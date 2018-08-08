@@ -32,6 +32,8 @@ module Eso
     SCAN_IN_SITE = 'scan-in-site'
     SYNC_EXTERNAL = 'sync-external-assets'
     TAG = 'tag'
+    VERIFY_AWS_ASSETS = 'verify-aws-targets'
+    VERIFY_EXTERNAL_TARGETS = 'verify-external-targets'
     VULN_DETAILS = 'vulnerability-details'
     VULN_DETAILS_REQUEST = 'vulnerability-details-request'
   end
@@ -66,6 +68,7 @@ module Eso
             StepNames::SCAN_IN_SITE,
             StepNames::SYNC_EXTERNAL]
     TAG = [StepNames::TAG]
+    VERIFY = [StepNames::DISCOVER_AWS_ASSETS]
   end
 
   module Filters
