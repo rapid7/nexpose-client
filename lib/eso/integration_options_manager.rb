@@ -107,8 +107,10 @@ module Eso
     def self.build_verify_aws_targets_option(name:, discovery_conn_id:)
       step1 = Step.new(service_name: ServiceNames::AWS, type_name: StepNames::VERIFY_AWS_ASSETS)
                   .add_property(StepConfiguration::ConfigParamProperties::DISCOVERY_CONFIG_ID, discovery_conn_id)
-      step2 = Step.new(service_name: ServiceNames::NEXPOSE, type_name: StepNames::VERIFY_EXTERNAL_TARGETS, previous_type_name: step1.type_name)
-      step3 = Step.new(service_name: ServiceNames::AWS, type_name: StepNames::VERIFY_AWS_ASSETS)
+      step2 = Step.new(service_name: ServiceNames::NEXPOSE, type_name: StepNames::VERIFY_EXTERNAL_TARGETS,
+                       previous_type_name: step1.type_name)
+      step3 = Step.new(service_name: ServiceNames::AWS, type_name: StepNames::VERIFY_AWS_ASSETS,
+                       previous_type_name: step2.type_name)
                   .add_property(StepConfiguration::ConfigParamProperties::DISCOVERY_CONFIG_ID, discovery_conn_id)
 
       IntegrationOption.new(name: name, steps: [step1, step2, step3])
