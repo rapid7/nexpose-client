@@ -25,7 +25,7 @@ module Eso
       @previousTypeName = previousTypeName
       @configurationParams = configurationParams ? configurationParams : {
           :valueClass => Values::OBJECT,
-          :objectType => typeName,
+          :objectType => 'params',
           :properties => {}}
       @workflowID = workflowID if workflowID
     end
