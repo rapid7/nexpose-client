@@ -55,7 +55,7 @@ module Nexpose
       IPAddr.new(ips[1]) if ips[1]
       IPRange.new(ips[0], ips[1])
     rescue ArgumentError => e
-      if e.message == 'invalid address'
+      if e.message =~ /invalid address/
         HostName.new(asset)
       else
         raise "Unable to parse asset: '#{asset}'. #{e.message}"
