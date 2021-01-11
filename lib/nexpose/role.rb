@@ -24,6 +24,7 @@ module Nexpose
       ADD_USERS_TO_REPORT         = 'AddUsersToReport'
       MANAGE_POLICIES             = 'ManagePolicies'
       MANAGE_TAGS                 = 'ManageTags'
+      MANAGE_ADVPOLICIES          = 'ManageAdvPolicies'
     end
 
     module Site
