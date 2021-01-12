@@ -11,15 +11,17 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master ]
+  schedule:
+    - '0 0 1 * *'
 
 jobs:
   test:
-
+    name: 'Ruby: ${{ matrix.ruby-version }}'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        ruby-version: ['2.5', '2.6', '2.7', '3.0']
+        ruby-version: ['2.3', '2.4', '2.5', '2.6', '2.7', '3.0']
 
     steps:
     - uses: actions/checkout@v2
@@ -29,4 +31,4 @@ jobs:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - name: Run tests
-      run: bundle exec rspec --color --format=documentation
+      run: bundle exec rspec
