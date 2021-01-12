@@ -11,6 +11,8 @@ on:
   push:
     branches: [ master ]
   pull_request:
+    branches:
+      - '*'
   schedule:
     - '0 0 1 * *'
 
