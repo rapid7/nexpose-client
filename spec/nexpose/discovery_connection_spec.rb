@@ -8,7 +8,7 @@ describe Nexpose::DiscoveryConnection do
       end
 
       it 'sends a request to create the connection' do
-        xml = REXML::Element.new(%(<DiscoveryConnectionCreateResponse id="1"></DiscoveryConnectionCreateResponse>))
+        xml = REXML::Document.new(%(<DiscoveryConnectionCreateResponse id="1"></DiscoveryConnectionCreateResponse>))
        response = double(:response, res: xml, success: true)
         nexpose_connection = Nexpose::Connection.new('example-host.local', 'johndoe', 'password123')
         expect(nexpose_connection).to receive(:make_xml)
@@ -30,7 +30,7 @@ describe Nexpose::DiscoveryConnection do
       end
 
       it 'sends a request to update the connection' do
-        xml = REXML::Element.new(%(<DiscoveryConnectionUpdateResponse id="1"></DiscoveryConnectionUpdateResponse>))
+        xml = REXML::Document.new(%(<DiscoveryConnectionUpdateResponse id="1"></DiscoveryConnectionUpdateResponse>))
         response = double(:response, res: xml, success: true)
         nexpose_connection = Nexpose::Connection.new('example-host.local', 'johndoe', 'password123')
         expect(nexpose_connection).to receive(:make_xml)
