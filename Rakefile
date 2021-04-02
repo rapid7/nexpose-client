@@ -12,4 +12,6 @@ GitHubChangelogGenerator::RakeTask.new :changelog do |config|
   if token.nil?
     warn "!!WARNING!! Missing Github Token Environment Variable. Fix before you run rake changelog. !!WARNING!!"
   end
+  config.user = 'rapid7'
+  config.project = 'nexpose-client'
 end
