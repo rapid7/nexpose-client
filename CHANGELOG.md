@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/rapid7/nexpose-client/tree/HEAD)
+## [v7.3.0](https://github.com/rapid7/nexpose-client/tree/v7.3.0) (2021-04-02)
 
-[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.2.1...HEAD)
+[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.2.1...v7.3.0)
 
 **Fixed bugs:**
 
@@ -79,6 +79,7 @@
 **Merged pull requests:**
 
 - adding the ability to include a password when restoring a backup [\#298](https://github.com/rapid7/nexpose-client/pull/298) ([sgreen-r7](https://github.com/sgreen-r7))
+- Allow for Starting Scan during Blackout [\#297](https://github.com/rapid7/nexpose-client/pull/297) ([sgreen-r7](https://github.com/sgreen-r7))
 
 ## [v7.0.1](https://github.com/rapid7/nexpose-client/tree/v7.0.1) (2017-09-11)
 
@@ -86,7 +87,6 @@
 
 **Merged pull requests:**
 
-- Allow for Starting Scan during Blackout [\#297](https://github.com/rapid7/nexpose-client/pull/297) ([sgreen-r7](https://github.com/sgreen-r7))
 - Only Cleanup!! v3 [\#295](https://github.com/rapid7/nexpose-client/pull/295) ([sgreen-r7](https://github.com/sgreen-r7))
 - Revert "Only Cleanup!" [\#293](https://github.com/rapid7/nexpose-client/pull/293) ([sgreen-r7](https://github.com/sgreen-r7))
 - Only Cleanup! [\#292](https://github.com/rapid7/nexpose-client/pull/292) ([sgreen-r7](https://github.com/sgreen-r7))
@@ -206,7 +206,6 @@
 **Merged pull requests:**
 
 - Add Unique ID support to Asset and ExternalAsset [\#241](https://github.com/rapid7/nexpose-client/pull/241) ([gschneider-r7](https://github.com/gschneider-r7))
-- api delete fix [\#230](https://github.com/rapid7/nexpose-client/pull/230) ([dmurray-r7](https://github.com/dmurray-r7))
 - first attempt for fix of hash failure of blackouts [\#226](https://github.com/rapid7/nexpose-client/pull/226) ([sgreen-r7](https://github.com/sgreen-r7))
 - Use latest minor versions of Ruby in Travis-CI [\#218](https://github.com/rapid7/nexpose-client/pull/218) ([gschneider-r7](https://github.com/gschneider-r7))
 
@@ -235,6 +234,7 @@
 **Merged pull requests:**
 
 - \#233: Fixed parsing of completed asset response to use correct asset ID [\#234](https://github.com/rapid7/nexpose-client/pull/234) ([mhuffman-r7](https://github.com/mhuffman-r7))
+- api delete fix [\#230](https://github.com/rapid7/nexpose-client/pull/230) ([dmurray-r7](https://github.com/dmurray-r7))
 
 ## [v4.0.4](https://github.com/rapid7/nexpose-client/tree/v4.0.4) (2016-05-17)
 
@@ -266,6 +266,7 @@
 
 **Merged pull requests:**
 
+- Add new filter and update IP address operators [\#224](https://github.com/rapid7/nexpose-client/pull/224) ([rkhalil-r7](https://github.com/rkhalil-r7))
 - Allow import scan to return scan ID when available [\#223](https://github.com/rapid7/nexpose-client/pull/223) ([gschneider-r7](https://github.com/gschneider-r7))
 
 ## [v3.3.2](https://github.com/rapid7/nexpose-client/tree/v3.3.2) (2016-04-29)
@@ -298,7 +299,6 @@
 **Closed issues:**
 
 - Unable to retrieve proofs [\#213](https://github.com/rapid7/nexpose-client/issues/213)
-- Adding criteria to tag. [\#209](https://github.com/rapid7/nexpose-client/issues/209)
 
 **Merged pull requests:**
 
@@ -311,10 +311,10 @@
 **Closed issues:**
 
 - Return nexpose\_id via API using vulnid [\#210](https://github.com/rapid7/nexpose-client/issues/210)
+- Adding criteria to tag. [\#209](https://github.com/rapid7/nexpose-client/issues/209)
 
 **Merged pull requests:**
 
-- Add new filter and update IP address operators [\#224](https://github.com/rapid7/nexpose-client/pull/224) ([rkhalil-r7](https://github.com/rkhalil-r7))
 - Add method for returning the version information for each scan engine [\#212](https://github.com/rapid7/nexpose-client/pull/212) ([Red5d](https://github.com/Red5d))
 - Scheduled Backup and Maintenance  [\#211](https://github.com/rapid7/nexpose-client/pull/211) ([dmurray-r7](https://github.com/dmurray-r7))
 
@@ -420,10 +420,6 @@
 - Add more engine info and features [\#166](https://github.com/rapid7/nexpose-client/issues/166)
 - Get asset count and vuln count for Asset Groups [\#130](https://github.com/rapid7/nexpose-client/issues/130)
 
-**Merged pull requests:**
-
-- Add methods for changing and querying a scan template's ACES logging level [\#187](https://github.com/rapid7/nexpose-client/pull/187) ([tomhart-r7](https://github.com/tomhart-r7))
-
 ## [v2.0.2](https://github.com/rapid7/nexpose-client/tree/v2.0.2) (2015-08-13)
 
 [Full Changelog](https://github.com/rapid7/nexpose-client/compare/v2.0.1...v2.0.2)
@@ -448,6 +444,7 @@
 
 **Merged pull requests:**
 
+- Add methods for changing and querying a scan template's ACES logging level [\#187](https://github.com/rapid7/nexpose-client/pull/187) ([tomhart-r7](https://github.com/tomhart-r7))
 - Password policy expiration [\#180](https://github.com/rapid7/nexpose-client/pull/180) ([dmurray-r7](https://github.com/dmurray-r7))
 
 ## [v1.3.0](https://github.com/rapid7/nexpose-client/tree/v1.3.0) (2015-07-07)
@@ -615,6 +612,7 @@
 **Merged pull requests:**
 
 - Update to the new username attr for xml [\#100](https://github.com/rapid7/nexpose-client/pull/100) ([sgreen-r7](https://github.com/sgreen-r7))
+- Refactor/Extract Common Credential Module [\#98](https://github.com/rapid7/nexpose-client/pull/98) ([sgreen-r7](https://github.com/sgreen-r7))
 
 ## [v0.8.18](https://github.com/rapid7/nexpose-client/tree/v0.8.18) (2014-12-15)
 
@@ -630,7 +628,6 @@
 
 **Merged pull requests:**
 
-- Refactor/Extract Common Credential Module [\#98](https://github.com/rapid7/nexpose-client/pull/98) ([sgreen-r7](https://github.com/sgreen-r7))
 - Add incomplete\_assets method [\#93](https://github.com/rapid7/nexpose-client/pull/93) ([gschneider-r7](https://github.com/gschneider-r7))
 
 ## [v0.8.15](https://github.com/rapid7/nexpose-client/tree/v0.8.15) (2014-11-12)
@@ -752,6 +749,7 @@
 **Merged pull requests:**
 
 - Add methods to scan\_template.rb to enable port exclusion. [\#65](https://github.com/rapid7/nexpose-client/pull/65) ([AdamBunn](https://github.com/AdamBunn))
+- Validate and raise error for unsupported colors [\#64](https://github.com/rapid7/nexpose-client/pull/64) ([erran](https://github.com/erran))
 
 ## [v0.7.5](https://github.com/rapid7/nexpose-client/tree/v0.7.5) (2014-05-23)
 
@@ -787,6 +785,7 @@
 
 **Merged pull requests:**
 
+- Set role.id to -1 by default on initialization [\#60](https://github.com/rapid7/nexpose-client/pull/60) ([erran](https://github.com/erran))
 - Add controls-insight-only as a valid role [\#58](https://github.com/rapid7/nexpose-client/pull/58) ([erran](https://github.com/erran))
 
 ## [v0.7.1](https://github.com/rapid7/nexpose-client/tree/v0.7.1) (2014-04-10)
@@ -806,8 +805,6 @@
 
 **Merged pull requests:**
 
-- Validate and raise error for unsupported colors [\#64](https://github.com/rapid7/nexpose-client/pull/64) ([erran](https://github.com/erran))
-- Set role.id to -1 by default on initialization [\#60](https://github.com/rapid7/nexpose-client/pull/60) ([erran](https://github.com/erran))
 - Changes for criticality tags and associated assets [\#56](https://github.com/rapid7/nexpose-client/pull/56) ([zachrab](https://github.com/zachrab))
 - Ivan - Support for tags [\#55](https://github.com/rapid7/nexpose-client/pull/55) ([kkohli-r7](https://github.com/kkohli-r7))
 - Minor licensing and naming updates [\#54](https://github.com/rapid7/nexpose-client/pull/54) ([todb-r7](https://github.com/todb-r7))
