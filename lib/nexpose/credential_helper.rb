@@ -81,6 +81,14 @@ module Nexpose
       self.service   = Credential::Service::ORACLE
     end
 
+    # sets the Oracle service using Service Name authentication.
+    def set_oracle_service_using_service_name_auth(servicename = nil, username = nil, password = nil)
+      self.database  = servicename
+      self.user_name = username
+      self.password  = password
+      self.service   = Credential::Service::ORACLESERVICENAME
+    end
+
     # sets the Post Office Protocol (POP) service.
     def set_pop_service(username = nil, password = nil)
       self.user_name = username
