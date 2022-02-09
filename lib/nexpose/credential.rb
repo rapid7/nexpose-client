@@ -47,7 +47,7 @@ module Nexpose
       CIFS             = 'cifs'             # Microsoft Windows/Samba (SMB/CIFS)
       CIFSHASH         = 'cifshash'         # Microsoft Windows/Samba LM/NTLM Hash (SMB/CIFS)
       ORACLE           = 'oracle'           # Oracle
-      ORACLESERVICENAME = 'oracle-service-name' # Oracle using Service Name Auth
+      ORACLE_SERVICE_NAME = 'oracle-service-name' # Oracle using Service Name Auth
       POP              = 'pop'              # Post Office Protocol (POP)
       POSTGRESQL       = 'postgresql'       # PostgreSQL
       REMOTE_EXECUTION = 'remote execution' # Remote Execution

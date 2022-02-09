@@ -86,7 +86,7 @@ module Nexpose
       self.database  = servicename
       self.user_name = username
       self.password  = password
-      self.service   = Credential::Service::ORACLESERVICENAME
+      self.service   = Credential::Service::ORACLE_SERVICE_NAME
     end
 
     # sets the Post Office Protocol (POP) service.
