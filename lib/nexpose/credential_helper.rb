@@ -82,8 +82,8 @@ module Nexpose
     end
 
     # sets the Oracle service using Service Name authentication.
-    def set_oracle_service_using_service_name_auth(servicename = nil, username = nil, password = nil)
-      self.database  = servicename
+    def set_oracle_service_using_service_name_auth(service_name = nil, username = nil, password = nil)
+      self.database  = service_name
       self.user_name = username
       self.password  = password
       self.service   = Credential::Service::ORACLE_SERVICE_NAME

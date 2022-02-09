@@ -49,8 +49,8 @@ module Nexpose
     attr_accessor :use_windows_auth
     # sid for oracle
     attr_accessor :sid
-    # servicename for oracle
-    attr_accessor :servicename
+    # service name for oracle
+    attr_accessor :service_name
     # for ssh public key require pem format private key
     attr_accessor :pem_format_private_key
     # for snmp v1/v2
@@ -186,7 +186,7 @@ module Nexpose
         notes_id_password: notes_id_password,
         use_windows_auth: use_windows_auth,
         sid: sid,
-        servicename: servicename,
+        service_name: service_name,
         pem_format_private_key: pem_format_private_key,
         community_name: community_name,
         scope: scope }
@@ -217,7 +217,7 @@ module Nexpose
       notes_id_password.eql?(other.notes_id_password) &&
       use_windows_auth.eql?(other.use_windows_auth) &&
       sid.eql?(other.sid) &&
-      servicename.eql?(other.servicename) &&
+      service_name.eql?(other.service_name) &&
       pem_format_private_key.eql?(other.pem_format_private_key) &&
       community_name.eql?(other.community_name) &&
       scope.eql?(other.scope)
