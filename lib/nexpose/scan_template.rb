@@ -162,6 +162,19 @@ module Nexpose
       gen.attributes['disableWebSpider'] = enable ? '0' : '1'
     end
 
+    # @return [Boolean] Whether Invulnerable Results is enabled.
+    def invulnerable_storage?
+      gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
+      gen.attributes['invulnerableStorage'] == 'on'
+    end
+
+    # Adjust whether to Store Invulnerable results with this template.
+    # @param [Boolean] enable Whether to Store Invulnerable results.
+    def invulnerable_storage=(enable)
+      gen = REXML::XPath.first(@xml, 'ScanTemplate/General')
+      gen.attributes['invulnerableStorage'] = enable ? 'on' : 'off'
+    end
+
     # Adjust the number of threads to use per scan engine for this template
     # @param [Integer] threads the number of threads to use per engine
     def scan_threads=(threads)
