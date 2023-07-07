@@ -137,6 +137,7 @@ module Nexpose
       http.read_timeout = (timeout || nsc.timeout)
       http.open_timeout = nsc.open_timeout
       http.use_ssl = true
+      http.ipaddr = nsc.connect_host
       if nsc.trust_store.nil?
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       else

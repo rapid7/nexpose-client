@@ -144,8 +144,8 @@ module Nexpose
       @res.root.attributes(*args)
     end
 
-    def self.execute(url, req, api_version = '1.1', options = {}, trust_store = nil)
-      obj = self.new(req.to_s, url, api_version, trust_store)
+    def self.execute(url, req, api_version = '1.1', options = {}, trust_store = nil, connect_host = nil)
+      obj = self.new(req.to_s, url, api_version, trust_store, connect_host)
       obj.execute(options)
       raise APIError.new(obj, "Action failed: #{obj.error}") unless obj.success
       obj

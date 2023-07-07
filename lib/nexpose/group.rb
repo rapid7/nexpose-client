@@ -159,7 +159,7 @@ module Nexpose
     #
     def self.load(connection, id)
       xml = %(<AssetGroupConfigRequest session-id="#{connection.session_id}" group-id="#{id}"/>)
-      r   = APIRequest.execute(connection.url, xml, '1.1', { timeout: connection.timeout, open_timeout: connection.open_timeout })
+      r   = APIRequest.execute(connection.url, xml, '1.1', { timeout: connection.timeout, open_timeout: connection.open_timeout }, nil, connection.connect_host)
       parse(r.res)
     end
 
