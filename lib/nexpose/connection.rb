@@ -41,6 +41,8 @@ module Nexpose
     attr_reader :session_id
     # The hostname or IP Address of the NSC
     attr_reader :host
+    # Host or IP address to connect through for tunneled connections. Allows sending correct host for SNI
+    attr_reader :connect_host
     # The port of the NSC (default is 3780)
     attr_reader :port
     # The username used to login to the NSC
@@ -81,8 +83,9 @@ module Nexpose
     # @param [String] silo_id The silo identifier for Nexpose sessions.
     # @param [String] token The two-factor authentication (2FA) token for Nexpose sessions.
     # @param [String] trust_cert The PEM-formatted web certificate of the Nexpose console. Used for SSL validation.
-    def initialize(ip, user, pass, port = 3780, silo_id = nil, token = nil, trust_cert = nil)
+    def initialize(ip, user, pass, port = 3780, silo_id = nil, token = nil, trust_cert = nil, connect_host = nil)
       @host         = ip
+      @connect_host = connect_host
       @username     = user
       @password     = pass
       @port         = port
@@ -121,7 +124,7 @@ module Nexpose
       options.store(:open_timeout, @open_timeout)
       @request_xml = xml.to_s
       @api_version = version
-      response = APIRequest.execute(@url, @request_xml, @api_version, options, @trust_store)
+      response = APIRequest.execute(@url, @request_xml, @api_version, options, @trust_store, @connect_host)
       @response_xml = response.raw_response_data
       response
     end
