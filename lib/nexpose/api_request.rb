@@ -1,3 +1,5 @@
+require 'pry'
+
 module Nexpose
   class APIRequest
     include XMLUtils
@@ -26,6 +28,7 @@ module Nexpose
       @api_version = api_version
       @url = @url.sub('API_VERSION', @api_version)
       @trust_store = trust_store
+      @connect_host = connect_host
       prepare_http_client
     end
 
