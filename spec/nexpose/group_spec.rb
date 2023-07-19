@@ -11,28 +11,33 @@ describe Nexpose::AssetGroup do
   let(:open_timeout) { 120 }
   let(:trust_store) { nil }
 
-  let(:connection) { double('Nexpose::Connection', :host => console_hostname, :port => port, :timeout => connection_timeout, :open_timeout => open_timeout, :url => url, :connect_host => connect_host, :trust_store => trust_store, :session_id => 'asdf')
-  }
+  let(:connection) do
+    double('Nexpose::Connection', host: console_hostname, port: port, timeout: connection_timeout, open_timeout: open_timeout, url: url,
+                                  connect_host: connect_host, trust_store: trust_store, session_id: 'asdf')
+  end
   let(:group_id) { 52 }
   before do
-    allow(Nexpose::APIRequest).to receive(:execute).and_return( double('nexpose_resonse', :res => "<AssetGroupConfigResponse><AssetGroup></AssetGroup></AssetGroupConfigResponse>") )
-    allow(Nexpose::AssetGroup).to receive(:parse).and_return( Nexpose::AssetGroup.new('test group name', 'asset group for testing', group_id, 1000.0) )
+    allow(Nexpose::APIRequest).to receive(:execute).and_return(double('nexpose_resonse',
+                                                                      res: '<AssetGroupConfigResponse><AssetGroup></AssetGroup></AssetGroupConfigResponse>'))
+    allow(Nexpose::AssetGroup).to receive(:parse).and_return(Nexpose::AssetGroup.new('test group name', 'asset group for testing', group_id, 1000.0))
   end
-  subject!{ Nexpose::AssetGroup.load(connection, group_id) }
+  subject! { Nexpose::AssetGroup.load(connection, group_id) }
 
   describe 'self.load' do
-      context 'with default connection parameters' do
-        it 'executes and APIRequest without connect_host' do
-          expect(Nexpose::APIRequest).to have_received(:execute).with(connection.url, %(<AssetGroupConfigRequest session-id="asdf" group-id="52"/>), '1.1', { timeout: connection.timeout, open_timeout: connection.open_timeout }, nil, nil)
-        end
+    context 'with default connection parameters' do
+      it 'executes and APIRequest without connect_host' do
+        expect(Nexpose::APIRequest).to have_received(:execute).with(connection.url, %(<AssetGroupConfigRequest session-id="asdf" group-id="52"/>), '1.1',
+                                                                    { timeout: connection.timeout, open_timeout: connection.open_timeout }, nil, nil)
       end
+    end
 
-      context 'with connect_host provided in connection' do
-        let(:connect_host) { 'virtual-tunnel.us.kennasec.com' }
+    context 'with connect_host provided in connection' do
+      let(:connect_host) { 'virtual-tunnel.us.kennasec.com' }
 
-        it 'executes an APIRequest with connect_host' do
-          expect(Nexpose::APIRequest).to have_received(:execute).with(connection.url, %(<AssetGroupConfigRequest session-id="asdf" group-id="52"/>), '1.1', { timeout: connection.timeout, open_timeout: connection.open_timeout }, nil, connect_host)
-        end
+      it 'executes an APIRequest with connect_host' do
+        expect(Nexpose::APIRequest).to have_received(:execute).with(connection.url, %(<AssetGroupConfigRequest session-id="asdf" group-id="52"/>), '1.1',
+                                                                    { timeout: connection.timeout, open_timeout: connection.open_timeout }, nil, connect_host)
       end
+    end
   end
 end

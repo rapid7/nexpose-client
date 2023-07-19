@@ -10,12 +10,11 @@ describe Nexpose::APIRequest do
   let(:connection_timeout) { 120 }
   let(:open_timeout) { 120 }
   let(:trust_store) { nil }
-  let(:request_xml) { "" }
-
+  let(:request_xml) { '' }
 
   describe '#new' do
-    subject!(:api_request){ Nexpose::APIRequest.new(request_xml, url, '1,1', trust_store, connect_host) }
-  
+    subject!(:api_request) { Nexpose::APIRequest.new(request_xml, url, '1,1', trust_store, connect_host) }
+
     context 'with defaults' do
       it 'creates a Net::HTTP with no ipaddr' do
         expect(api_request.http.ipaddr).to eq(nil)
@@ -32,10 +31,10 @@ describe Nexpose::APIRequest do
   end
 
   describe 'execute' do
-    let(:options){ {:timeout => 120, :open_timeout => 120, :raw => true} }
+    let(:options) { { timeout: 120, open_timeout: 120, raw: true } }
     let(:request_object) { Nexpose::APIRequest.new(request_xml, url, '1.1', trust_store, connect_host) }
     before do
-      allow(Nexpose::APIRequest).to receive(:new).and_return( request_object )
+      allow(Nexpose::APIRequest).to receive(:new).and_return(request_object)
       allow(request_object).to receive(:execute)
       allow(request_object).to receive(:success).and_return(true)
     end

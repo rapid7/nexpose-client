@@ -56,9 +56,9 @@ describe Nexpose::Connection do
     let(:connection) { Nexpose::Connection.new(uri, username, password, port, silo_id, token, trust_cert, connect_host) }
     let(:test_xml) { "<LoginRequest password='password' sync-id='0' user-id='username'></LoginRequest>" }
     let(:options) { {} }
-    
-    before do 
-      allow(Nexpose::APIRequest).to receive(:execute).and_return( double(raw_response_data: 'success') )
+
+    before do
+      allow(Nexpose::APIRequest).to receive(:execute).and_return(double(raw_response_data: 'success'))
     end
 
     subject!(:execute_response) { connection.execute(test_xml, nil, options) }
@@ -81,8 +81,10 @@ describe Nexpose::Connection do
       subject!(:execute_response) { connection.execute(test_xml) }
 
       it 'request defaults timeouts and api version' do
-        expect(Nexpose::APIRequest).to have_received(:execute).with(connection.url, test_xml.to_s, '1.1', {:open_timeout=>120, :timeout=>120}, trust_cert, connect_host)
+        expect(Nexpose::APIRequest).to have_received(:execute).with(connection.url, test_xml.to_s, '1.1', { open_timeout: 120, timeout: 120 }, trust_cert,
+                                                                    connect_host)
       end
     end
   end
 end
+

@@ -9,10 +9,12 @@ describe Nexpose::AJAX do
   let(:open_timeout) { 120 }
   let(:trust_store) { nil }
   let(:port) { 3780 }
-  let(:connection) { double('Nexpose::Connection', :host => console_hostname, :port => port, :timeout => connection_timeout, :open_timeout => open_timeout, :connect_host => connect_host, :trust_store => trust_store)
-  }
+  let(:connection) do
+    double('Nexpose::Connection', host: console_hostname, port: port, timeout: connection_timeout, open_timeout: open_timeout,
+                                  connect_host: connect_host, trust_store: trust_store)
+  end
   let(:timeout) { nil }
-  
+
   subject!(:https) { Nexpose::AJAX.https(connection, timeout) }
 
   describe '#https' do
