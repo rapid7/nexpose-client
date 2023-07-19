@@ -1,5 +1,3 @@
-require 'pry'
-
 module Nexpose
   class APIRequest
     include XMLUtils
