@@ -1,0 +1,15 @@
+---
+info:
+  title: Nexpose Client
+  description: 'DEPRECATED: Rapid7 Nexpose API client library written in Ruby'
+  x-cortex-git:
+    github:
+      alias: r7org
+      repository: rapid7/nexpose-client
+  x-cortex-tag: nexpose-client
+  x-cortex-type: service
+  x-cortex-domain-parents:
+  - tag: vm-console
+openapi: 3.0.1
+servers:
+- url: "/"
