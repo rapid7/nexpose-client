@@ -66,7 +66,7 @@ module Eso
     # return [JSON] A json object representing a configuration
     # TODO : Update to use an Eso::Configuration
     def get_configuration(configuration_id)
-      json_data = ::Nexpose::AJAX.get(@nexpose_console, "#{@url}/service/configuration/id/#{configuration_id}", ::Nexpose::AJAX::CONTENT_TYPE::JSON)
+      json_data = ::Nexpose::AJAX.get(@nexpose_console, "#{@url}service/configuration/id/#{configuration_id}", ::Nexpose::AJAX::CONTENT_TYPE::JSON)
       JSON.parse(json_data, :symbolize_names => true)
     end
 
