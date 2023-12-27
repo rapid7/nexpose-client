@@ -5,7 +5,7 @@
 [Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.3.1...v7.3.2)
 
 **Merged pull requests:**
-- Missing Global Privileges (ViewVulnInvestigations, ManageVulnInvestigations) (https://github.com/rapid7/nexpose-client/pull/337)
+- Missing Global Privileges (ViewVulnInvestigations, ManageVulnInvestigations)
 
 **Fixed bugs:**
 
