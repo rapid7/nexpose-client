@@ -1,5 +1,14 @@
 # Changelog
 
+## [v7.3.2](https://github.com/rapid7/nexpose-client/tree/v7.3.2) (2023-12-27)
+
+[Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.3.1...v7.3.2)
+
+**Merged pull requests:**
+- Missing Global Privileges (ViewVulnInvestigations, ManageVulnInvestigations)
+
+**Fixed bugs:**
+
 ## [v7.3.0](https://github.com/rapid7/nexpose-client/tree/v7.3.0) (2021-04-02)
 
 [Full Changelog](https://github.com/rapid7/nexpose-client/compare/v7.2.1...v7.3.0)
