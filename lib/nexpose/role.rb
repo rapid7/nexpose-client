@@ -16,8 +16,6 @@ module Nexpose
       SUBMIT_VULN_EXCEPTIONS      = 'SubmitVulnExceptions'
       APPROVE_VULN_EXCEPTIONS     = 'ApproveVulnExceptions'
       DELETE_VULN_EXCEPTIONS      = 'DeleteVulnExceptions'
-      VIEW_VULN_INVESTIGATIONS    = 'ViewVulnInvestigations'
-      MANAGE_VULN_INVESTIGATIONS  = 'ManageVulnInvestigations'
       CREATE_TICKETS              = 'CreateTickets'
       CLOSE_TICKETS               = 'CloseTickets'
       TICKET_ASSIGNEE             = 'TicketAssignee'
