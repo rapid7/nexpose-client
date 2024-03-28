@@ -65,7 +65,7 @@ module Nexpose
     # @return [Array[Hash]] array of hashes representing the requested table.
     #
     # Example usage:
-    #   DataTable._get_dyn_table(@console, '/data/asset/os/dyntable.xml?tableID=OSSynopsisTable')
+    #   DataTable._get_dyn_table(@console, '/data/asset/os/dyntable?tableID=OSSynopsisTable')
     #
     def _get_dyn_table(console, address, payload = nil)
       if payload
