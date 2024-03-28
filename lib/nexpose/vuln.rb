@@ -35,7 +35,7 @@ module Nexpose
     # @return [Array[String]] Array of currently valid check categories.
     #
     def list_vuln_categories
-      data = DataTable._get_dyn_table(self, '/data/vulnerability/categories/dyntable.xml?tableID=VulnCategorySynopsis')
+      data = DataTable._get_dyn_table(self, '/data/vulnerability/categories/dyntable?tableID=VulnCategorySynopsis')
       data.map { |c| c['Category'] }
     end
 
@@ -46,7 +46,7 @@ module Nexpose
     # @return [Array[String]] Array of currently valid check types.
     #
     def vuln_types
-      data = DataTable._get_dyn_table(self, '/data/vulnerability/checktypes/dyntable.xml?tableID=VulnCheckCategorySynopsis')
+      data = DataTable._get_dyn_table(self, '/data/vulnerability/checktypes/dyntable?tableID=VulnCheckCategorySynopsis')
       data.map { |c| c['Category'] }
     end
     alias list_vuln_types vuln_types
@@ -74,7 +74,7 @@ module Nexpose
     # @return [Array[VulnCheck]] List of matching Vulnerability Checks.
     #
     def find_vuln_check(search_term, partial_words = true, all_words = true)
-      uri = "/data/vulnerability/vulnerabilities/dyntable.xml?tableID=VulnCheckSynopsis&phrase=#{URI.encode(search_term)}&allWords=#{all_words}"
+      uri = "/data/vulnerability/vulnerabilities/dyntable?tableID=VulnCheckSynopsis&phrase=#{URI.encode(search_term)}&allWords=#{all_words}"
       data = DataTable._get_dyn_table(self, uri)
       data.map do |vuln|
         XML::VulnCheck.new(vuln)
@@ -91,7 +91,7 @@ module Nexpose
     #   Nexpose between the provided dates.
     #
     def find_vulns_by_date(from, to = nil)
-      uri = "/data/vulnerability/synopsis/dyntable.xml?addedMin=#{from}"
+      uri = "/data/vulnerability/synopsis/dyntable?addedMin=#{from}"
       uri += "&addedMax=#{to}" if to
       DataTable._get_dyn_table(self, uri).map { |v| VulnSynopsis.new(v) }
     end

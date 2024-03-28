@@ -396,7 +396,7 @@ module Nexpose
           data.map(&ActiveScan.method(:parse_json))
         end
       else
-        uri  = '/data/site/scans/dyntable.xml?printDocType=0&tableID=siteScansTable&activeOnly=true'
+        uri  = '/data/site/scans/dyntable?printDocType=0&tableID=siteScansTable&activeOnly=true'
         data = DataTable._get_dyn_table(self, uri).select { |scan| (scan['Status'].include? 'Paused') }
         data.map(&ActiveScan.method(:parse_dyntable))
       end
