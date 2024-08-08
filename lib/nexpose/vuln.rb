@@ -153,8 +153,6 @@ module Nexpose
       attr_accessor :added
       # The last date the vulnerability was modified.
       attr_accessor :modified
-      # The date when the information about the vulnerability was first released.
-      attr_accessor :published
       # How the vulnerability is exploited according to PCI standards.
       attr_accessor :cvss_vector
       # The computation of the Common Vulnerability Scoring System indicating
@@ -173,7 +171,6 @@ module Nexpose
         vuln.credentials  = xml.attributes['requiresCredentials'] == 'true'
 
         # These three fields are optional in the XSD.
-        vuln.published    = Date.parse(xml.attributes['published']) if xml.attributes['published']
         vuln.cvss_vector  = xml.attributes['cvssVector'] if xml.attributes['cvssVector']
         vuln.cvss_score   = xml.attributes['cvssScore'].to_f if xml.attributes['cvssScore']
         vuln
@@ -240,8 +237,6 @@ module Nexpose
     attr_reader :cvss_score
     attr_reader :cvss_vector
     attr_reader :risk
-    # Date this vulnerability was published.
-    attr_reader :published
     attr_reader :severity
     # Number of instances of this vulnerabilty finding on an asset.
     attr_reader :instances
@@ -259,7 +254,6 @@ module Nexpose
       @cvss_vector = json['cvssBase']
       @cvss_score  = json['cvssScore']
       @risk        = json['riskScore']
-      @published   = Time.at(json['publishedDate'] / 1000)
       @severity    = json['severity']
       @instances   = json['vulnInstanceCount']
       @exploit     = json['mainExploit']
@@ -279,7 +273,6 @@ module Nexpose
       @cvss_vector = hash['CVSS Base Vector']
       @cvss_score  = hash['CVSS Score'].to_f
       @risk        = hash['Risk'].to_f
-      @published   = Time.at(hash['Published On'].to_i / 1000)
       @severity    = hash['Severity'].to_i
       @instances   = hash['Instances'].to_i
       @exploit     = hash['ExploitSource']
