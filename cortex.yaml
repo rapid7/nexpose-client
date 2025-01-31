@@ -1,4 +1,5 @@
 ---
+openapi: 3.0.1
 info:
   title: Nexpose Client
   description: 'DEPRECATED: Rapid7 Nexpose API client library written in Ruby'
@@ -9,7 +10,6 @@ info:
   x-cortex-tag: nexpose-client
   x-cortex-type: service
   x-cortex-domain-parents:
-  - tag: vm-console
-openapi: 3.0.1
-servers:
-- url: "/"
+    - tag: insightvm
+  x-cortex-groups:
+    - status:deprecated
