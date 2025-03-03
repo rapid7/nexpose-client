@@ -10,6 +10,6 @@ info:
   x-cortex-tag: nexpose-client
   x-cortex-type: service
   x-cortex-domain-parents:
-    - tag: insightvm
+    - tag: vm-console
   x-cortex-groups:
     - status:deprecated
