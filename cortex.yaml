@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Nexpose Client
-  description: DEPRECATED: Rapid7 Nexpose API client library written in Ruby
+  description: 'DEPRECATED: Rapid7 Nexpose API client library written in Ruby'
   x-cortex-git:
     github:
       alias: r7org
