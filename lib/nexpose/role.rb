@@ -38,6 +38,7 @@ module Nexpose
       CONFIGURE_TARGETS        = 'ConfigureTargets'
       MANUAL_SCANS             = 'ManualScans'
       PURGE_DATA               = 'PurgeData'
+      SITE_MANAGE_TAGS         = 'SiteManageTags'
     end
 
     module AssetGroup
