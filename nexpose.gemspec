@@ -5,7 +5,7 @@ require 'nexpose/version'
 
 Gem::Specification.new do |s|
   s.name                  = 'nexpose'
-  s.version               = '8.9.0'
+  s.version               = Nexpose::VERSION
   s.homepage              = 'https://github.com/rapid7/nexpose-client'
   s.summary               = 'Ruby API for Rapid7 Nexpose'
   s.description           = 'This gem provides a Ruby API to the Nexpose vulnerability management product by Rapid7.'

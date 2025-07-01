@@ -39,11 +39,13 @@ module Nexpose
       MANUAL_SCANS             = 'ManualScans'
       PURGE_DATA               = 'PurgeData'
       SITE_MANAGE_TAGS         = 'SiteManageTags'
+      ASSET_MANAGE_TAGS        = 'AssetManageTags'
     end
 
     module AssetGroup
       CONFIGURE_ASSETS = 'ConfigureAssets'
       VIEW_ASSET_DATA  = 'ViewAssetData' # NOTE Duplicated between Site and AssetGroup
+      MANAGE_TAGS      = 'GroupManageTags'
     end
   end
 
