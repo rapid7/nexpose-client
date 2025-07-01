@@ -45,7 +45,7 @@ module Nexpose
     module AssetGroup
       CONFIGURE_ASSETS = 'ConfigureAssets'
       VIEW_ASSET_DATA  = 'ViewAssetData' # NOTE Duplicated between Site and AssetGroup
-      MANAGE_TAGS      = 'GroupManageTags'
+      GROUP_MANAGE_TAGS      = 'GroupManageTags'
     end
   end
 
